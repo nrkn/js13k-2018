@@ -1,3 +1,6 @@
+/*
+  The world's roughest build script
+*/
 const fs = require( 'fs' )
 const yazl = require( 'yazl' )
 const uglifycss = require( 'uglifycss' )
