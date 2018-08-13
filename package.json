@@ -2,6 +2,9 @@
   "name": "js13k-2018",
   "version": "0.0.1",
   "description": "js13k games entry for 2018",
+  "scripts": {
+    "build": "node ./build"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrkn/js13k-2018.git"
@@ -11,5 +14,10 @@
   "bugs": {
     "url": "https://github.com/nrkn/js13k-2018/issues"
   },
-  "homepage": "https://github.com/nrkn/js13k-2018#readme"
+  "homepage": "https://github.com/nrkn/js13k-2018#readme",
+  "devDependencies": {
+    "uglify-es": "^3.3.9",
+    "uglifycss": "0.0.29",
+    "yazl": "^2.4.3"
+  }
 }

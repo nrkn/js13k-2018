@@ -2,7 +2,6 @@
   close over to make uglify minify properly as couldn't seem to find the option
   to minify top level - easy enough to remove this
 */
-//
 const s = () => {
   'use strict'
 
