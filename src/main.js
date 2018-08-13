@@ -21,7 +21,7 @@ const s = () => {
 
   c.width = c.height = tileSize * canvasSize
 
-  loadImages( 'font.gif' ).then( ( [ font ] ) => {
+  loadImages( 'font.gif', 'tiles.gif' ).then( ( [ font, tiles ] ) => {
     const drawText = ( str = '', x = 0, y = 0 ) => {
       for( let i = 0; i < str.length; i++ ){
         const c = str.charCodeAt( i ) - 32
