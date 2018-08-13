@@ -37,6 +37,7 @@ zip.addBuffer( Buffer.from( html ), 'index.html', {
 })
 zip.outputStream.pipe( fs.createWriteStream( './dist/offline.zip' )).on( 'close', () => {
   const buffer = fs.readFileSync( './dist/offline.zip' )
-  console.log( `Size: ${ buffer.byteLength }` )
+  const { byteLength } = buffer
+  console.log( `Size: ${ byteLength }, Remaining: ${ 13312 - byteLength }` )
 })
 zip.end()
