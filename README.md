@@ -16,5 +16,6 @@
   - Size: 2268, Remaining: 11044
 - ~~draw player~~
   - Size: 2287, Remaining: 11025
-- player animates
+- ~~player animates~~
+  - Size: 2325, Remaining: 10987
 - player can move around with arrows or tap, trees and edge of map block

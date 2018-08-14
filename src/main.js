@@ -23,6 +23,9 @@ const s = () => {
   // center the map on this tile
   const vX = 25
   const vY = 25
+  // player settings
+  const playerAnimationTime = 500
+  let facing = 0
 
   loadImages( 'font.gif', 'tiles.gif', 'player.gif' ).then( ( [ font, tiles, player ] ) => {
     const tileCount = tiles.width / tileSize
@@ -63,7 +66,18 @@ const s = () => {
 
     const map = generateMap()
 
-    const draw = () => {
+    let start
+    let elapsed
+    const draw = time => {
+      // set up start when we first get a proper tick time
+      if( time && !start ) start = time
+
+      elapsed = time - start
+
+      // is this over complicated? might be a simpler way to do this
+      const playerTime = Math.floor( elapsed / playerAnimationTime )
+      const playerFrame = playerTime % 2 ? 0 : 1
+
       // blank the canvas
       c.width = c.height = tileSize * canvasSize
 
@@ -90,16 +104,16 @@ const s = () => {
           ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
 
           if( x === center && y === center ){
-            // when we animate and add facing this will change
-            const sx = 0
+            // when we add movement we'll toggle facing, this should work
+            const sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
 
             ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           }
         }
       }
 
+      // UI placeholder, use this space later for game UI
       drawText( 'Offline         $10', 0.5, 0.5 )
-
       for( let i = 1; i < 10; i++ ){
         drawText( i + '', 0.5, ( i * 2 ) + 0.5 )
       }
