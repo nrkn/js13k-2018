@@ -20,12 +20,14 @@ const s = () => {
   const canvasSize = viewSize + 1
   const center = ~~( viewSize / 2 )
   const mapSize = 50
-
-  c.width = c.height = tileSize * canvasSize
+  // center the map on this tile
+  const vX = 25
+  const vY = 25
 
   loadImages( 'font.gif', 'tiles.gif', 'player.gif' ).then( ( [ font, tiles, player ] ) => {
     const tileCount = tiles.width / tileSize
 
+    // nb the text grid is half the size of the tile grid, 8x8 not 16x16
     const drawText = ( str = '', x = 0, y = 0 ) => {
       for( let i = 0; i < str.length; i++ ){
         const c = str.charCodeAt( i ) - 32
@@ -61,13 +63,44 @@ const s = () => {
 
     const map = generateMap()
 
-    console.log( map )
+    const draw = () => {
+      // blank the canvas
+      c.width = c.height = tileSize * canvasSize
 
-    drawText( 'Offline         $10', 0.5, 0.5 )
+      for( let y = 0; y < viewSize; y++ ){
+        for( let x = 0; x < viewSize; x++ ){
+          const mapX = ( vX - center ) + x
+          const mapY = ( vY - center ) + y
 
-    for( let i = 1; i < 10; i++ ){
-      drawText( i + '', 0.5, ( i * 2 ) + 0.5 )
+          // bounds check
+          if( mapX < 0 || mapY < 0 || mapX >= mapSize || mapY >= mapSize ) continue
+
+          const i = ( mapY * mapSize ) + mapX
+          const tileIndex = map[ i ]
+
+          const sx = tileIndex * tileSize
+          const sy = 0
+          const sWidth = tileSize
+          const sHeight = tileSize
+          const dx = ( x + 1 ) * tileSize
+          const dy = ( y + 1 ) * tileSize
+          const dWidth = tileSize
+          const dHeight = tileSize
+
+          ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+        }
+      }
+
+      drawText( 'Offline         $10', 0.5, 0.5 )
+
+      for( let i = 1; i < 10; i++ ){
+        drawText( i + '', 0.5, ( i * 2 ) + 0.5 )
+      }
+
+      requestAnimationFrame( draw )
     }
+
+    draw()
   })
 }
 

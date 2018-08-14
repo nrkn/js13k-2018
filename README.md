@@ -12,7 +12,8 @@
   - Size: 2070, Remaining: 11242
 - ~~generate a map with grass placed randomly, some trees~~
   - Size: 2160, Remaining: 11152
-- draw map
+- ~~draw map~~
+  - Size: 2268, Remaining: 11044
 - draw player
 - player animates
 - player can move around with arrows or tap, trees and edge of map block
