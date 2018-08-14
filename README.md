@@ -5,9 +5,13 @@
 - ~~pixels scaled as big as possible centered in viewport~~
 - ~~draw font to canvas~~
 - ~~setup to minify~~
+  - Size: 1439, Remaining: 11873
 - ~~create art - some grass and tree tiles~~
+  - Size: 1730, Remaining: 11582
 - ~~create art - a player sprite, two(?) frames animation~~
-- generate a map with grass placed randomly, some trees
+  - Size: 2070, Remaining: 11242
+- ~~generate a map with grass placed randomly, some trees~~
+  - Size: 2160, Remaining: 11152
 - draw map
 - draw player
 - player animates

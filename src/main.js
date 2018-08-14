@@ -18,10 +18,14 @@ const s = () => {
   const tileSize = 16
   const viewSize = 9
   const canvasSize = viewSize + 1
+  const center = ~~( viewSize / 2 )
+  const mapSize = 50
 
   c.width = c.height = tileSize * canvasSize
 
   loadImages( 'font.gif', 'tiles.gif', 'player.gif' ).then( ( [ font, tiles, player ] ) => {
+    const tileCount = tiles.width / tileSize
+
     const drawText = ( str = '', x = 0, y = 0 ) => {
       for( let i = 0; i < str.length; i++ ){
         const c = str.charCodeAt( i ) - 32
@@ -39,6 +43,25 @@ const s = () => {
         x++
       }
     }
+
+    const generateMap = () => {
+      const tiles = []
+
+      for( let y = 0; y < mapSize; y++ ){
+        for( let x = 0; x < mapSize; x++ ){
+          // always start on a blank tile, otherwise pick a tile randomly
+          const tileIndex = x === center && y === center ? 0 : Math.floor( Math.random() * tileCount )
+
+          tiles.push( tileIndex )
+        }
+      }
+
+      return tiles
+    }
+
+    const map = generateMap()
+
+    console.log( map )
 
     drawText( 'Offline         $10', 0.5, 0.5 )
 
