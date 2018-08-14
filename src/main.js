@@ -26,6 +26,35 @@ const s = () => {
   // player settings
   const playerAnimationTime = 500
   let facing = 0
+  let h = 5
+  let m = 0
+
+  const incTime = () => {
+    m++
+    if( m === 60 ){
+      m = 0
+      h++
+    }
+    if( h === 24 ){
+      h = 0
+    }
+    if( ( h === 6 || h === 18 ) && m === 0 ){
+      c.classList.toggle( 'i' )
+    }
+  }
+
+  const timeStr = () => `T${ h < 10 ? '0' : '' }${ h }${ m < 10 ? '0' : '' }${ m }`
+
+  const messages = [
+    [
+      'Lost contact with',
+      'RANGER. Take boat,',
+      'Find out what ',
+      'happened'
+    ]
+  ]
+
+  let message = messages[ 0 ]
 
   loadImages( 'font.gif', 'tiles.gif', 'player.gif' ).then( ( [ font, tiles, player ] ) => {
     const tileCount = tiles.width / tileSize
@@ -110,6 +139,13 @@ const s = () => {
         y = 1
       }
 
+      if( message && ( x || y ) ){
+        message = ''
+
+        return
+      }
+
+      incTime()
       move( x, y )
     }
 
@@ -127,6 +163,19 @@ const s = () => {
 
       // blank the canvas
       c.width = c.height = tileSize * canvasSize
+
+      if( message ){
+        for( let y = 0; y < message.length; y++ ){
+          const line = message[ y ]
+          const tX = 1
+          const tY = 1 + y
+          drawText( line, tX, tY )
+        }
+
+        requestAnimationFrame( draw )
+
+        return
+      }
 
       for( let y = 0; y < viewSize; y++ ){
         for( let x = 0; x < viewSize; x++ ){
@@ -160,7 +209,7 @@ const s = () => {
       }
 
       // UI placeholder, use this space later for game UI
-      drawText( 'Offline         $10', 0.5, 0.5 )
+      drawText( `Offline       ${ timeStr() }`, 0.5, 0.5 )
       for( let i = 1; i < 10; i++ ){
         drawText( i + '', 0.5, ( i * 2 ) + 0.5 )
       }

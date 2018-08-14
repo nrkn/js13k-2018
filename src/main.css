@@ -14,3 +14,7 @@ body {
   width: 100vmin;
   height: 100vmin;
 }
+
+.i {
+	filter: invert(100%);
+}

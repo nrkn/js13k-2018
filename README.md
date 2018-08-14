@@ -60,6 +60,14 @@ They gradually unlock messages etc on computer from RANGER explaining what
 happened, ability to craft better items, ability to finally send a message for
 help
 
+There is time - one action = 1 minute
+
+At 6am and 6pm it switches from day to night
+
+Monsters only come out at night and flee in daytime
+
+Player is safe in hut, can sleep to pass the night away
+
 ## Engine
 
 ### TODO
@@ -83,6 +91,10 @@ help
   - Only implemented keyboard - mouse/touch controls is a luxury we can add
     later
   - Size: 2456, Remaining: 10856
+- ~~implement messages~~
+  - Size: 2566, Remaining: 10746
+- ~~implement day/night cycle~~
+  - Size: 2660, Remaining: 10652
 - create art - water tiles, beach tiles
 - proper tile collision code
 - create art - more tiles - rocks, flowers, more trees
