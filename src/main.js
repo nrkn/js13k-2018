@@ -15,48 +15,58 @@ const s = () => {
 
   const loadImages = ( ...paths ) => Promise.all( paths.map( loadImage ) )
 
+  // geometry etc
   const tileSize = 16
   const viewSize = 9
   const canvasSize = viewSize + 1
   const center = ~~( viewSize / 2 )
+  // map settings
   const mapSize = 50
-  // center the map on this tile
+  // center the map on this tile - typically the player location
   let vX = 25
   let vY = 25
   // player settings
   const playerAnimationTime = 500
   let facing = 0
-  let h = 5
-  let m = 0
+  // time
+  let h = 16
+  let m = 30
 
   const incTime = () => {
     m++
     if( m === 60 ){
       m = 0
       h++
+      if( h === 6 ){
+        c.classList.toggle( 'i' )
+        message = messages[ 1 ]
+      }
+      if( h === 18 ){
+        c.classList.toggle( 'i' )
+        message = messages[ 2 ]
+      }
     }
     if( h === 24 ){
       h = 0
     }
-    if( ( h === 6 || h === 18 ) && m === 0 ){
-      c.classList.toggle( 'i' )
-    }
   }
 
-  const timeStr = () => `T${ h < 10 ? '0' : '' }${ h }${ m < 10 ? '0' : '' }${ m }`
+  const timeStr = () => `${ h < 10 ? '0' : '' }${ h }:${ m < 10 ? '0' : '' }${ m }`
 
   const messages = [
     [
       'Lost contact with',
       'RANGER. Take boat,',
-      'Find out what ',
+      'find out what ',
       'happened'
-    ]
+    ],
+    [ 'Sunrise' ],
+    [ 'Sunset' ],
   ]
 
   let message = messages[ 0 ]
 
-  loadImages( 'font.gif', 'tiles.gif', 'player.gif' ).then( ( [ font, tiles, player ] ) => {
+  loadImages( 'f.gif', 't.gif', 'p.gif' ).then( ( [ font, tiles, player ] ) => {
     const tileCount = tiles.width / tileSize
 
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
@@ -84,7 +94,7 @@ const s = () => {
       for( let y = 0; y < mapSize; y++ ){
         for( let x = 0; x < mapSize; x++ ){
           // always start on a blank tile, otherwise pick a tile randomly
-          const tileIndex = x === center && y === center ? 0 : Math.floor( Math.random() * tileCount )
+          const tileIndex = x === vX && y === vY ? 0 : ~~( Math.random() * tileCount )
 
           tiles.push( tileIndex )
         }
@@ -116,33 +126,35 @@ const s = () => {
       vY = y
     }
 
-    document.onkeypress = e => {
+    document.onkeyup = e => {
+      // if showing a message
+      if( message ){
+        // clear the message if one of these keys
+        if( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ) message = 0
+
+        return
+      }
+
       let x = 0
       let y = 0
 
       // left, change the facing as well
-      if( e.keyCode === 37 ){
+      if( e.keyCode === 65 || e.keyCode === 37 ){
         facing = 1
         x = -1
       }
       // right, change the facing as well
-      if( e.keyCode === 39 ){
+      if( e.keyCode === 68 || e.keyCode === 39 ){
         facing = 0
         x = 1
       }
       // up
-      if( e.keyCode === 38 ){
+      if( e.keyCode === 87 || e.keyCode === 38 ){
         y = -1
       }
       // down
-      if( e.keyCode === 40 ){
+      if( e.keyCode === 83 || e.keyCode === 40 ){
         y = 1
-      }
-
-      if( message && ( x || y ) ){
-        message = ''
-
-        return
       }
 
       incTime()
@@ -158,7 +170,7 @@ const s = () => {
       elapsed = time - start
 
       // is this over complicated? might be a simpler way to do this
-      const playerTime = Math.floor( elapsed / playerAnimationTime )
+      const playerTime = ~~( elapsed / playerAnimationTime )
       const playerFrame = playerTime % 2 ? 0 : 1
 
       // blank the canvas
@@ -208,11 +220,7 @@ const s = () => {
         }
       }
 
-      // UI placeholder, use this space later for game UI
-      drawText( `Offline       ${ timeStr() }`, 0.5, 0.5 )
-      for( let i = 1; i < 10; i++ ){
-        drawText( i + '', 0.5, ( i * 2 ) + 0.5 )
-      }
+      drawText( `MOMOS Down    ${ timeStr() }`, 0.5, 0.5 )
 
       requestAnimationFrame( draw )
     }

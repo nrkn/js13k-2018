@@ -1,4 +1,6 @@
-# js13k-2018
+# MOMOS Down
+
+A game for [js13kGames 2018 **Offline**](http://2018.js13kgames.com/)
 
 ## Story
 
