@@ -21,8 +21,8 @@ const s = () => {
   const center = ~~( viewSize / 2 )
   const mapSize = 50
   // center the map on this tile
-  const vX = 25
-  const vY = 25
+  let vX = 25
+  let vY = 25
   // player settings
   const playerAnimationTime = 500
   let facing = 0
@@ -65,6 +65,53 @@ const s = () => {
     }
 
     const map = generateMap()
+
+    /*
+      needed so we can have multiple input methods, eg touch controls, can be
+      rolled into the key handler if we don't use other inputs
+    */
+    const move = ( x, y ) => {
+      x = vX + x
+      y = vY + y
+
+      const i = ( y * mapSize ) + x
+      const tileIndex = map[ i ]
+
+      /*
+        blocks if out of bounds or a tree (the last tile) - need to be able to
+        define blocking tiles but can do that later
+      */
+      if( x < 0 || y < 0 || x >= mapSize || y >= mapSize || tileIndex === tileCount - 1 ) return
+
+      vX = x
+      vY = y
+    }
+
+    document.onkeypress = e => {
+      let x = 0
+      let y = 0
+
+      // left, change the facing as well
+      if( e.keyCode === 37 ){
+        facing = 1
+        x = -1
+      }
+      // right, change the facing as well
+      if( e.keyCode === 39 ){
+        facing = 0
+        x = 1
+      }
+      // up
+      if( e.keyCode === 38 ){
+        y = -1
+      }
+      // down
+      if( e.keyCode === 40 ){
+        y = 1
+      }
+
+      move( x, y )
+    }
 
     let start
     let elapsed

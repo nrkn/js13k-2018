@@ -18,4 +18,9 @@
   - Size: 2287, Remaining: 11025
 - ~~player animates~~
   - Size: 2325, Remaining: 10987
-- player can move around with arrows or tap, trees and edge of map block
+- ~~player can move around with arrows or tap, trees and edge of map block~~
+  - Only implemented keyboard - mouse/touch controls is a luxury we can add
+    later
+  - Size: 2456, Remaining: 10856
+
+Engine prototype done! Now story, more tiles, game code etc...
