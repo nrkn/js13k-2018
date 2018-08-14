@@ -26,7 +26,7 @@ html = html.replace( /\n/g, '' ).replace( /\r/g, '' )
 html = html.replace( '<script src=main.js></script>', `<script>${ code }</script>` )
 html = html.replace( '<link rel=stylesheet href=main.css>', `<style>${ css }</style>` )
 
-const files = [ 'font.gif', 'tiles.gif' ]
+const files = [ 'font.gif', 'tiles.gif', 'player.gif' ]
 
 const zip = new yazl.ZipFile()
 

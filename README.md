@@ -6,7 +6,7 @@
 - ~~draw font to canvas~~
 - ~~setup to minify~~
 - ~~create art - some grass and tree tiles~~
-- create art - a player sprite, two(?) frames animation
+- ~~create art - a player sprite, two(?) frames animation~~
 - generate a map with grass placed randomly, some trees
 - draw map
 - draw player
