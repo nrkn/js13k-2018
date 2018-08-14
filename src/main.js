@@ -88,6 +88,13 @@ const s = () => {
           const dHeight = tileSize
 
           ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+
+          if( x === center && y === center ){
+            // when we animate and add facing this will change
+            const sx = 0
+
+            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          }
         }
       }
 
