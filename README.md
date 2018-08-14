@@ -2,32 +2,63 @@
 
 ## Story
 
-Our hero starts in a little house
+### Who is the player?
 
-The house has a bed, shower, food machine and computer terminal
+The player is some kind of ranger
+
+### Where is here
+
+An island
+
+### Why are they here?
+
+They were sent to investigate the disappearance of the previous ranger
+
+The previous ranger was killed by monsters - a monster outbreak is happening on
+the island
+
+They need to find out what happened and return
+
+Their boat gets sunk and the computer in the ranger hut is *offline*
+
+They need to scavenge/craft the components needed to get the computer working
+to find out what happened and send a message for help
+
+### Gameplay
+
+Player arrives on a boat - while en route they get their brief:
+
+'We lost contact with RANGER - investigate'
+
+When they arrive, monsters attack and sink boat - player can only just fend off
+monsters and get to hut and safety
+
+On way to hut they find RANGER - dead
+
+There is a house for the ranger on the island
+
+The house has a bed, shower, replicator and computer terminal
 
 The player can bump the computer to interact with it
 
-It serves to explain the story to the player and control the food machine
+It serves to explain the story to the player and control the replicator
 
-The food machine works like a star trek replicator
-
-The computer is broken and some of its functions are *offline* - the player will
+The computer is broken and most of its functions are *offline* - the player will
 need to find several components to get it fully working
 
 The player needs food to survive - with the computer not working properly the
-food machine is running in emergency backup mode and can only provide enough
+replicator is running in emergency backup mode and can only provide enough
 food for the player to travel a short distance from their home before they need
 to go home and get food again
 
 Their first task is to explore the area around their home and find a component
-to fix the computer, so they can get the food machine running properly and
+to fix the computer, so they can get the replicator running properly and
 get enough food to explore further afield, and find more of the components the
 computer needs
 
-- who is the player?
-- why are they here?
-- what do they want, once the immediate problems with computer are solved?
+They gradually unlock messages etc on computer from RANGER explaining what
+happened, ability to craft better items, ability to finally send a message for
+help
 
 ## Engine
 
@@ -52,10 +83,10 @@ computer needs
   - Only implemented keyboard - mouse/touch controls is a luxury we can add
     later
   - Size: 2456, Remaining: 10856
-- create art - player's house
+- create art - water tiles, beach tiles
 - proper tile collision code
 - create art - more tiles - rocks, flowers, more trees
-- bump interactions - food machine, computer
+- create art - player's house
+- bump interactions
+- computer interface
 - food mechanic
-
-Engine prototype done! Now story, more tiles, game code etc...
