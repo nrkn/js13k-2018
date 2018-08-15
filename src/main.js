@@ -16,6 +16,7 @@ const s = () => {
 
   // geometry etc
   const tileSize = 16
+  const tileCount = 9
   const viewSize = 9
   const canvasSize = viewSize + 1
   const center = ~~( viewSize / 2 )
@@ -65,9 +66,7 @@ const s = () => {
 
   let message = messages[ 0 ]
 
-  loadImages( 'f.gif', 't.gif', 'p.gif', 'w.gif' ).then( ( [ font, tiles, player, water ] ) => {
-    const tileCount = tiles.width / tileSize
-
+  loadImages( 'f.gif', 't.gif', 'p.gif' ).then( ( [ font, tiles, player ] ) => {
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
     const drawText = ( str = '', tx = 0, ty = 0 ) => {
       for( let i = 0; i < str.length; i++ ){
@@ -94,7 +93,7 @@ const s = () => {
         const row = []
         for( let x = 0; x < mapSize; x++ ){
           // always start on a blank tile, otherwise pick a tile randomly
-          const tileIndex = x === vX && y === vY ? 0 : ~~( Math.random() * tileCount )
+          const tileIndex = x === vX && y === vY ? 2 : ~~( Math.random() * 7 ) + 2
 
           row.push( tileIndex )
         }
@@ -105,6 +104,9 @@ const s = () => {
     }
 
     const map = generateMap()
+
+    // defines blocking tiles
+    const blocks = i => i < 2 || i > 7
 
     /*
       needed so we can have multiple input methods, eg touch controls, can be
@@ -120,7 +122,7 @@ const s = () => {
         blocks if out of bounds or a tree (the last tile) - need to be able to
         define blocking tiles but can do that later
       */
-      if( x < 0 || y < 0 || x >= mapSize || y >= mapSize || tileIndex === tileCount - 1 ) return
+      if( x < 0 || y < 0 || x >= mapSize || y >= mapSize || blocks( tileIndex ) ) return
 
       vX = x
       vY = y
@@ -206,7 +208,7 @@ const s = () => {
           if( mapX < 0 || mapY < 0 || mapX >= mapSize || mapY >= mapSize ){
             const sx = playerFrame * tileSize
 
-            ctx.drawImage( water, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+            ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           } else {
             const tileIndex = map[ mapY ][ mapX ]
             const sx = tileIndex * tileSize
