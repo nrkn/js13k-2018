@@ -1,10 +1,9 @@
+'use strict'
 /*
   close over to make uglify minify properly as couldn't seem to find the option
   to minify top level - easy enough to remove this
 */
 const s = () => {
-  'use strict'
-
   const ctx = c.getContext( '2d' )
 
   const loadImage = path => new Promise( resolve => {
@@ -66,7 +65,7 @@ const s = () => {
 
   let message = messages[ 0 ]
 
-  loadImages( 'f.gif', 't.gif', 'p.gif' ).then( ( [ font, tiles, player ] ) => {
+  loadImages( 'f.gif', 't.gif', 'p.gif', 'w.gif' ).then( ( [ font, tiles, player, water ] ) => {
     const tileCount = tiles.width / tileSize
 
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
@@ -89,18 +88,20 @@ const s = () => {
     }
 
     const generateMap = () => {
-      const tiles = []
+      const rows = []
 
       for( let y = 0; y < mapSize; y++ ){
+        const row = []
         for( let x = 0; x < mapSize; x++ ){
           // always start on a blank tile, otherwise pick a tile randomly
           const tileIndex = x === vX && y === vY ? 0 : ~~( Math.random() * tileCount )
 
-          tiles.push( tileIndex )
+          row.push( tileIndex )
         }
+        rows.push( row )
       }
 
-      return tiles
+      return rows
     }
 
     const map = generateMap()
@@ -113,8 +114,7 @@ const s = () => {
       x = vX + x
       y = vY + y
 
-      const i = ( y * mapSize ) + x
-      const tileIndex = map[ i ]
+      const tileIndex = map[ y ][ x ]
 
       /*
         blocks if out of bounds or a tree (the last tile) - need to be able to
@@ -194,13 +194,6 @@ const s = () => {
           const mapX = ( vX - center ) + x
           const mapY = ( vY - center ) + y
 
-          // bounds check
-          if( mapX < 0 || mapY < 0 || mapX >= mapSize || mapY >= mapSize ) continue
-
-          const i = ( mapY * mapSize ) + mapX
-          const tileIndex = map[ i ]
-
-          const sx = tileIndex * tileSize
           const sy = 0
           const sWidth = tileSize
           const sHeight = tileSize
@@ -209,7 +202,17 @@ const s = () => {
           const dWidth = tileSize
           const dHeight = tileSize
 
-          ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          // bounds check
+          if( mapX < 0 || mapY < 0 || mapX >= mapSize || mapY >= mapSize ){
+            const sx = playerFrame * tileSize
+
+            ctx.drawImage( water, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          } else {
+            const tileIndex = map[ mapY ][ mapX ]
+            const sx = tileIndex * tileSize
+
+            ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          }
 
           if( x === center && y === center ){
             // when we add movement we'll toggle facing, this should work

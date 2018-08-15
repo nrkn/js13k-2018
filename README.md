@@ -97,7 +97,9 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 2566, Remaining: 10746
 - ~~implement day/night cycle~~
   - Size: 2660, Remaining: 10652
-- create art - water tiles, beach tiles
+- ~~create art - water tiles~~
+  - Size: 2820, Remaining: 10492
+- create art - beach tiles
 - proper tile collision code
 - create art - more tiles - rocks, flowers, more trees
 - create art - player's house

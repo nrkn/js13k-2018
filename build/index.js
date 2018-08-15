@@ -11,9 +11,11 @@ const { minify } = uglify
 
 const js = fs.readFileSync( './src/main.js', 'utf8' )
 const min = minify( js, uglifyOptions )
-const { error, code } = min
+let { error, code } = min
 
 if( error ) return console.error( error.message )
+
+code = code.replace( `"use strict";const s=()=>{`, '' ).replace( `};s();`, '' ).replace( /\"/g, '`' )
 
 let css = fs.readFileSync( './src/main.css', 'utf8' )
 
@@ -26,7 +28,7 @@ html = html.replace( /\n/g, '' ).replace( /\r/g, '' )
 html = html.replace( '<script src=main.js></script>', `<script>${ code }</script>` )
 html = html.replace( '<link rel=stylesheet href=main.css>', `<style>${ css }</style>` )
 
-const files = [ 'f.gif', 't.gif', 'p.gif' ]
+const files = [ 'f.gif', 't.gif', 'p.gif', 'w.gif' ]
 
 const zip = new yazl.ZipFile()
 
