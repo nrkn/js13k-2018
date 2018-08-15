@@ -70,21 +70,21 @@ const s = () => {
     const tileCount = tiles.width / tileSize
 
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
-    const drawText = ( str = '', x = 0, y = 0 ) => {
+    const drawText = ( str = '', tx = 0, ty = 0 ) => {
       for( let i = 0; i < str.length; i++ ){
         const c = str.charCodeAt( i ) - 32
         const sx = c * 8
         const sy = 0
         const sWidth = 8
         const sHeight = 8
-        const dx = x * 8
-        const dy = y * 8
+        const dx = tx * 8
+        const dy = ty * 8
         const dWidth = 8
         const dHeight = 8
 
         ctx.drawImage( font, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
 
-        x++
+        tx++
       }
     }
 
