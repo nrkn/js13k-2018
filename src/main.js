@@ -14,6 +14,11 @@ const s = () => {
 
   const loadImages = ( ...paths ) => Promise.all( paths.map( loadImage ) )
 
+  const pick = arr => arr[ ~~( Math.random() * arr.length ) ]
+
+  // defines blocking tiles
+  const blocks = i => i < 2 || i > 7
+
   // geometry etc
   const tileSize = 16
   const tileCount = 9
@@ -21,17 +26,19 @@ const s = () => {
   const canvasSize = viewSize + 1
   const center = ~~( viewSize / 2 )
   // map settings
-  const mapSize = 50
+  const mapSize = 128
   // center the map on this tile - typically the player location
-  let vX = 25
-  let vY = 25
+  let vX = ~~( mapSize / 2 )
+  let vY = ~~( mapSize / 2 )
   // player settings
   const playerAnimationTime = 500
   let facing = 0
-  // time
-  let h = 16
-  let m = 30
 
+  const inBounds = ( x, y ) => x >= 0 && x <= mapSize - 1 && y >= 0 && y <= mapSize - 1
+
+  // time
+  let h = 6
+  let m = 30
   const incTime = () => {
     m++
     if( m === 60 ){
@@ -66,6 +73,69 @@ const s = () => {
 
   let message = messages[ 0 ]
 
+  const island = () => {
+    const len = mapSize * mapSize
+    const tileCount = ~~( 0.6 * len )
+    const tiles = [ [ vX, vY ] ]
+    const rows = []
+
+    for( let y = 0; y < mapSize; y++ ){
+      const row = []
+      for( let x = 0; x < mapSize; x++ ){
+        row.push( x === vX && y === vY ? 2 : 0 )
+      }
+      rows.push( row )
+    }
+
+    while( tiles.length < tileCount ){
+      const [ cx, cy ] = pick( tiles )
+      // check if smaller to extract this to fn
+      const neighbours = ([
+        [ cx - 1, cy ],
+        [ cx + 1, cy ],
+        [ cx, cy - 1 ],
+        [ cx, cy + 1 ]
+      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+      if( neighbours.length ){
+        const [ nx, ny ] = pick( neighbours )
+        tiles.push( [ nx, ny ] )
+        rows[ ny ][ nx ] = ~~( Math.random() * 7 ) + 2
+      }
+    }
+
+    // make border tiles sand and remove water with no neighbours
+    for( let y = 0; y < mapSize; y++ ){
+      for( let x = 0; x < mapSize; x++ ){
+        if( rows[ y ][ x ] ){
+          const neighbours = ([
+            [ x - 1, y ],
+            [ x + 1, y ],
+            [ x, y - 1 ],
+            [ x, y + 1 ]
+          ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+          if( neighbours.length ){
+            // replace with sand tile when we have one
+            rows[ y ][ x ] = 2
+          }
+        } else {
+          const neighbours = ([
+            [ x - 1, y ],
+            [ x + 1, y ],
+            [ x, y - 1 ],
+            [ x, y + 1 ]
+          ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+          //no water neighbours
+          if( !neighbours.length ){
+            // replace with sand tile when we have one
+            rows[ y ][ x ] = 2
+          }
+        }
+      }
+    }
+
+    return rows
+  }
+
   loadImages( 'f.gif', 't.gif', 'p.gif' ).then( ( [ font, tiles, player ] ) => {
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
     const drawText = ( str = '', tx = 0, ty = 0 ) => {
@@ -86,27 +156,7 @@ const s = () => {
       }
     }
 
-    const generateMap = () => {
-      const rows = []
-
-      for( let y = 0; y < mapSize; y++ ){
-        const row = []
-        for( let x = 0; x < mapSize; x++ ){
-          // always start on a blank tile, otherwise pick a tile randomly
-          const tileIndex = x === vX && y === vY ? 2 : ~~( Math.random() * 7 ) + 2
-
-          row.push( tileIndex )
-        }
-        rows.push( row )
-      }
-
-      return rows
-    }
-
-    const map = generateMap()
-
-    // defines blocking tiles
-    const blocks = i => i < 2 || i > 7
+    const map = island()
 
     /*
       needed so we can have multiple input methods, eg touch controls, can be
@@ -116,13 +166,11 @@ const s = () => {
       x = vX + x
       y = vY + y
 
-      const tileIndex = map[ y ][ x ]
-
       /*
         blocks if out of bounds or a tree (the last tile) - need to be able to
         define blocking tiles but can do that later
       */
-      if( x < 0 || y < 0 || x >= mapSize || y >= mapSize || blocks( tileIndex ) ) return
+      if( !inBounds( x, y ) || blocks( map[ y ][ x ] ) ) return
 
       vX = x
       vY = y
@@ -204,21 +252,20 @@ const s = () => {
           const dWidth = tileSize
           const dHeight = tileSize
 
+          let sx = playerFrame * tileSize
+
           // bounds check
-          if( mapX < 0 || mapY < 0 || mapX >= mapSize || mapY >= mapSize ){
-            const sx = playerFrame * tileSize
-
-            ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
-          } else {
+          if( inBounds( mapX, mapY ) ){
             const tileIndex = map[ mapY ][ mapX ]
-            const sx = tileIndex * tileSize
 
-            ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+            if( tileIndex ) sx = tileIndex * tileSize
           }
+
+          ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
 
           if( x === center && y === center ){
             // when we add movement we'll toggle facing, this should work
-            const sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
+            sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
 
             ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           }
