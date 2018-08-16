@@ -112,15 +112,16 @@ Player is safe in hut, can sleep to pass the night away
 - ~~computer interface~~
   - Size: 4010, Remaining: 9302
 - create art - food icon
-- food mechanic
 - create art - health icon
+- create art - skeleton
+- food mechanic
 - health mechanic
 - create art - boat
 - create art - dock
 - create art - path
 - create art - hut
-- create art - skeleton
-- create art - more tiles - rocks, flowers, more trees
 - create art - inside hut
 - create art - monsters
 - monster mechanics
+- scripted intro events
+- create art - more tiles - rocks, flowers, more trees
