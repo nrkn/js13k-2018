@@ -105,6 +105,8 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 2853, Remaining: 10459
 - ~~color modes - green and amber~~
   - Size: 2955, Remaining: 10357
+- ~~splash screen~~
+  - Size: 3672, Remaining: 9640
 - create art - boat
 - create art - dock
 - create art - path

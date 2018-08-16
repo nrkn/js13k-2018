@@ -37,8 +37,8 @@ const s = () => {
   const inBounds = ( x, y ) => x >= 0 && x <= mapSize - 1 && y >= 0 && y <= mapSize - 1
 
   // time
-  let h = 6
-  let m = 30
+  let h = 17
+  let m = 55
   const incTime = () => {
     m++
     if( m === 60 ){
@@ -63,15 +63,15 @@ const s = () => {
   const messages = [
     [
       'Lost contact with',
-      'RANGER. Take boat,',
-      'find out what ',
-      'happened'
+      'RANGER. Take boat',
+      'and investigate.'
     ],
     [ 'Sunrise' ],
     [ 'Sunset' ],
+    [ 's.png' ]
   ]
 
-  let message = messages[ 0 ]
+  let message = messages[ 3 ]
 
   const island = () => {
     const len = mapSize * mapSize
@@ -127,7 +127,7 @@ const s = () => {
     return rows
   }
 
-  loadImages( 'f.gif', 't.gif', 'p.gif' ).then( ( [ font, tiles, player ] ) => {
+  loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( ( [ font, tiles, player, splash ] ) => {
     const map = island()
 
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
@@ -173,7 +173,9 @@ const s = () => {
       // if showing a message
       if( message ){
         // clear the message if one of these keys
-        if( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ) message = 0
+        if( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ){
+          message = message[ 0 ] === 's.png' ? messages[ 0 ] : 0
+        }
         c.classList.remove( 'g' )
         c.classList.remove( 'a' )
 
@@ -222,13 +224,20 @@ const s = () => {
       c.width = c.height = tileSize * canvasSize
 
       if( message ){
-        c.classList.add( 'g' )
+        if( message[ 0 ] === 's.png' ){
+          c.classList.add( 'a' )
+          ctx.drawImage( splash, 0, 0 )
+        } else {
+          c.classList.add( 'g' )
+          const yOff = ~~( ( canvasSize * 2 - message.length ) / 2 )
 
-        for( let y = 0; y < message.length; y++ ){
-          const line = message[ y ]
-          const tX = 1
-          const tY = 1 + y
-          drawText( line, tX, tY )
+          for( let y = 0; y < message.length; y++ ){
+            const line = message[ y ]
+            const xOff = ~~( ( canvasSize * 2 - line.length ) / 2 )
+            const tX = xOff
+            const tY = y + yOff
+            drawText( line, tX, tY )
+          }
         }
 
         requestAnimationFrame( draw )
