@@ -61,14 +61,24 @@ const s = () => {
   const timeStr = () => `${ h < 10 ? '0' : '' }${ h }:${ m < 10 ? '0' : '' }${ m }`
 
   const messages = [
+    // 0
     [
       'Lost contact with',
       'RANGER. Take boat',
       'and investigate.'
     ],
+
+    // 1
     [ 'Sunrise' ],
+
+    // 2
     [ 'Sunset' ],
-    [ 's.png' ]
+
+    // 3
+    [ 's.png' ],
+
+    // 4
+    [ 'Tree' ]
   ]
 
   let message = messages[ 3 ]
@@ -155,9 +165,15 @@ const s = () => {
       needed so we can have multiple input methods, eg touch controls, can be
       rolled into the key handler if we don't use other inputs
     */
+    const treeIndex = 8
     const move = ( x, y ) => {
       x = vX + x
       y = vY + y
+
+      if( map[ y ][ x ] === treeIndex ){
+        message = messages[ 4 ]
+        return
+      }
 
       /*
         blocks if out of bounds or a tree (the last tile) - need to be able to
