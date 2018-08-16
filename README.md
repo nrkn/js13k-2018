@@ -109,6 +109,8 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 3672, Remaining: 9640
 - ~~bump interactions~~
   - Size: 3688, Remaining: 9624
+- ~~computer interface~~
+  - Size: 4016, Remaining: 9296
 - create art - food icon
 - food mechanic
 - create art - health icon
@@ -121,4 +123,4 @@ Player is safe in hut, can sleep to pass the night away
 - create art - monsters
 - create art - more tiles - rocks, flowers, more trees
 - create art - inside hut
-- computer interface
+

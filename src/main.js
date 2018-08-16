@@ -80,7 +80,6 @@ const s = () => {
     // 4
     [ 'Tree' ]
   ]
-
   let message = messages[ 3 ]
 
   const island = () => {
@@ -137,6 +136,55 @@ const s = () => {
     return rows
   }
 
+  let selected = 0
+  const computerScreens = [
+    [
+      [
+        'RSOS v3.27',
+        '',
+        'ERROR:',
+        ' SYSTEM OFFLINE',
+        '',
+        'EMERGENCY OPS:',
+        ''
+      ],
+      [
+        [ 'DIAGNOSTICS', 1 ],
+        [ 'SYNTHESIZE', 2 ]
+      ]
+    ],
+    [
+      [
+        'DIAGNOSTICS',
+        '',
+        'MAIN SYSTEM:',
+        ' OFFLINE',
+        '',
+        ' PROBLEM:',
+        '  6 CAPS BLOWN',
+        '',
+        'SYNTHESIZE:',
+        ' ONLINE'
+      ],
+      []
+    ],
+    [
+      [
+        'SYNTHESIZE',
+        '',
+        'SYNTHDB:',
+        ' OFFLINE',
+        '',
+        'EMERGENCY OPS:',
+        ''
+      ],
+      [
+        [ 'BASIC RATIONS', 1 ]
+      ]
+    ]
+  ]
+  let screens = [ computerScreens[ 0 ] ]
+
   loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( ( [ font, tiles, player, splash ] ) => {
     const map = island()
 
@@ -186,6 +234,33 @@ const s = () => {
     }
 
     document.onkeyup = e => {
+      if( screens.length ){
+        const [ text, options ] = screens[ screens.length - 1 ]
+        // pop the screen if esc
+        if( e.keyCode === 27 ){
+          screens.pop()
+          if( !screens.length ){
+            c.classList.remove( 'a' )
+          }
+        }
+        // push new screen if enter
+        if( e.keyCode === 13 && options[ selected ] ){
+          const [ name, pageIndex ] = options[ selected ]
+          screens.push( computerScreens[ pageIndex ] )
+          selected = 0
+        }
+        // up
+        if( e.keyCode === 87 || e.keyCode === 38 ){
+          if( selected > 0 ) selected--
+        }
+        // down
+        if( e.keyCode === 83 || e.keyCode === 40 ){
+          if( selected < options.length - 1 ) selected++
+        }
+
+        return
+      }
+
       // if showing a message
       if( message ){
         // clear the message if one of these keys
@@ -238,6 +313,26 @@ const s = () => {
 
       // blank the canvas
       c.width = c.height = tileSize * canvasSize
+
+      if( screens.length ){
+        c.classList.add( 'a' )
+
+        const [ text, options ] = screens[ screens.length - 1 ]
+
+        let y
+        for( y = 0; y < text.length; y++ ){
+          drawText( text[ y ], 1, y + 1 )
+        }
+        for( let s = 0; s < options.length; s++ ){
+          drawText(
+            `${ s === selected ? '> ': '  ' }${ options[ s ][ 0 ] }`, 1, y + s + 2
+          )
+        }
+
+        requestAnimationFrame( draw )
+
+        return
+      }
 
       if( message ){
         if( message[ 0 ] === 's.png' ){
