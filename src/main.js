@@ -183,7 +183,7 @@ const s = () => {
       ]
     ]
   ]
-  let screens = [ computerScreens[ 0 ] ]
+  let screens = []
 
   loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( ( [ font, tiles, player, splash ] ) => {
     const map = island()
@@ -263,12 +263,18 @@ const s = () => {
 
       // if showing a message
       if( message ){
-        // clear the message if one of these keys
-        if( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ){
-          message = message[ 0 ] === 's.png' ? messages[ 0 ] : 0
-        }
         c.classList.remove( 'g' )
         c.classList.remove( 'a' )
+
+        // clear the message if one of these keys
+        if( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ){
+          if( message[ 0 ] === 's.png' ){
+            screens.push( computerScreens[ 0 ] )
+            message = messages[ 0 ]
+          } else {
+            message = 0
+          }
+        }
 
         return
       }
