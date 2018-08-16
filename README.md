@@ -120,7 +120,7 @@ Player is safe in hut, can sleep to pass the night away
 - create art - path
 - create art - hut
 - create art - skeleton
-- create art - monsters
 - create art - more tiles - rocks, flowers, more trees
 - create art - inside hut
-
+- create art - monsters
+- monster mechanics
