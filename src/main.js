@@ -6,19 +6,6 @@
 const s = () => {
   const ctx = c.getContext( '2d' )
 
-  const loadImage = path => new Promise( resolve => {
-    const img = new Image()
-    img.onload = () => resolve( img )
-    img.src = path
-  })
-
-  const loadImages = ( ...paths ) => Promise.all( paths.map( loadImage ) )
-
-  const pick = arr => arr[ ~~( Math.random() * arr.length ) ]
-
-  // defines blocking tiles
-  const blocks = i => i < 2 || i > 7
-
   // geometry etc
   const tileSize = 16
   const tileCount = 9
@@ -33,32 +20,6 @@ const s = () => {
   // player settings
   const playerAnimationTime = 500
   let facing = 0
-
-  const inBounds = ( x, y ) => x >= 0 && x <= mapSize - 1 && y >= 0 && y <= mapSize - 1
-
-  // time
-  let h = 17
-  let m = 55
-  const incTime = () => {
-    m++
-    if( m === 60 ){
-      m = 0
-      h++
-      if( h === 6 ){
-        c.classList.remove( 'i' )
-        message = messages[ 1 ]
-      }
-      if( h === 18 ){
-        c.classList.add( 'i' )
-        message = messages[ 2 ]
-      }
-    }
-    if( h === 24 ){
-      h = 0
-    }
-  }
-
-  const timeStr = () => `${ h < 10 ? '0' : '' }${ h }:${ m < 10 ? '0' : '' }${ m }`
 
   const messages = [
     // 0
@@ -81,6 +42,98 @@ const s = () => {
     [ 'Tree' ]
   ]
   let message = messages[ 3 ]
+
+  let selected = 0
+  const computerScreens = [
+    [
+      [
+        'RSOS v3.27',
+        '',
+        'ERROR:',
+        ' SYSTEM OFFLINE',
+        '',
+        'EMERGENCY OPS:',
+        ''
+      ],
+      [
+        [ 'DIAGNOSTICS', 1 ],
+        [ 'SYNTHESIZE', 2 ]
+      ]
+    ],
+    [
+      [
+        'DIAGNOSTICS',
+        '',
+        'MAIN SYSTEM:',
+        ' OFFLINE',
+        '',
+        ' PROBLEM:',
+        '  6 CAPS BLOWN',
+        '',
+        'SYNTHESIZE:',
+        ' ONLINE'
+      ],
+      []
+    ],
+    [
+      [
+        'SYNTHESIZE',
+        '',
+        'SYNTHDB:',
+        ' OFFLINE',
+        '',
+        'EMERGENCY OPS:',
+        ''
+      ],
+      [
+        [ 'BASIC RATIONS', 1 ]
+      ]
+    ]
+  ]
+  let screens = []
+
+  // named indices
+  const treeIndex = 8
+
+  // time
+  let h = 17
+  let m = 55
+
+  const incTime = () => {
+    m++
+    if( m === 60 ){
+      m = 0
+      h++
+      if( h === 6 ){
+        c.classList.remove( 'i' )
+        message = messages[ 1 ]
+      }
+      if( h === 18 ){
+        c.classList.add( 'i' )
+        message = messages[ 2 ]
+      }
+    }
+    if( h === 24 ){
+      h = 0
+    }
+  }
+
+  const timeStr = () => `${ h < 10 ? '0' : '' }${ h }:${ m < 10 ? '0' : '' }${ m }`
+
+  const loadImage = path => new Promise( resolve => {
+    const img = new Image()
+    img.onload = () => resolve( img )
+    img.src = path
+  })
+
+  const loadImages = ( ...paths ) => Promise.all( paths.map( loadImage ) )
+
+  const pick = arr => arr[ ~~( Math.random() * arr.length ) ]
+
+  // defines blocking tiles
+  const blocks = i => i < 2 || i > 7
+
+  const inBounds = ( x, y ) => x >= 0 && x <= mapSize - 1 && y >= 0 && y <= mapSize - 1
 
   const island = () => {
     const len = mapSize * mapSize
@@ -136,55 +189,6 @@ const s = () => {
     return rows
   }
 
-  let selected = 0
-  const computerScreens = [
-    [
-      [
-        'RSOS v3.27',
-        '',
-        'ERROR:',
-        ' SYSTEM OFFLINE',
-        '',
-        'EMERGENCY OPS:',
-        ''
-      ],
-      [
-        [ 'DIAGNOSTICS', 1 ],
-        [ 'SYNTHESIZE', 2 ]
-      ]
-    ],
-    [
-      [
-        'DIAGNOSTICS',
-        '',
-        'MAIN SYSTEM:',
-        ' OFFLINE',
-        '',
-        ' PROBLEM:',
-        '  6 CAPS BLOWN',
-        '',
-        'SYNTHESIZE:',
-        ' ONLINE'
-      ],
-      []
-    ],
-    [
-      [
-        'SYNTHESIZE',
-        '',
-        'SYNTHDB:',
-        ' OFFLINE',
-        '',
-        'EMERGENCY OPS:',
-        ''
-      ],
-      [
-        [ 'BASIC RATIONS', 1 ]
-      ]
-    ]
-  ]
-  let screens = []
-
   loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( ( [ font, tiles, player, splash ] ) => {
     const map = island()
 
@@ -213,7 +217,6 @@ const s = () => {
       needed so we can have multiple input methods, eg touch controls, can be
       rolled into the key handler if we don't use other inputs
     */
-    const treeIndex = 8
     const move = ( x, y ) => {
       x = vX + x
       y = vY + y
@@ -231,6 +234,100 @@ const s = () => {
 
       vX = x
       vY = y
+    }
+
+    let start
+    let elapsed
+    const draw = time => {
+      // set up start when we first get a proper tick time
+      if( time && !start ) start = time
+
+      elapsed = time - start
+
+      // is this over complicated? might be a simpler way to do this
+      const playerTime = ~~( elapsed / playerAnimationTime )
+      const playerFrame = playerTime % 2 ? 0 : 1
+
+      // blank the canvas
+      c.width = c.height = tileSize * canvasSize
+
+      if( screens.length ){
+        c.classList.add( 'a' )
+
+        const [ text, options ] = screens[ screens.length - 1 ]
+
+        let y
+        for( y = 0; y < text.length; y++ ){
+          drawText( text[ y ], 1, y + 1 )
+        }
+        for( let s = 0; s < options.length; s++ ){
+          drawText(
+            `${ s === selected ? '> ': '  ' }${ options[ s ][ 0 ] }`, 1, y + s + 2
+          )
+        }
+
+        requestAnimationFrame( draw )
+
+        return
+      }
+
+      if( message ){
+        c.classList.add( 'g' )
+        if( message[ 0 ] === 's.png' ){
+          ctx.drawImage( splash, 0, 0 )
+        } else {
+          const yOff = ~~( ( canvasSize * 2 - message.length ) / 2 )
+
+          for( let y = 0; y < message.length; y++ ){
+            const line = message[ y ]
+            const xOff = ~~( ( canvasSize * 2 - line.length ) / 2 )
+            const tX = xOff
+            const tY = y + yOff
+            drawText( line, tX, tY )
+          }
+        }
+
+        requestAnimationFrame( draw )
+
+        return
+      }
+
+      for( let y = 0; y < viewSize; y++ ){
+        for( let x = 0; x < viewSize; x++ ){
+          const mapX = ( vX - center ) + x
+          const mapY = ( vY - center ) + y
+
+          const sy = 0
+          const sWidth = tileSize
+          const sHeight = tileSize
+          const dx = ( x + 1 ) * tileSize
+          const dy = ( y + 1 ) * tileSize
+          const dWidth = tileSize
+          const dHeight = tileSize
+
+          let sx = playerFrame * tileSize
+
+          // bounds check
+          if( inBounds( mapX, mapY ) ){
+            const tileIndex = map[ mapY ][ mapX ]
+
+            if( tileIndex ) sx = tileIndex * tileSize
+          }
+
+          ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+
+          if( x === center && y === center ){
+            // when we add movement we'll toggle facing, this should work
+            sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
+
+            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          }
+        }
+      }
+
+      drawText( `RANGER DOWN   ${ timeStr() }`, 0.5, 0.5 )
+
+      requestAnimationFrame( draw )
     }
 
     document.onkeyup = e => {
@@ -303,101 +400,6 @@ const s = () => {
 
       incTime()
       move( x, y )
-    }
-
-    let start
-    let elapsed
-    const draw = time => {
-      // set up start when we first get a proper tick time
-      if( time && !start ) start = time
-
-      elapsed = time - start
-
-      // is this over complicated? might be a simpler way to do this
-      const playerTime = ~~( elapsed / playerAnimationTime )
-      const playerFrame = playerTime % 2 ? 0 : 1
-
-      // blank the canvas
-      c.width = c.height = tileSize * canvasSize
-
-      if( screens.length ){
-        c.classList.add( 'a' )
-
-        const [ text, options ] = screens[ screens.length - 1 ]
-
-        let y
-        for( y = 0; y < text.length; y++ ){
-          drawText( text[ y ], 1, y + 1 )
-        }
-        for( let s = 0; s < options.length; s++ ){
-          drawText(
-            `${ s === selected ? '> ': '  ' }${ options[ s ][ 0 ] }`, 1, y + s + 2
-          )
-        }
-
-        requestAnimationFrame( draw )
-
-        return
-      }
-
-      if( message ){
-        if( message[ 0 ] === 's.png' ){
-          c.classList.add( 'a' )
-          ctx.drawImage( splash, 0, 0 )
-        } else {
-          c.classList.add( 'g' )
-          const yOff = ~~( ( canvasSize * 2 - message.length ) / 2 )
-
-          for( let y = 0; y < message.length; y++ ){
-            const line = message[ y ]
-            const xOff = ~~( ( canvasSize * 2 - line.length ) / 2 )
-            const tX = xOff
-            const tY = y + yOff
-            drawText( line, tX, tY )
-          }
-        }
-
-        requestAnimationFrame( draw )
-
-        return
-      }
-
-      for( let y = 0; y < viewSize; y++ ){
-        for( let x = 0; x < viewSize; x++ ){
-          const mapX = ( vX - center ) + x
-          const mapY = ( vY - center ) + y
-
-          const sy = 0
-          const sWidth = tileSize
-          const sHeight = tileSize
-          const dx = ( x + 1 ) * tileSize
-          const dy = ( y + 1 ) * tileSize
-          const dWidth = tileSize
-          const dHeight = tileSize
-
-          let sx = playerFrame * tileSize
-
-          // bounds check
-          if( inBounds( mapX, mapY ) ){
-            const tileIndex = map[ mapY ][ mapX ]
-
-            if( tileIndex ) sx = tileIndex * tileSize
-          }
-
-          ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
-
-          if( x === center && y === center ){
-            // when we add movement we'll toggle facing, this should work
-            sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
-
-            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
-          }
-        }
-      }
-
-      drawText( `RANGER DOWN   ${ timeStr() }`, 0.5, 0.5 )
-
-      requestAnimationFrame( draw )
     }
 
     draw()

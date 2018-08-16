@@ -9,13 +9,13 @@ const uglifyOptions = require( './uglify-options.json' )
 
 const { minify } = uglify
 
-const js = fs.readFileSync( './src/main.js', 'utf8' )
+const js = fs.readFileSync( './src/main.js', 'utf8' ).replace( /const/g, 'let' )
 const min = minify( js, uglifyOptions )
 let { error, code } = min
 
 if( error ) return console.error( error.message )
 
-code = code.replace( `"use strict";const s=()=>{`, '' ).replace( `};s();`, '' ).replace( /\"/g, '`' ).replace( /const/g, 'let' )
+code = code.replace( `"use strict";const s=()=>{`, '' ).replace( `};s();`, '' ).replace( /\"/g, '`' )
 
 let css = fs.readFileSync( './src/main.css', 'utf8' )
 
