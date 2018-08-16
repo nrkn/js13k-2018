@@ -96,7 +96,7 @@ const s = () => {
   const treeIndex = 8
 
   // time
-  let h = 17
+  let h = 6
   let m = 55
 
   const incTime = () => {
@@ -141,7 +141,7 @@ const s = () => {
     const tiles = [ [ vX, vY ] ]
     const rows = []
 
-    const getWaterNeighbours = ( x, y ) =>
+    const getImmediateWaterNeighbours = ( x, y ) =>
       ([
         [ x - 1, y ],
         [ x + 1, y ],
@@ -149,6 +149,20 @@ const s = () => {
         [ x, y + 1 ]
       ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
 
+    const getWaterNeighbours = ( x, y ) =>
+      ([
+        [ x - 1, y ],
+        [ x + 1, y ],
+        [ x, y - 1 ],
+        [ x, y + 1 ],
+
+        [ x - 1, y - 1 ],
+        [ x + 1, y - 1 ],
+        [ x - 1, y + 1 ],
+        [ x + 1, y + 1 ]
+      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+
+    // set all to water
     for( let y = 0; y < mapSize; y++ ){
       const row = []
       for( let x = 0; x < mapSize; x++ ){
@@ -157,9 +171,10 @@ const s = () => {
       rows.push( row )
     }
 
+    // randomly draw out from center - end up with rough circle
     while( tiles.length < tileCount ){
       const [ cx, cy ] = pick( tiles )
-      const neighbours = getWaterNeighbours( cx, cy )
+      const neighbours = getImmediateWaterNeighbours( cx, cy )
       if( neighbours.length ){
         const [ nx, ny ] = pick( neighbours )
         tiles.push( [ nx, ny ] )
@@ -178,7 +193,7 @@ const s = () => {
           }
         } else {
           // water with no water neighbours, make beach
-          const neighbours = getWaterNeighbours( x, y )
+          const neighbours = getImmediateWaterNeighbours( x, y )
           if( !neighbours.length ){
             rows[ y ][ x ] = 2
           }
