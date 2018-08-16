@@ -125,3 +125,4 @@ Player is safe in hut, can sleep to pass the night away
 - monster mechanics
 - scripted intro events
 - create art - more tiles - rocks, flowers, more trees
+- blue color mode for night instead of invert?
