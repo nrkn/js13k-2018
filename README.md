@@ -1,4 +1,4 @@
-# MOMOS Down
+# RANGER DOWN
 
 A game for [js13kGames 2018 **Offline**](http://2018.js13kgames.com/)
 
@@ -103,8 +103,19 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 2689, Remaining: 10623
 - ~~generate better map~~
   - Size: 2853, Remaining: 10459
-- create art - more tiles - rocks, flowers, more trees
-- create art - player's house
+- ~~color modes - green and amber~~
+  - Size: 2955, Remaining: 10357
+- create art - boat
+- create art - dock
+- create art - path
+- create art - hut
+- create art - skeleton
 - bump interactions
+- create art - monsters
+- create art - more tiles - rocks, flowers, more trees
+- create art - inside hut
 - computer interface
+- create art - food icon
 - food mechanic
+- create art - health icon
+- health mechanic

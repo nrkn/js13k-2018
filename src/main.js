@@ -45,11 +45,11 @@ const s = () => {
       m = 0
       h++
       if( h === 6 ){
-        c.classList.toggle( 'i' )
+        c.classList.remove( 'i' )
         message = messages[ 1 ]
       }
       if( h === 18 ){
-        c.classList.toggle( 'i' )
+        c.classList.add( 'i' )
         message = messages[ 2 ]
       }
     }
@@ -79,6 +79,14 @@ const s = () => {
     const tiles = [ [ vX, vY ] ]
     const rows = []
 
+    const getWaterNeighbours = ( x, y ) =>
+      ([
+        [ x - 1, y ],
+        [ x + 1, y ],
+        [ x, y - 1 ],
+        [ x, y + 1 ]
+      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+
     for( let y = 0; y < mapSize; y++ ){
       const row = []
       for( let x = 0; x < mapSize; x++ ){
@@ -89,13 +97,7 @@ const s = () => {
 
     while( tiles.length < tileCount ){
       const [ cx, cy ] = pick( tiles )
-      // check if smaller to extract this to fn
-      const neighbours = ([
-        [ cx - 1, cy ],
-        [ cx + 1, cy ],
-        [ cx, cy - 1 ],
-        [ cx, cy + 1 ]
-      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+      const neighbours = getWaterNeighbours( cx, cy )
       if( neighbours.length ){
         const [ nx, ny ] = pick( neighbours )
         tiles.push( [ nx, ny ] )
@@ -107,26 +109,15 @@ const s = () => {
     for( let y = 0; y < mapSize; y++ ){
       for( let x = 0; x < mapSize; x++ ){
         if( rows[ y ][ x ] ){
-          const neighbours = ([
-            [ x - 1, y ],
-            [ x + 1, y ],
-            [ x, y - 1 ],
-            [ x, y + 1 ]
-          ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+          // land with a water neighbour, make beach
+          const neighbours = getWaterNeighbours( x, y )
           if( neighbours.length ){
-            // replace with sand tile when we have one
             rows[ y ][ x ] = 2
           }
         } else {
-          const neighbours = ([
-            [ x - 1, y ],
-            [ x + 1, y ],
-            [ x, y - 1 ],
-            [ x, y + 1 ]
-          ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
-          //no water neighbours
+          // water with no water neighbours, make beach
+          const neighbours = getWaterNeighbours( x, y )
           if( !neighbours.length ){
-            // replace with sand tile when we have one
             rows[ y ][ x ] = 2
           }
         }
@@ -137,26 +128,28 @@ const s = () => {
   }
 
   loadImages( 'f.gif', 't.gif', 'p.gif' ).then( ( [ font, tiles, player ] ) => {
+    const map = island()
+
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
-    const drawText = ( str = '', tx = 0, ty = 0 ) => {
-      for( let i = 0; i < str.length; i++ ){
-        const c = str.charCodeAt( i ) - 32
-        const sx = c * 8
-        const sy = 0
-        const sWidth = 8
-        const sHeight = 8
-        const dx = tx * 8
-        const dy = ty * 8
-        const dWidth = 8
-        const dHeight = 8
+    const drawChar = ( ch = '', tx = 0, ty = 0 ) => {
+      const c = ch.charCodeAt( 0 ) - 32
+      const sx = c * 8
+      const sy = 0
+      const sWidth = 8
+      const sHeight = 8
+      const dx = tx * 8
+      const dy = ty * 8
+      const dWidth = 8
+      const dHeight = 8
 
-        ctx.drawImage( font, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
-
-        tx++
-      }
+      ctx.drawImage( font, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
     }
 
-    const map = island()
+    const drawText = ( str = '', tx = 0, ty = 0 ) => {
+      for( let i = 0; i < str.length; i++ ){
+        drawChar( str[ i ], tx + i, ty )
+      }
+    }
 
     /*
       needed so we can have multiple input methods, eg touch controls, can be
@@ -181,6 +174,8 @@ const s = () => {
       if( message ){
         // clear the message if one of these keys
         if( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ) message = 0
+        c.classList.remove( 'g' )
+        c.classList.remove( 'a' )
 
         return
       }
@@ -227,6 +222,8 @@ const s = () => {
       c.width = c.height = tileSize * canvasSize
 
       if( message ){
+        c.classList.add( 'g' )
+
         for( let y = 0; y < message.length; y++ ){
           const line = message[ y ]
           const tX = 1
@@ -272,7 +269,7 @@ const s = () => {
         }
       }
 
-      drawText( `MOMOS Down    ${ timeStr() }`, 0.5, 0.5 )
+      drawText( `RANGER DOWN   ${ timeStr() }`, 0.5, 0.5 )
 
       requestAnimationFrame( draw )
     }

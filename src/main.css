@@ -1,4 +1,5 @@
 body {
+  background: #000;
   margin: 0;
 }
 
@@ -10,8 +11,25 @@ body {
   image-rendering: pixelated;
   width: 100vmin;
   height: 100vmin;
+  filter: contrast(80%) brightness(95%);
 }
 
-.i {
-	filter: invert(100%);
+#c.i {
+  filter: invert(100%) contrast(80%) brightness(95%);
+}
+
+#c.g {
+  filter: contrast(80%) brightness(80%) sepia(60%) saturate(666%) hue-rotate(71deg);
+}
+
+#c.g.i {
+  filter: invert(100%) contrast(80%) brightness(80%) sepia(60%) saturate(666%) hue-rotate(71deg);
+}
+
+#c.a {
+  filter: contrast(90%) brightness(80%) sepia(60%) saturate(999%) hue-rotate(345deg);
+}
+
+#c.a.i {
+  filter: invert(100%) contrast(90%) brightness(80%) sepia(60%) saturate(999%) hue-rotate(345deg);
 }
