@@ -94,6 +94,12 @@ const s = () => {
 
   // named indices
   const treeIndex = 8
+  const foodIndex = 9
+  const healthIndex = 10
+
+  let food = 1
+  let health = 1
+  let maxHealth = 10
 
   // time
   let h = 6
@@ -111,6 +117,12 @@ const s = () => {
       if( h === 18 ){
         c.classList.add( 'i' )
         message = messages[ 2 ]
+      }
+      if( food > 0 ){
+        food--
+        if( health < maxHealth ) health++
+      } else {
+        health--
       }
     }
     if( h === 24 ){
@@ -245,7 +257,7 @@ const s = () => {
         blocks if out of bounds or a tree (the last tile) - need to be able to
         define blocking tiles but can do that later
       */
-      if( !inBounds( x, y ) || blocks( map[ y ][ x ] ) ) return
+      if( health <= 0 || !inBounds( x, y ) || blocks( map[ y ][ x ] ) ) return
 
       vX = x
       vY = y
@@ -332,8 +344,11 @@ const s = () => {
           ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
 
           if( x === center && y === center ){
-            // when we add movement we'll toggle facing, this should work
-            sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
+            if( health ){
+              sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
+            } else {
+              sx = 4 * tileSize
+            }
 
             ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           }
@@ -341,6 +356,22 @@ const s = () => {
       }
 
       drawText( `RANGER DOWN   ${ timeStr() }`, 0.5, 0.5 )
+      // health
+      let sx = healthIndex * tileSize
+      const sy = 0
+      const sWidth = tileSize
+      const sHeight = tileSize
+      const dx = 0
+      let dy = tileSize
+      const dWidth = tileSize
+      const dHeight = tileSize
+      ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+      drawText( `${ health }`, health < 10 ? 0.5 : 0, 4 )
+      // food
+      sx = foodIndex * tileSize
+      dy += tileSize * 2
+      ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+      drawText( `${ food }`, food < 10 ? 0.5 : 0, 8 )
 
       requestAnimationFrame( draw )
     }
