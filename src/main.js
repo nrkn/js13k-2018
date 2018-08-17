@@ -96,6 +96,7 @@ const s = () => {
   const treeIndex = 8
   const foodIndex = 9
   const healthIndex = 10
+  const pathIndex = 11
   const boatLeft = 5
   const boatRight = 6
 
@@ -107,8 +108,8 @@ const s = () => {
   let boatY = 0
 
   // time
-  let h = 17
-  let m = 30
+  let h = 7
+  let m = 0
 
   const incTime = () => {
     m++
@@ -148,7 +149,7 @@ const s = () => {
   const pick = arr => arr[ ~~( Math.random() * arr.length ) ]
 
   // defines blocking tiles
-  const blocks = i => i < 2 || i > 7
+  const blocks = i => i < 2 || i === treeIndex
 
   const inBounds = ( x, y ) => x >= 0 && x <= mapSize - 1 && y >= 0 && y <= mapSize - 1
 
@@ -157,6 +158,93 @@ const s = () => {
     const tileCount = ~~( 0.6 * len )
     const tiles = [ [ vX, vY ] ]
     const rows = []
+
+    const emptyNear = ( x1, y1, min, max ) =>
+      pick( tiles.filter( ( [ x2, y2 ] ) => {
+        let dx = 0
+        let dy = 0
+        if( x2 > x1 ){
+          dx = x2 - x1
+        }
+        if( x1 > x2 ){
+          dx = x1 - x2
+        }
+        if( y2 > y1 ){
+          dy = y2 - y1
+        }
+        if( y1 > y2 ){
+          dy = y1 - y2
+        }
+
+        return dx >= min && dx <= max && dy >= min && dy <= max
+      } ) )
+
+    const drunkenWalk = ( x1, y1, x2, y2, getTileIndex, d = 0.66 ) => {
+      rows[ y1 ][ x1 ] = getTileIndex()
+
+      if( x1 === x2 && y1 === y2 ) return
+
+      const neighbours = getPassableNeighbours( x1, y1 )
+
+      if( Math.random() < d ){
+        const neighbour = pick( neighbours )
+
+        drunkenWalk( neighbour[ 0 ], neighbour[ 1 ], x2, y2, getTileIndex, d )
+
+        return
+      }
+
+      let dx = 0
+      let dy = 0
+      if( x2 > x1 ){
+        dx = x2 - x1
+      }
+      if( x1 > x2 ){
+        dx = x1 - x2
+      }
+      if( y2 > y1 ){
+        dy = y2 - y1
+      }
+      if( y1 > y2 ){
+        dy = y1 - y2
+      }
+
+      let x = x1
+      let y = y1
+
+      if( dx > dy ){
+        if( x2 > x1 ){
+          x = x1 + 1
+        }
+        if( x1 > x2 ){
+          x = x1 - 1
+        }
+      }
+      if( dy > dx ){
+        if( y2 > y1 ){
+          y = y1 + 1
+        }
+        if( y1 > y2 ){
+          y = y1 - 1
+        }
+      }
+
+      if( blocks( x, y ) ){
+        drunkenWalk( x1, y1, x2, y2, getTileIndex, d )
+
+        return
+      }
+
+      drunkenWalk( x, y, x2, y2, getTileIndex, d )
+    }
+
+    const getPassableNeighbours = ( x, y ) =>
+      ([
+        [ x - 1, y ],
+        [ x + 1, y ],
+        [ x, y - 1 ],
+        [ x, y + 1 ]
+      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !blocks( rows[ ny ][ nx ] ) )
 
     const getImmediateWaterNeighbours = ( x, y ) =>
       ([
@@ -226,6 +314,10 @@ const s = () => {
         }
       }
     }
+
+    const hut = emptyNear( vX, vY, 15, 25 )
+
+    drunkenWalk( vX, vY, hut[ 0 ], hut[ 1 ], () => ~~( Math.random() * 3 ) + pathIndex )
 
     return rows
   }
@@ -524,7 +616,7 @@ const s = () => {
         // clear the message if one of these keys
         if( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ){
           if( message[ 0 ] === 's.png' ){
-            screens.push( computerScreens[ 0 ] )
+            //screens.push( computerScreens[ 0 ] )
             message = messages[ 0 ]
           } else {
             message = 0
