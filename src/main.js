@@ -302,6 +302,16 @@ const s = () => {
         c.classList.add( 'g' )
         if( message[ 0 ] === 's.png' ){
           ctx.drawImage( splash, 0, 0 )
+          drawText( 'C2018 Wundergast', 2, 17 )
+          const sx = 4 * tileSize
+          const sy = 0
+          const sWidth = tileSize
+          const sHeight = tileSize
+          const dx = ( center + 0.5 ) * tileSize
+          const dy = ( center + 0.5 ) * tileSize
+          const dWidth = tileSize
+          const dHeight = tileSize
+          ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
         } else {
           const yOff = ~~( ( canvasSize * 2 - message.length ) / 2 )
 
