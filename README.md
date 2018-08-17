@@ -121,8 +121,8 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 4425, Remaining: 8887
 - ~~improve splash~~
   - Size: 4487, Remaining: 8825
-- create art - boat
-- create art - dock
+- ~~create art - boat~~
+  - Size: 4648, Remaining: 8664
 - create art - path
 - create art - hut
 - create art - inside hut

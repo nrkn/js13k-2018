@@ -96,10 +96,15 @@ const s = () => {
   const treeIndex = 8
   const foodIndex = 9
   const healthIndex = 10
+  const boatLeft = 5
+  const boatRight = 6
 
   let food = 1
   let health = 1
   let maxHealth = 10
+
+  let boatX = 0
+  let boatY = 0
 
   // time
   let h = 17
@@ -194,6 +199,7 @@ const s = () => {
       }
     }
 
+    let lx = canvasSize
     // make border tiles sand and remove water with no neighbours
     for( let y = 0; y < mapSize; y++ ){
       for( let x = 0; x < mapSize; x++ ){
@@ -202,6 +208,14 @@ const s = () => {
           const neighbours = getWaterNeighbours( x, y )
           if( neighbours.length ){
             rows[ y ][ x ] = 2
+            // hack - make player on leftmost
+            if( x < lx ){
+              lx = x
+              vX = x
+              vY = y
+              boatX = x - 2
+              boatY = y
+            }
           }
         } else {
           // water with no water neighbours, make beach
@@ -362,6 +376,29 @@ const s = () => {
 
             ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           }
+
+          if( mapX === boatX && mapY === boatY ){
+            const sx = boatLeft * tileSize
+            const sy = 0
+            const sWidth = tileSize
+            const sHeight = tileSize
+            const dx = ( x + 1 ) * tileSize
+            const dy = ( y + 1 ) * tileSize
+            const dWidth = tileSize
+            const dHeight = tileSize
+            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          }
+          if( mapX === ( boatX + 1 ) && mapY === boatY ){
+            const sx = boatRight * tileSize
+            const sy = 0
+            const sWidth = tileSize
+            const sHeight = tileSize
+            const dx = ( x + 1 ) * tileSize
+            const dy = ( y + 1 ) * tileSize
+            const dWidth = tileSize
+            const dHeight = tileSize
+            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          }
         }
       }
 
@@ -463,8 +500,8 @@ const s = () => {
         }
         // push new screen if enter
         if( e.keyCode === 13 && options[ selected ] ){
-          const [ name, pageIndex ] = options[ selected ]
-          screens.push( computerScreens[ pageIndex ] )
+          //const [ name, pageIndex ] = options[ selected ]
+          //screens.push( computerScreens[ pageIndex ] )
           selected = 0
         }
         // up
