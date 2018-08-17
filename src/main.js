@@ -102,8 +102,8 @@ const s = () => {
   let maxHealth = 10
 
   // time
-  let h = 6
-  let m = 55
+  let h = 17
+  let m = 30
 
   const incTime = () => {
     m++
@@ -374,6 +374,71 @@ const s = () => {
       drawText( `${ food }`, food < 10 ? 0.5 : 0, 8 )
 
       requestAnimationFrame( draw )
+    }
+
+    c.ontouchend = e => {
+      const touches = [ ...e.changedTouches ]
+
+      touches.forEach( t => {
+        const { clientX, clientY } = t
+        const tileSize = c.getBoundingClientRect().width / canvasSize
+        const tx = Math.floor( clientX / tileSize ) - 1
+        const ty = Math.floor( clientY / tileSize ) - 1
+
+        if( screens.length ){
+          // add select code
+          screens.pop()
+          if( !screens.length ){
+            c.classList.remove( 'a' )
+          }
+          return
+        }
+
+        // if showing a message
+        if( message ){
+          c.classList.remove( 'g' )
+          c.classList.remove( 'a' )
+
+          if( message[ 0 ] === 's.png' ){
+            //screens.push( computerScreens[ 0 ] )
+            message = messages[ 0 ]
+          } else {
+            message = 0
+          }
+
+          return
+        }
+
+        if( tx === center && ty === center ){
+          // tapped on player
+          return
+        }
+
+        if( tx < 0 || ty < 0 ){
+          //tapped an interface tile
+          return
+        }
+
+        const dx = Math.max( center, tx ) - Math.min( center, tx )
+        const dy = Math.max( center, ty ) - Math.min( center, ty )
+
+        let x = 0
+        let y = 0
+        if( dx > dy ){
+          if( tx > center ){
+            x = 1
+            facing = 0
+          } else {
+            x = -1
+            facing = 1
+          }
+        } else if( dx < dy ){
+          y = ty > center ? 1 : -1
+        }
+
+        incTime()
+        move( x, y )
+      })
     }
 
     document.onkeyup = e => {

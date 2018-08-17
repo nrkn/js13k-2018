@@ -117,6 +117,8 @@ Player is safe in hut, can sleep to pass the night away
 - ~~food mechanic~~
 - ~~health mechanic~~
   - Size: 4219, Remaining: 9093
+- ~~touch controls~~
+  - Size: 4425, Remaining: 8887
 - create art - boat
 - create art - dock
 - create art - path
