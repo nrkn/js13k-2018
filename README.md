@@ -125,6 +125,8 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 4648, Remaining: 8664
 - ~~create art - path~~
   - Size: 4743, Remaining: 8569
+- before refactor
+  - Size: 4746, Remaining: 8566
 - create art - hut
 - create art - inside hut
 - create art - monsters
