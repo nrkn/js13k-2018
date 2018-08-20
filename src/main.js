@@ -108,8 +108,8 @@ const s = () => {
   let boatY = 0
 
   // time
-  let h = 7
-  let m = 0
+  let h = 17
+  let m = 30
 
   const incTime = () => {
     m++
@@ -324,6 +324,8 @@ const s = () => {
 
   loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( ( [ font, tiles, player, splash ] ) => {
     const map = island()
+    let start
+    let elapsed
 
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
     const drawChar = ( ch = '', tx = 0, ty = 0 ) => {
@@ -369,8 +371,6 @@ const s = () => {
       vY = y
     }
 
-    let start
-    let elapsed
     const draw = time => {
       // set up start when we first get a proper tick time
       if( time && !start ) start = time
