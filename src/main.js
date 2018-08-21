@@ -6,20 +6,20 @@
 const s = () => {
   const ctx = c.getContext( '2d' )
 
-  // geometry etc
-  const tileSize = 16
-  const tileCount = 9
-  const viewSize = 9
-  const canvasSize = viewSize + 1
-  const center = ~~( viewSize / 2 )
-  // map settings
-  const mapSize = 128
-  // center the map on this tile - typically the player location
-  let vX = ~~( mapSize / 2 )
-  let vY = ~~( mapSize / 2 )
-  // player settings
-  const playerAnimationTime = 500
-  let facing = 0
+  const settings_tileSize = 16
+  const settings_viewTiles = 9
+  const settings_canvasTiles = settings_viewTiles + 1
+  const settings_centerTile = ~~( settings_viewTiles / 2 )
+  const settings_mapSize = 128
+  const settings_animTime = 500
+
+  // named indices
+  const index_tree = 8
+  const index_food = 9
+  const index_health = 10
+  const index_path = 11
+  const index_boatLeft = 5
+  const index_boatRight = 6
 
   const messages = [
     // 0
@@ -41,10 +41,8 @@ const s = () => {
     // 4
     [ 'Tree' ]
   ]
-  let message = messages[ 3 ]
 
-  let selected = 0
-  const computerScreens = [
+  const computer_screens = [
     [
       [
         'RSOS v3.27',
@@ -90,53 +88,49 @@ const s = () => {
       ]
     ]
   ]
+
+  let player_x = ~~( settings_mapSize / 2 )
+  let player_y = ~~( settings_mapSize / 2 )
+  let player_facing = 0
+  let player_food = 1
+  let player_health = 1
+  let player_maxHealth = 10
+  let hours = 17
+  let minutes = 30
+  let message = messages[ 3 ]
+  let computer_selected = 0
   let screens = []
-
-  // named indices
-  const treeIndex = 8
-  const foodIndex = 9
-  const healthIndex = 10
-  const pathIndex = 11
-  const boatLeft = 5
-  const boatRight = 6
-
-  let food = 1
-  let health = 1
-  let maxHealth = 10
-
-  let boatX = 0
-  let boatY = 0
-
-  // time
-  let h = 17
-  let m = 30
+  let map_boatX = 0
+  let map_boatY = 0
+  let start = 0
+  let elapsed = 0
 
   const incTime = () => {
-    m++
-    if( m === 60 ){
-      m = 0
-      h++
-      if( h === 6 ){
+    minutes++
+    if( minutes === 60 ){
+      minutes = 0
+      hours++
+      if( hours === 6 ){
         c.classList.remove( 'i' )
         message = messages[ 1 ]
       }
-      if( h === 18 ){
+      if( hours === 18 ){
         c.classList.add( 'i' )
         message = messages[ 2 ]
       }
-      if( food > 0 ){
-        food--
-        if( health < maxHealth ) health++
+      if( player_food > 0 ){
+        player_food--
+        if( player_health < player_maxHealth ) player_health++
       } else {
-        health--
+        player_health--
       }
     }
-    if( h === 24 ){
-      h = 0
+    if( hours === 24 ){
+      hours = 0
     }
   }
 
-  const timeStr = () => `${ h < 10 ? '0' : '' }${ h }:${ m < 10 ? '0' : '' }${ m }`
+  const timeStr = () => `${ hours < 10 ? '0' : '' }${ hours }:${ minutes < 10 ? '0' : '' }${ minutes }`
 
   const loadImage = path => new Promise( resolve => {
     const img = new Image()
@@ -149,183 +143,192 @@ const s = () => {
   const pick = arr => arr[ ~~( Math.random() * arr.length ) ]
 
   // defines blocking tiles
-  const blocks = i => i < 2 || i === treeIndex
+  const blocks = i => i < 2 || i === index_tree
 
-  const inBounds = ( x, y ) => x >= 0 && x <= mapSize - 1 && y >= 0 && y <= mapSize - 1
+  const inBounds = ( x, y ) => x >= 0 && x <= settings_mapSize - 1 && y >= 0 && y <= settings_mapSize - 1
 
-  const island = () => {
-    const len = mapSize * mapSize
-    const tileCount = ~~( 0.6 * len )
-    const tiles = [ [ vX, vY ] ]
-    const rows = []
+  const emptyNear = ( tiles, x1, y1, min, max ) =>
+    pick( tiles.filter( ( [ x2, y2 ] ) => {
+      let dx = delta( x1, x2 )
+      let dy = delta( y1, y2 )
 
-    const emptyNear = ( x1, y1, min, max ) =>
-      pick( tiles.filter( ( [ x2, y2 ] ) => {
-        let dx = 0
-        let dy = 0
-        if( x2 > x1 ){
-          dx = x2 - x1
-        }
-        if( x1 > x2 ){
-          dx = x1 - x2
-        }
-        if( y2 > y1 ){
-          dy = y2 - y1
-        }
-        if( y1 > y2 ){
-          dy = y1 - y2
-        }
+      return dx >= min && dx <= max && dy >= min && dy <= max
+    } ) )
 
-        return dx >= min && dx <= max && dy >= min && dy <= max
-      } ) )
+  const immediateNeighbours = ( x, y ) => [
+    [ x - 1, y ],
+    [ x + 1, y ],
+    [ x, y - 1 ],
+    [ x, y + 1 ]
+  ]
 
-    const drunkenWalk = ( x1, y1, x2, y2, getTileIndex, d = 0.66 ) => {
-      rows[ y1 ][ x1 ] = getTileIndex()
+  const allNeighbours = ( x, y ) => [
+    [ x - 1, y ],
+    [ x + 1, y ],
+    [ x, y - 1 ],
+    [ x, y + 1 ],
+    [ x - 1, y - 1 ],
+    [ x + 1, y - 1 ],
+    [ x - 1, y + 1 ],
+    [ x + 1, y + 1 ]
+  ]
 
-      if( x1 === x2 && y1 === y2 ) return
+  const getPassableNeighbours = ( x, y, rows ) =>
+    immediateNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !blocks( rows[ ny ][ nx ] ) )
 
-      const neighbours = getPassableNeighbours( x1, y1 )
+  const getImmediateWaterNeighbours = ( x, y, rows ) =>
+    immediateNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
 
-      if( Math.random() < d ){
-        const neighbour = pick( neighbours )
+  const getWaterNeighbours = ( x, y, rows ) =>
+    allNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
 
-        drunkenWalk( neighbour[ 0 ], neighbour[ 1 ], x2, y2, getTileIndex, d )
+  const delta = ( i, j ) => Math.max( i, j ) - Math.min( i, j )
 
-        return
-      }
+  const towards = ( x1, y1, x2, y2 ) => {
+    let dx = delta( x1, x2 )
+    let dy = delta( y1, y2 )
+    let x = x1
+    let y = y1
 
-      let dx = 0
-      let dy = 0
+    if( dx > dy ){
       if( x2 > x1 ){
-        dx = x2 - x1
+        x = x1 + 1
       }
       if( x1 > x2 ){
-        dx = x1 - x2
+        x = x1 - 1
       }
+    }
+    if( dy > dx ){
       if( y2 > y1 ){
-        dy = y2 - y1
+        y = y1 + 1
       }
       if( y1 > y2 ){
-        dy = y1 - y2
+        y = y1 - 1
       }
-
-      let x = x1
-      let y = y1
-
-      if( dx > dy ){
-        if( x2 > x1 ){
-          x = x1 + 1
-        }
-        if( x1 > x2 ){
-          x = x1 - 1
-        }
-      }
-      if( dy > dx ){
-        if( y2 > y1 ){
-          y = y1 + 1
-        }
-        if( y1 > y2 ){
-          y = y1 - 1
-        }
-      }
-
-      if( blocks( x, y ) ){
-        drunkenWalk( x1, y1, x2, y2, getTileIndex, d )
-
-        return
-      }
-
-      drunkenWalk( x, y, x2, y2, getTileIndex, d )
     }
 
-    const getPassableNeighbours = ( x, y ) =>
-      ([
-        [ x - 1, y ],
-        [ x + 1, y ],
-        [ x, y - 1 ],
-        [ x, y + 1 ]
-      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !blocks( rows[ ny ][ nx ] ) )
+    return [ x, y ]
+  }
 
-    const getImmediateWaterNeighbours = ( x, y ) =>
-      ([
-        [ x - 1, y ],
-        [ x + 1, y ],
-        [ x, y - 1 ],
-        [ x, y + 1 ]
-      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
+  const emptyMap = () => {
+    const rows = []
 
-    const getWaterNeighbours = ( x, y ) =>
-      ([
-        [ x - 1, y ],
-        [ x + 1, y ],
-        [ x, y - 1 ],
-        [ x, y + 1 ],
-
-        [ x - 1, y - 1 ],
-        [ x + 1, y - 1 ],
-        [ x - 1, y + 1 ],
-        [ x + 1, y + 1 ]
-      ]).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !rows[ ny ][ nx ] )
-
-    // set all to water
-    for( let y = 0; y < mapSize; y++ ){
+    for( let y = 0; y < settings_mapSize; y++ ){
       const row = []
-      for( let x = 0; x < mapSize; x++ ){
-        row.push( x === vX && y === vY ? 2 : 0 )
+      for( let x = 0; x < settings_mapSize; x++ ){
+        row.push( 0 )
       }
       rows.push( row )
     }
 
-    // randomly draw out from center - end up with rough circle
+    return rows
+  }
+
+  const expandLand = ( rows, tiles, tileCount ) => {
     while( tiles.length < tileCount ){
       const [ cx, cy ] = pick( tiles )
-      const neighbours = getImmediateWaterNeighbours( cx, cy )
+      const neighbours = getImmediateWaterNeighbours( cx, cy, rows )
       if( neighbours.length ){
         const [ nx, ny ] = pick( neighbours )
         tiles.push( [ nx, ny ] )
         rows[ ny ][ nx ] = ~~( Math.random() * 7 ) + 2
       }
     }
+  }
 
-    let lx = canvasSize
-    // make border tiles sand and remove water with no neighbours
-    for( let y = 0; y < mapSize; y++ ){
-      for( let x = 0; x < mapSize; x++ ){
+  const leftmostLand = rows => {
+    let lx = settings_canvasTiles
+    let ly = settings_canvasTiles
+    for( let y = 0; y < settings_mapSize; y++ ){
+      for( let x = 0; x < settings_mapSize; x++ ){
+        if( rows[ y ][ x ] ){
+          const neighbours = getWaterNeighbours( x, y, rows )
+
+          if( neighbours.length && x < lx ){
+            lx = x
+            ly = y
+          }
+        }
+      }
+    }
+    return [ lx, ly ]
+  }
+
+  const addSand = rows => {
+    for( let y = 0; y < settings_mapSize; y++ ){
+      for( let x = 0; x < settings_mapSize; x++ ){
         if( rows[ y ][ x ] ){
           // land with a water neighbour, make beach
-          const neighbours = getWaterNeighbours( x, y )
+          const neighbours = getWaterNeighbours( x, y, rows )
+
           if( neighbours.length ){
             rows[ y ][ x ] = 2
-            // hack - make player on leftmost
-            if( x < lx ){
-              lx = x
-              vX = x
-              vY = y
-              boatX = x - 2
-              boatY = y
-            }
           }
         } else {
           // water with no water neighbours, make beach
-          const neighbours = getImmediateWaterNeighbours( x, y )
+          const neighbours = getImmediateWaterNeighbours( x, y, rows )
+
           if( !neighbours.length ){
             rows[ y ][ x ] = 2
           }
         }
       }
     }
+  }
 
-    const hut = emptyNear( vX, vY, 15, 25 )
+  const drunkenWalk = ( rows, x1, y1, x2, y2, getTileIndex, d = 0.66 ) => {
+    rows[ y1 ][ x1 ] = getTileIndex()
 
-    drunkenWalk( vX, vY, hut[ 0 ], hut[ 1 ], () => ~~( Math.random() * 3 ) + pathIndex )
+    if( x1 === x2 && y1 === y2 ) return
+
+    const neighbours = getPassableNeighbours( x1, y1, rows )
+
+    if( Math.random() < d ){
+      const neighbour = pick( neighbours )
+
+      drunkenWalk( rows, neighbour[ 0 ], neighbour[ 1 ], x2, y2, getTileIndex, d )
+
+      return
+    }
+
+    const [ x, y ] = towards( x1, y1, x2, y2 )
+
+    if( blocks( x, y ) ){
+      drunkenWalk( rows, x1, y1, x2, y2, getTileIndex, d )
+
+      return
+    }
+
+    drunkenWalk( rows, x, y, x2, y2, getTileIndex, d )
+  }
+
+  const island = () => {
+    const len = settings_mapSize * settings_mapSize
+    const tileCount = ~~( 0.6 * len )
+    const tiles = [ [ player_x, player_y ] ]
+    const rows = emptyMap()
+
+    rows[ player_y ][ player_x ] = 2
+
+    expandLand( rows, tiles, tileCount )
+    addSand( rows )
+
+    const [ lx, ly ] = leftmostLand( rows )
+
+    player_x = lx
+    player_y = ly
+    map_boatX = player_x - 2
+    map_boatY = player_y
+
+    const hut = emptyNear( tiles, player_x, player_y, 15, 25 )
+
+    drunkenWalk( rows, player_x, player_y, hut[ 0 ], hut[ 1 ], () => ~~( Math.random() * 3 ) + index_path )
 
     return rows
   }
 
   loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( ( [ font, tiles, player, splash ] ) => {
     const map = island()
-    let start
-    let elapsed
 
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
     const drawChar = ( ch = '', tx = 0, ty = 0 ) => {
@@ -353,22 +356,18 @@ const s = () => {
       rolled into the key handler if we don't use other inputs
     */
     const move = ( x, y ) => {
-      x = vX + x
-      y = vY + y
+      x = player_x + x
+      y = player_y + y
 
-      if( map[ y ][ x ] === treeIndex ){
+      if( map[ y ][ x ] === index_tree ){
         message = messages[ 4 ]
         return
       }
 
-      /*
-        blocks if out of bounds or a tree (the last tile) - need to be able to
-        define blocking tiles but can do that later
-      */
-      if( health <= 0 || !inBounds( x, y ) || blocks( map[ y ][ x ] ) ) return
+      if( player_health <= 0 || !inBounds( x, y ) || blocks( map[ y ][ x ] ) ) return
 
-      vX = x
-      vY = y
+      player_x = x
+      player_y = y
     }
 
     const draw = time => {
@@ -378,11 +377,11 @@ const s = () => {
       elapsed = time - start
 
       // is this over complicated? might be a simpler way to do this
-      const playerTime = ~~( elapsed / playerAnimationTime )
-      const playerFrame = playerTime % 2 ? 0 : 1
+      const frameTime = ~~( elapsed / settings_animTime )
+      const currentFrame = frameTime % 2 ? 0 : 1
 
       // blank the canvas
-      c.width = c.height = tileSize * canvasSize
+      c.width = c.height = settings_tileSize * settings_canvasTiles
 
       if( screens.length ){
         c.classList.add( 'a' )
@@ -395,7 +394,7 @@ const s = () => {
         }
         for( let s = 0; s < options.length; s++ ){
           drawText(
-            `${ s === selected ? '> ': '  ' }${ options[ s ][ 0 ] }`, 1, y + s + 2
+            `${ s === computer_selected ? '> ': '  ' }${ options[ s ][ 0 ] }`, 1, y + s + 2
           )
         }
 
@@ -409,21 +408,21 @@ const s = () => {
         if( message[ 0 ] === 's.png' ){
           ctx.drawImage( splash, 0, 0 )
           drawText( 'C2018 Wundergast', 2, 17 )
-          const sx = 4 * tileSize
+          const sx = 4 * settings_tileSize
           const sy = 0
-          const sWidth = tileSize
-          const sHeight = tileSize
-          const dx = ( center + 0.5 ) * tileSize
-          const dy = ( center + 0.5 ) * tileSize
-          const dWidth = tileSize
-          const dHeight = tileSize
+          const sWidth = settings_tileSize
+          const sHeight = settings_tileSize
+          const dx = ( settings_centerTile + 0.5 ) * settings_tileSize
+          const dy = ( settings_centerTile + 0.5 ) * settings_tileSize
+          const dWidth = settings_tileSize
+          const dHeight = settings_tileSize
           ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
         } else {
-          const yOff = ~~( ( canvasSize * 2 - message.length ) / 2 )
+          const yOff = ~~( ( settings_canvasTiles * 2 - message.length ) / 2 )
 
           for( let y = 0; y < message.length; y++ ){
             const line = message[ y ]
-            const xOff = ~~( ( canvasSize * 2 - line.length ) / 2 )
+            const xOff = ~~( ( settings_canvasTiles * 2 - line.length ) / 2 )
             const tX = xOff
             const tY = y + yOff
             drawText( line, tX, tY )
@@ -435,60 +434,60 @@ const s = () => {
         return
       }
 
-      for( let y = 0; y < viewSize; y++ ){
-        for( let x = 0; x < viewSize; x++ ){
-          const mapX = ( vX - center ) + x
-          const mapY = ( vY - center ) + y
+      for( let y = 0; y < settings_viewTiles; y++ ){
+        for( let x = 0; x < settings_viewTiles; x++ ){
+          const mapX = ( player_x - settings_centerTile ) + x
+          const mapY = ( player_y - settings_centerTile ) + y
 
           const sy = 0
-          const sWidth = tileSize
-          const sHeight = tileSize
-          const dx = ( x + 1 ) * tileSize
-          const dy = ( y + 1 ) * tileSize
-          const dWidth = tileSize
-          const dHeight = tileSize
+          const sWidth = settings_tileSize
+          const sHeight = settings_tileSize
+          const dx = ( x + 1 ) * settings_tileSize
+          const dy = ( y + 1 ) * settings_tileSize
+          const dWidth = settings_tileSize
+          const dHeight = settings_tileSize
 
-          let sx = playerFrame * tileSize
+          let sx = currentFrame * settings_tileSize
 
           // bounds check
           if( inBounds( mapX, mapY ) ){
             const tileIndex = map[ mapY ][ mapX ]
 
-            if( tileIndex ) sx = tileIndex * tileSize
+            if( tileIndex ) sx = tileIndex * settings_tileSize
           }
 
           ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
 
-          if( x === center && y === center ){
-            if( health ){
-              sx = ( playerFrame * tileSize ) + ( facing * tileSize * 2 )
+          if( x === settings_centerTile && y === settings_centerTile ){
+            if( player_health ){
+              sx = ( currentFrame * settings_tileSize ) + ( player_facing * settings_tileSize * 2 )
             } else {
-              sx = 4 * tileSize
+              sx = 4 * settings_tileSize
             }
 
             ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           }
 
-          if( mapX === boatX && mapY === boatY ){
-            const sx = boatLeft * tileSize
+          if( mapX === map_boatX && mapY === map_boatY ){
+            const sx = index_boatLeft * settings_tileSize
             const sy = 0
-            const sWidth = tileSize
-            const sHeight = tileSize
-            const dx = ( x + 1 ) * tileSize
-            const dy = ( y + 1 ) * tileSize
-            const dWidth = tileSize
-            const dHeight = tileSize
+            const sWidth = settings_tileSize
+            const sHeight = settings_tileSize
+            const dx = ( x + 1 ) * settings_tileSize
+            const dy = ( y + 1 ) * settings_tileSize
+            const dWidth = settings_tileSize
+            const dHeight = settings_tileSize
             ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           }
-          if( mapX === ( boatX + 1 ) && mapY === boatY ){
-            const sx = boatRight * tileSize
+          if( mapX === ( map_boatX + 1 ) && mapY === map_boatY ){
+            const sx = index_boatRight * settings_tileSize
             const sy = 0
-            const sWidth = tileSize
-            const sHeight = tileSize
-            const dx = ( x + 1 ) * tileSize
-            const dy = ( y + 1 ) * tileSize
-            const dWidth = tileSize
-            const dHeight = tileSize
+            const sWidth = settings_tileSize
+            const sHeight = settings_tileSize
+            const dx = ( x + 1 ) * settings_tileSize
+            const dy = ( y + 1 ) * settings_tileSize
+            const dWidth = settings_tileSize
+            const dHeight = settings_tileSize
             ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
           }
         }
@@ -496,21 +495,21 @@ const s = () => {
 
       drawText( `RANGER DOWN   ${ timeStr() }`, 0.5, 0.5 )
       // health
-      let sx = healthIndex * tileSize
+      let sx = index_health * settings_tileSize
       const sy = 0
-      const sWidth = tileSize
-      const sHeight = tileSize
+      const sWidth = settings_tileSize
+      const sHeight = settings_tileSize
       const dx = 0
-      let dy = tileSize
-      const dWidth = tileSize
-      const dHeight = tileSize
+      let dy = settings_tileSize
+      const dWidth = settings_tileSize
+      const dHeight = settings_tileSize
       ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
-      drawText( `${ health }`, health < 10 ? 0.5 : 0, 4 )
+      drawText( `${ player_health }`, player_health < 10 ? 0.5 : 0, 4 )
       // food
-      sx = foodIndex * tileSize
-      dy += tileSize * 2
+      sx = index_food * settings_tileSize
+      dy += settings_tileSize * 2
       ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
-      drawText( `${ food }`, food < 10 ? 0.5 : 0, 8 )
+      drawText( `${ player_food }`, player_food < 10 ? 0.5 : 0, 8 )
 
       requestAnimationFrame( draw )
     }
@@ -520,7 +519,7 @@ const s = () => {
 
       touches.forEach( t => {
         const { clientX, clientY } = t
-        const tileSize = c.getBoundingClientRect().width / canvasSize
+        const tileSize = c.getBoundingClientRect().width / settings_canvasTiles
         const tx = Math.floor( clientX / tileSize ) - 1
         const ty = Math.floor( clientY / tileSize ) - 1
 
@@ -548,7 +547,7 @@ const s = () => {
           return
         }
 
-        if( tx === center && ty === center ){
+        if( tx === settings_centerTile && ty === settings_centerTile ){
           // tapped on player
           return
         }
@@ -558,21 +557,21 @@ const s = () => {
           return
         }
 
-        const dx = Math.max( center, tx ) - Math.min( center, tx )
-        const dy = Math.max( center, ty ) - Math.min( center, ty )
+        const dx = Math.max( settings_centerTile, tx ) - Math.min( settings_centerTile, tx )
+        const dy = Math.max( settings_centerTile, ty ) - Math.min( settings_centerTile, ty )
 
         let x = 0
         let y = 0
         if( dx > dy ){
-          if( tx > center ){
+          if( tx > settings_centerTile ){
             x = 1
-            facing = 0
+            player_facing = 0
           } else {
             x = -1
-            facing = 1
+            player_facing = 1
           }
         } else if( dx < dy ){
-          y = ty > center ? 1 : -1
+          y = ty > settings_centerTile ? 1 : -1
         }
 
         incTime()
@@ -591,18 +590,18 @@ const s = () => {
           }
         }
         // push new screen if enter
-        if( e.keyCode === 13 && options[ selected ] ){
+        if( e.keyCode === 13 && options[ computer_selected ] ){
           //const [ name, pageIndex ] = options[ selected ]
           //screens.push( computerScreens[ pageIndex ] )
-          selected = 0
+          computer_selected = 0
         }
         // up
         if( e.keyCode === 87 || e.keyCode === 38 ){
-          if( selected > 0 ) selected--
+          if( computer_selected > 0 ) computer_selected--
         }
         // down
         if( e.keyCode === 83 || e.keyCode === 40 ){
-          if( selected < options.length - 1 ) selected++
+          if( computer_selected < options.length - 1 ) computer_selected++
         }
 
         return
@@ -631,12 +630,12 @@ const s = () => {
 
       // left, change the facing as well
       if( e.keyCode === 65 || e.keyCode === 37 ){
-        facing = 1
+        player_facing = 1
         x = -1
       }
       // right, change the facing as well
       if( e.keyCode === 68 || e.keyCode === 39 ){
-        facing = 0
+        player_facing = 0
         x = 1
       }
       // up

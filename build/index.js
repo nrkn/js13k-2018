@@ -15,7 +15,7 @@ let { error, code } = min
 
 if( error ) return console.error( error.message )
 
-code = code.replace( `"use strict";const s=()=>{`, '' ).replace( `};s();`, '' ).replace( /\"/g, '`' )
+code = code.replace( `"use strict";let s=()=>{`, '' ).replace( `};s();`, '' ).replace( /\"/g, '`' )
 
 let css = fs.readFileSync( './src/main.css', 'utf8' )
 
