@@ -331,24 +331,12 @@ const s = () => {
     const map = island()
 
     // nb the text grid is half the size of the tile grid, 8x8 not 16x16
-    const drawChar = ( ch = '', tx = 0, ty = 0 ) => {
-      const c = ch.charCodeAt( 0 ) - 32
-      const sx = c * 8
-      const sy = 0
-      const sWidth = 8
-      const sHeight = 8
-      const dx = tx * 8
-      const dy = ty * 8
-      const dWidth = 8
-      const dHeight = 8
-
-      ctx.drawImage( font, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
-    }
+    const drawChar = ( ch = '', tx = 0, ty = 0 ) =>
+      ctx.drawImage( font, c * 8, 0, 8, 8, tx * 8, ty * 8, 8, 8 )
 
     const drawText = ( str = '', tx = 0, ty = 0 ) => {
-      for( let i = 0; i < str.length; i++ ){
+      for( let i = 0; i < str.length; i++ )
         drawChar( str[ i ], tx + i, ty )
-      }
     }
 
     /*
@@ -408,15 +396,13 @@ const s = () => {
         if( message[ 0 ] === 's.png' ){
           ctx.drawImage( splash, 0, 0 )
           drawText( 'C2018 Wundergast', 2, 17 )
-          const sx = 4 * settings_tileSize
-          const sy = 0
-          const sWidth = settings_tileSize
-          const sHeight = settings_tileSize
-          const dx = ( settings_centerTile + 0.5 ) * settings_tileSize
-          const dy = ( settings_centerTile + 0.5 ) * settings_tileSize
-          const dWidth = settings_tileSize
-          const dHeight = settings_tileSize
-          ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          ctx.drawImage(
+            player,
+            4 * settings_tileSize, 0,
+            settings_tileSize, settings_tileSize,
+            ( settings_centerTile + 0.5 ) * settings_tileSize, ( settings_centerTile + 0.5 ) * settings_tileSize,
+            settings_tileSize, settings_tileSize
+          )
         } else {
           const yOff = ~~( ( settings_canvasTiles * 2 - message.length ) / 2 )
 
@@ -439,14 +425,6 @@ const s = () => {
           const mapX = ( player_x - settings_centerTile ) + x
           const mapY = ( player_y - settings_centerTile ) + y
 
-          const sy = 0
-          const sWidth = settings_tileSize
-          const sHeight = settings_tileSize
-          const dx = ( x + 1 ) * settings_tileSize
-          const dy = ( y + 1 ) * settings_tileSize
-          const dWidth = settings_tileSize
-          const dHeight = settings_tileSize
-
           let sx = currentFrame * settings_tileSize
 
           // bounds check
@@ -456,7 +434,13 @@ const s = () => {
             if( tileIndex ) sx = tileIndex * settings_tileSize
           }
 
-          ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+          ctx.drawImage(
+            tiles,
+            sx, 0,
+            settings_tileSize, settings_tileSize,
+            ( x + 1 ) * settings_tileSize, ( y + 1 ) * settings_tileSize,
+            settings_tileSize, settings_tileSize
+          )
 
           if( x === settings_centerTile && y === settings_centerTile ){
             if( player_health ){
@@ -465,50 +449,56 @@ const s = () => {
               sx = 4 * settings_tileSize
             }
 
-            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+            ctx.drawImage(
+              player,
+              sx, 0,
+              settings_tileSize, settings_tileSize,
+              ( x + 1 ) * settings_tileSize, ( y + 1 ) * settings_tileSize,
+              settings_tileSize, settings_tileSize
+            )
           }
 
           if( mapX === map_boatX && mapY === map_boatY ){
-            const sx = index_boatLeft * settings_tileSize
-            const sy = 0
-            const sWidth = settings_tileSize
-            const sHeight = settings_tileSize
-            const dx = ( x + 1 ) * settings_tileSize
-            const dy = ( y + 1 ) * settings_tileSize
-            const dWidth = settings_tileSize
-            const dHeight = settings_tileSize
-            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+            ctx.drawImage(
+              player,
+              index_boatLeft * settings_tileSize, 0,
+              settings_tileSize, settings_tileSize,
+              ( x + 1 ) * settings_tileSize, ( y + 1 ) * settings_tileSize,
+              settings_tileSize, settings_tileSize
+            )
           }
           if( mapX === ( map_boatX + 1 ) && mapY === map_boatY ){
-            const sx = index_boatRight * settings_tileSize
-            const sy = 0
-            const sWidth = settings_tileSize
-            const sHeight = settings_tileSize
-            const dx = ( x + 1 ) * settings_tileSize
-            const dy = ( y + 1 ) * settings_tileSize
-            const dWidth = settings_tileSize
-            const dHeight = settings_tileSize
-            ctx.drawImage( player, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+            ctx.drawImage(
+              player,
+              index_boatRight * settings_tileSize, 0,
+              settings_tileSize, settings_tileSize,
+              ( x + 1 ) * settings_tileSize, ( y + 1 ) * settings_tileSize,
+              settings_tileSize, settings_tileSize
+            )
           }
         }
       }
 
       drawText( `RANGER DOWN   ${ timeStr() }`, 0.5, 0.5 )
-      // health
-      let sx = index_health * settings_tileSize
-      const sy = 0
-      const sWidth = settings_tileSize
-      const sHeight = settings_tileSize
-      const dx = 0
-      let dy = settings_tileSize
-      const dWidth = settings_tileSize
-      const dHeight = settings_tileSize
-      ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+
+      ctx.drawImage(
+        tiles,
+        index_health * settings_tileSize, 0,
+        settings_tileSize, settings_tileSize,
+        0, settings_tileSize,
+        settings_tileSize, settings_tileSize
+      )
+
       drawText( `${ player_health }`, player_health < 10 ? 0.5 : 0, 4 )
-      // food
-      sx = index_food * settings_tileSize
-      dy += settings_tileSize * 2
-      ctx.drawImage( tiles, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight )
+
+      ctx.drawImage(
+        tiles,
+        index_food * settings_tileSize, 0,
+        settings_tileSize, settings_tileSize,
+        0, settings_tileSize * 2,
+        settings_tileSize, settings_tileSize
+      )
+
       drawText( `${ player_food }`, player_food < 10 ? 0.5 : 0, 8 )
 
       requestAnimationFrame( draw )
@@ -520,8 +510,8 @@ const s = () => {
       touches.forEach( t => {
         const { clientX, clientY } = t
         const tileSize = c.getBoundingClientRect().width / settings_canvasTiles
-        const tx = Math.floor( clientX / tileSize ) - 1
-        const ty = Math.floor( clientY / tileSize ) - 1
+        const tx = ~~( clientX / tileSize ) - 1
+        const ty = ~~( clientY / tileSize ) - 1
 
         if( screens.length ){
           // add select code
@@ -557,11 +547,12 @@ const s = () => {
           return
         }
 
-        const dx = Math.max( settings_centerTile, tx ) - Math.min( settings_centerTile, tx )
-        const dy = Math.max( settings_centerTile, ty ) - Math.min( settings_centerTile, ty )
+        const dx = delta( settings_centerTile, tx )
+        const dy = delta( settings_centerTile, ty )
 
         let x = 0
         let y = 0
+
         if( dx > dy ){
           if( tx > settings_centerTile ){
             x = 1
