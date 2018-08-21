@@ -126,10 +126,12 @@ Player is safe in hut, can sleep to pass the night away
 - ~~create art - path~~
   - Size: 4743, Remaining: 8569
 - before refactor
-  - Size: 4746, Remaining: 8566
-  - Move all consts together and rename
-  - Move all lets together and rename
-  - Extract functions for map generation
+  - ~Size: 4746, Remaining: 8566~
+  - ~Move all consts together and rename~
+  - ~Move all lets together and rename~
+  - ~Extract functions for map generation~
+  - ~Better maps with waypoints~
+  - Size: 4743, Remaining: 8569
 - create art - hut
 - create art - inside hut
 - create art - monsters
