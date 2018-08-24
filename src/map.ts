@@ -1,12 +1,14 @@
-import { T_TREE, DTYPE_MAP, Y, X, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_PATH, T_PATH_L, T_SAND_L, T_SAND } from './indices'
-import { mapSize } from './settings'
+import { T_TREE, DTYPE_MAP, Y, X, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_PATH, T_PATH_L, T_SAND_L, T_SAND, T_HUT } from './indices'
+import { mapSize, gridSize, gridTiles } from './settings'
 import { MapTiles, MapRow, DisplayMap, Point, FloodPoint } from './types'
 import { randInt, pick } from './utils'
 import {
   drunkenWalk, randomPointInLandBorder, inWaterBorder, expandLand,
   findTilePoints, randomLandEdge, floodFill, leftMost, findPath,
   getImmediateNeighbours,
-  hasPoint
+  hasPoint,
+  withinDist,
+  allNeighbours
 } from './geometry'
 
 export const createMap = () => {
@@ -95,17 +97,50 @@ export const createIsland = (): DisplayMap => {
 
   expandLand( tiles, land )
 
-  const sea = floodFill( tiles, 0, 0, T_WATER )
+  const sea = floodFill( [ 0, 0 ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )
 
   drawTilesToMap( tiles, sea, () => T_SEA )
 
   const [ playerX, playerY ] = leftMost( land )
 
-  const hut = pick( clear )
-  const playerFlood = floodFill( tiles, playerX, playerY, T_LAND )
-  const pathToHut = findPath( playerFlood, hut )
+  const [ rangerX, rangerY ] = withinDist( clear, [ playerX, playerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
+  const [ hutX, hutY ] = withinDist( clear, [ rangerX, rangerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
 
-  drawTilesToMap( tiles, pathToHut, () => randInt( T_PATH_L ) + T_PATH )
+  const waypoints: Point[] = [
+    [ playerX, playerY ],
+    [ rangerX, rangerY ],
+    [ hutX, hutY ]
+  ]
+
+  const waypointCount = 15
+
+  while ( waypoints.length < waypointCount ){
+    const [ px, py ] = pick( waypoints )
+    const gx = randInt( gridTiles ) * gridSize
+    const gy = randInt( gridTiles ) * gridSize
+    const w = withinDist( clear, [ gx, gy ], 1, gridSize )
+    const flood = floodFill( [ px, py ], ( [ tx, ty ] ) => !blocks( tiles[ ty ][ tx ] ) )
+    if ( w && flood.length ) {
+      const pathToNext = findPath( flood, w )
+      waypoints.push( w )
+      // don't necessarily want to draw paths for all but hey
+      drawTilesToMap( tiles, pathToNext, () => randInt( T_PATH_L ) + T_PATH )
+    }
+    /*
+    const [ px, py ] = pick( waypoints )
+    const w = withinDist( clear, [ px, py ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
+    */
+  }
+
+  for( let i = 2; i < waypointCount; i++ ){
+    const [ wx, wy ] = waypoints[ i ]
+    const neighbours = allNeighbours( [ wx, wy ] )
+    for( let n = 0; n < neighbours.length; n++ ){
+      const [ nx, ny ] = neighbours[ n ]
+      if( blocks( tiles[ ny ][ nx ] ) ) tiles[ ny ][ nx ] = T_LAND
+    }
+    tiles[ wy ][ wx ] = T_HUT
+  }
 
   decorate( tiles, clear )
 

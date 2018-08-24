@@ -6,10 +6,16 @@ import {
   MAP_TILES, T_PATH, T_PATH_L, T_GRASS, T_GRASS_L, T_TREE, MAP_PLAYERX,
   MAP_PLAYERY,
   T_SAND,
-  T_SAND_L
+  T_SAND_L,
+  T_HUT
 } from './indices'
 
+const start = process.hrtime()
 const mapData = createIsland()
+const end = process.hrtime( start )
+
+console.log( 'time: ', end )
+
 const map = mapData[ MAP_TILES ]
 const playerX = mapData[ MAP_PLAYERX ]
 const playerY = mapData[ MAP_PLAYERY ]
@@ -53,6 +59,10 @@ new Jimp( mapSize, mapSize, ( err, image ) => {
 
       if ( x === playerX && y === playerY ) {
         color = Jimp.rgbaToInt( 255, 255, 255, 255 )
+      }
+
+      if ( map[ y ][ x ] === T_HUT ) {
+        color = Jimp.rgbaToInt( 255, 0, 0, 255 )
       }
 
       image.setPixelColor( color, x, y )

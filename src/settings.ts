@@ -6,3 +6,5 @@ export const mapSize = 128
 export const animTime = 500
 export const waterBorder = ~~( mapSize / 16 )
 export const landBorder = ~~( mapSize / 6 )
+export const gridTiles = 10
+export const gridSize = ~~( mapSize / gridTiles )

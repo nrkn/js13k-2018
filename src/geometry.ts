@@ -26,13 +26,24 @@ export const allNeighbours = ( [ x, y ]: Point ): Point[] => [
 export const getImmediateNeighbours = ( tiles: MapTiles, p: Point, tileIndex: number ) =>
   immediateNeighbours( p ).filter( p => tiles[ p[ Y ] ][ p[ X ] ] === tileIndex )
 
-export const floodFill = ( tiles: MapTiles, x: number, y: number, tileIndex: number ) => {
+export const withinDist = ( tiles: Point[], [ x , y ]: Point, min: number, max: number ) => {
+  const candidates = tiles.filter( ( [ tx, ty ] ) => {
+    return delta( tx, x ) >= min &&
+      delta( ty, y ) >= min &&
+      delta( tx, x ) <= max &&
+      delta( ty, y ) <= max
+  })
+
+  return <Point>pick( candidates )
+}
+
+export const floodFill = ( [ x, y ]: Point, canFlood: ( p: Point ) => boolean ) => {
   const flooded: FloodPoint[] = []
   const queue: FloodPoint[] = [ [ x, y, 0 ] ]
 
   const floodPoint = ( [ x, y, d ]: FloodPoint ) => {
     if ( !inBounds( [ x, y ] ) ) return
-    if ( tiles[ y ][ x ] !== tileIndex ) return
+    if ( !canFlood( [ x, y ] ) ) return
     if ( hasPoint( flooded, [ x, y ] ) ) return
 
     flooded.push( [ x, y, d ] )
