@@ -2,6 +2,7 @@
 export type MapRow = number[]
 export type MapTiles = MapRow[]
 export type Point = [ number, number ]
+export type FloodPoint = [ number, number, number ]
 
 export interface PointMap {
   [ pointKey: string ]: number

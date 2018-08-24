@@ -9,6 +9,9 @@ export const T_FOOD = 9
 export const T_HEALTH = 10
 export const T_PATH = 11
 export const T_PATH_L = 3
+export const T_SAND = 14
+export const T_SAND_L = 3
+export const T_HUT = 17
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
 

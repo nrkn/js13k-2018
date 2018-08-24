@@ -110,11 +110,11 @@ export const Game = () => {
 
   const reset = () => {
     playerFacing = 0
-    playerFood = 1
-    playerHealth = 1
+    playerFood = 5
+    playerHealth = 2
     playerMaxHealth = 10
-    hours = 17
-    minutes = 55
+    hours = 6
+    minutes = 5
     gameData[ DATA_ISLAND ] = createIsland()
     displayStack = [
       gameData[ DATA_ISLAND ],

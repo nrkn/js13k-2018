@@ -4,7 +4,9 @@ import { mapSize } from './settings'
 import { createIsland } from './map'
 import {
   MAP_TILES, T_PATH, T_PATH_L, T_GRASS, T_GRASS_L, T_TREE, MAP_PLAYERX,
-  MAP_PLAYERY
+  MAP_PLAYERY,
+  T_SAND,
+  T_SAND_L
 } from './indices'
 
 const mapData = createIsland()
@@ -45,8 +47,12 @@ new Jimp( mapSize, mapSize, ( err, image ) => {
         color = Jimp.rgbaToInt( 0, 128, 0, 255 )
       }
 
+      if ( map[ y ][ x ] >= T_SAND && map[ y ][ x ] < T_SAND + T_SAND_L ) {
+        color = Jimp.rgbaToInt( 255, 255, 0, 255 )
+      }
+
       if ( x === playerX && y === playerY ) {
-        color = Jimp.rgbaToInt( 0, 255, 0, 255 )
+        color = Jimp.rgbaToInt( 255, 255, 255, 255 )
       }
 
       image.setPixelColor( color, x, y )

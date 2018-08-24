@@ -1,7 +1,7 @@
-import { Point, MapTiles, Edge } from './types'
+import { Point, MapTiles, Edge, FloodPoint } from './types'
 import { pick, randInt } from './utils'
 import { mapSize, waterBorder, landBorder } from './settings'
-import { X, Y, T_WATER, T_LAND, LEFT, RIGHT, TOP, BOTTOM } from './indices'
+import { X, Y, T_WATER, T_LAND, LEFT, RIGHT, TOP, BOTTOM, T_SEA } from './indices'
 
 export const delta = ( i: number, j: number ) => Math.max( i, j ) - Math.min( i, j )
 
@@ -23,8 +23,78 @@ export const allNeighbours = ( [ x, y ]: Point ): Point[] => [
   [ x + 1, y + 1 ]
 ]
 
-export const getImmediateWaterNeighbours = ( tiles: MapTiles, p: Point ) =>
-  immediateNeighbours( p ).filter( p => tiles[ p[ Y ] ][ p[ X ] ] === T_WATER )
+export const getImmediateNeighbours = ( tiles: MapTiles, p: Point, tileIndex: number ) =>
+  immediateNeighbours( p ).filter( p => tiles[ p[ Y ] ][ p[ X ] ] === tileIndex )
+
+export const floodFill = ( tiles: MapTiles, x: number, y: number, tileIndex: number ) => {
+  const flooded: FloodPoint[] = []
+  const queue: FloodPoint[] = [ [ x, y, 0 ] ]
+
+  const floodPoint = ( [ x, y, d ]: FloodPoint ) => {
+    if ( !inBounds( [ x, y ] ) ) return
+    if ( tiles[ y ][ x ] !== tileIndex ) return
+    if ( hasPoint( flooded, [ x, y ] ) ) return
+
+    flooded.push( [ x, y, d ] )
+
+    queue.push(
+      ...immediateNeighbours( [ x, y ] ).map(
+        ( [ x, y ] ) =>
+          <FloodPoint>[ x, y, d + 1 ]
+      )
+    )
+  }
+
+  while ( queue.length ) {
+    floodPoint( queue.shift()! )
+  }
+
+  return flooded
+}
+
+const findTile = ( tiles: Point[] | FloodPoint[], [ x, y ] ) => {
+  for( let i = 0; i < tiles.length; i++ ){
+    if( tiles[ i ][ X ] === x && tiles[ i ][ Y ] === y ) return tiles[ i ]
+  }
+}
+
+export const findPath = ( flood: FloodPoint[], [ x2, y2 ] ) => {
+  const path: Point[] = []
+
+  const [ x1, y1 ] = flood[ 0 ]
+  const end = findTile( flood, [ x2, y2 ] )
+
+  if( !end ) return path
+
+  const queue: FloodPoint[] = [ <FloodPoint>end ]
+
+  const connectNext = ( [ x, y, min ]: FloodPoint ) => {
+    path.unshift( [ x, y ] )
+
+    if ( x === x1 && y === y1 ) return
+
+    const neighbours = immediateNeighbours( [ x, y ] )
+    let n
+    neighbours.forEach( ( [ x, y ] ) => {
+      const t = flood.find( ( [ fx, fy ] ) => fx === x && fy === y )
+      if ( t ) {
+        const [ tx, ty, d ] = t
+        if ( d < min ) {
+          min = d
+          n = t
+        }
+      }
+    } )
+
+    if ( n ) queue.push( n )
+  }
+
+  while ( queue.length ) {
+    connectNext( queue.shift()! )
+  }
+
+  return path
+}
 
 export const towards = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point ): Point => {
   let dx = delta( x1, x2 )
@@ -73,10 +143,10 @@ export const drunkenWalk = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point, allowed = inB
   return steps
 }
 
-export const expandLand = ( mapTiles: MapTiles, landTiles: Point[], tileCount = ~~( ( mapSize * mapSize ) * 0.2 ) ) => {
+export const expandLand = ( mapTiles: MapTiles, landTiles: Point[], tileCount = ~~( ( mapSize * mapSize ) * 0.25 ) ) => {
   while ( landTiles.length < tileCount ) {
     const [ cx, cy ] = pick( landTiles )
-    const neighbours = getImmediateWaterNeighbours( mapTiles, [ cx, cy ] ).filter( inWaterBorder )
+    const neighbours = getImmediateNeighbours( mapTiles, [ cx, cy ], T_WATER ).filter( inWaterBorder )
 
     if ( neighbours.length ) {
       const [ nx, ny ] = pick( neighbours )
@@ -111,7 +181,22 @@ export const randomPointInLandBorder = (): Point =>
     randInt( mapSize - landBorder * 2, landBorder )
   ]
 
-export const hasPoint = ( tiles: Point[], [ x, y ]: Point ) => {
+export const leftMost = ( tiles: Point[] | FloodPoint[] ) => {
+  let left = mapSize
+  let p: Point = [ 0, 0 ]
+
+  for( let i = 0; i < tiles.length; i++ ){
+    const [ x, y ] = tiles[ i ]
+    if( x < left ){
+      left = x
+      p = [ x, y ]
+    }
+  }
+
+  return p
+}
+
+export const hasPoint = ( tiles: Point[] | FloodPoint[], [ x, y ]: Point | FloodPoint ) => {
   for( let i = 0; i < tiles.length; i++ ){
     if( tiles[ i ][ X ] === x && tiles[ i ][ Y ] === y ) return true
   }
