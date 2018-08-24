@@ -138,6 +138,8 @@ Player is safe in hut, can sleep to pass the night away
   - ~create art - sand~
   - ~improve map generation~
   - Size: 5059, Remaining: 8253
+- ~massive speed optimization~
+  - Size 5251, Remaining: 8061
 - create art - inside hut
 - create art - monsters
 - monster mechanics

@@ -1,7 +1,7 @@
 import { Point, MapTiles, Edge, FloodPoint } from './types'
 import { pick, randInt } from './utils'
 import { mapSize, waterBorder, landBorder } from './settings'
-import { X, Y, T_WATER, T_LAND, LEFT, RIGHT, TOP, BOTTOM, T_SEA } from './indices'
+import { X, Y, T_WATER, T_LAND, LEFT, RIGHT, TOP, BOTTOM } from './indices'
 
 export const delta = ( i: number, j: number ) => Math.max( i, j ) - Math.min( i, j )
 
@@ -40,13 +40,15 @@ export const withinDist = ( tiles: Point[], [ x , y ]: Point, min: number, max: 
 export const floodFill = ( [ x, y ]: Point, canFlood: ( p: Point ) => boolean ) => {
   const flooded: FloodPoint[] = []
   const queue: FloodPoint[] = [ [ x, y, 0 ] ]
+  const cache: boolean[] = []
 
   const floodPoint = ( [ x, y, d ]: FloodPoint ) => {
     if ( !inBounds( [ x, y ] ) ) return
     if ( !canFlood( [ x, y ] ) ) return
-    if ( hasPoint( flooded, [ x, y ] ) ) return
+    if ( cache[ y * mapSize + x ] ) return
 
     flooded.push( [ x, y, d ] )
+    cache[ y * mapSize + x ] = true
 
     queue.push(
       ...immediateNeighbours( [ x, y ] ).map(
@@ -89,7 +91,7 @@ export const findPath = ( flood: FloodPoint[], [ x2, y2 ] ) => {
     neighbours.forEach( ( [ x, y ] ) => {
       const t = flood.find( ( [ fx, fy ] ) => fx === x && fy === y )
       if ( t ) {
-        const [ tx, ty, d ] = t
+        const [ ,, d ] = t
         if ( d < min ) {
           min = d
           n = t

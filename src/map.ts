@@ -101,6 +101,8 @@ export const createIsland = (): DisplayMap => {
 
   drawTilesToMap( tiles, sea, () => T_SEA )
 
+  decorate( tiles, clear )
+
   const [ playerX, playerY ] = leftMost( land )
 
   const [ rangerX, rangerY ] = withinDist( clear, [ playerX, playerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
@@ -119,12 +121,13 @@ export const createIsland = (): DisplayMap => {
     const gx = randInt( gridTiles ) * gridSize
     const gy = randInt( gridTiles ) * gridSize
     const w = withinDist( clear, [ gx, gy ], 1, gridSize )
-    const flood = floodFill( [ px, py ], ( [ tx, ty ] ) => !blocks( tiles[ ty ][ tx ] ) )
+    const flood = floodFill( [ px, py ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] !== T_SEA )
     if ( w && flood.length ) {
       const pathToNext = findPath( flood, w )
       waypoints.push( w )
       // don't necessarily want to draw paths for all but hey
-      drawTilesToMap( tiles, pathToNext, () => randInt( T_PATH_L ) + T_PATH )
+      // drawTilesToMap( tiles, pathToNext, () => randInt( T_PATH_L ) + T_PATH )
+      drawTilesToMap( tiles, pathToNext, () => T_LAND )
     }
     /*
     const [ px, py ] = pick( waypoints )
@@ -141,8 +144,6 @@ export const createIsland = (): DisplayMap => {
     }
     tiles[ wy ][ wx ] = T_HUT
   }
-
-  decorate( tiles, clear )
 
   return [ DTYPE_MAP, playerX, playerY, tiles ]
 }

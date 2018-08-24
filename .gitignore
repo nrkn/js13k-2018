@@ -1,4 +1,5 @@
 node_modules
-dist
+dist/browser
+dist/node
 debug
 zip
