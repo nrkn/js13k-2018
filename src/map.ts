@@ -39,10 +39,10 @@ export const cloneMap = ( tiles: MapTiles ) => {
   return rows
 }
 
-export const drawTilesToMap = ( tiles: MapTiles, points: Point[] | FloodPoint[], getTileIndex: () => number ) => {
+export const drawTilesToMap = ( tiles: MapTiles, points: Point[] | FloodPoint[], getTileIndex: ( p: Point ) => number ) => {
   for( let i = 0; i < points.length; i++ ){
-    const point = points[ i ]
-    tiles[ point[ Y ] ][ point[ X ] ] = getTileIndex()
+    const [ px, py ] = points[ i ]
+    tiles[ py ][ px ] = getTileIndex( [ px, py ] )
   }
 }
 
@@ -105,7 +105,12 @@ export const createIsland = (): DisplayMap => {
 
   const [ playerX, playerY ] = leftMost( land )
 
-  const [ rangerX, rangerY ] = withinDist( clear, [ playerX, playerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
+  let r
+  while( !r ){
+    r = withinDist( clear, [ playerX, playerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
+  }
+  const [ rangerX, rangerY ] = r
+
   const [ hutX, hutY ] = withinDist( clear, [ rangerX, rangerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
 
   const waypoints: Point[] = [
@@ -125,23 +130,22 @@ export const createIsland = (): DisplayMap => {
     if ( w && flood.length ) {
       const pathToNext = findPath( flood, w )
       waypoints.push( w )
-      // don't necessarily want to draw paths for all but hey
-      // drawTilesToMap( tiles, pathToNext, () => randInt( T_PATH_L ) + T_PATH )
-      drawTilesToMap( tiles, pathToNext, () => T_LAND )
+      drawTilesToMap( tiles, pathToNext, ( [ wx, wy ] ) => {
+        if ( tiles[ wy ][ wx ] >= T_SAND && tiles[ wy ][ wx ] < T_SAND + T_SAND_L ){
+          return tiles[ wy ][ wx ]
+        }
+        return T_LAND
+      })
     }
-    /*
-    const [ px, py ] = pick( waypoints )
-    const w = withinDist( clear, [ px, py ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
-    */
   }
 
   for( let i = 2; i < waypointCount; i++ ){
     const [ wx, wy ] = waypoints[ i ]
-    const neighbours = allNeighbours( [ wx, wy ] )
-    for( let n = 0; n < neighbours.length; n++ ){
-      const [ nx, ny ] = neighbours[ n ]
-      if( blocks( tiles[ ny ][ nx ] ) ) tiles[ ny ][ nx ] = T_LAND
-    }
+    // const neighbours = allNeighbours( [ wx, wy ] )
+    // for( let n = 0; n < neighbours.length; n++ ){
+    //   const [ nx, ny ] = neighbours[ n ]
+    //   if( blocks( tiles[ ny ][ nx ] ) ) tiles[ ny ][ nx ] = T_LAND
+    // }
     tiles[ wy ][ wx ] = T_HUT
   }
 
