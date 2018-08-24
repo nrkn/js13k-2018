@@ -131,7 +131,8 @@ Player is safe in hut, can sleep to pass the night away
   - ~Move all lets together and rename~
   - ~Extract functions for map generation~
   - ~Better maps with waypoints~
-  - Size: 4743, Remaining: 8569
+  - ~Move to typescript with hacked in import inliner~
+  - Size: 4642, Remaining: 8670
 - create art - hut
 - create art - inside hut
 - create art - monsters
