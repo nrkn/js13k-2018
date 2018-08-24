@@ -1,6 +1,6 @@
 {
-  "asi": true,
   "esversion": 6,
-  "browser": true,
-  "globals": { "c": true }
+  "asi": true,
+  "mocha": true,
+  "node": true
 }

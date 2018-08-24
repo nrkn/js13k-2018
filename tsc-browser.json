@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "es2015",
+    "declaration": true,
+    "outDir": "./dist/browser",
+    "rootDir": "./src",
+    "listFiles": false,
+    "listEmittedFiles": false,
+    "newLine": "LF",
+    "pretty": true,
+
+    "sourceMap": false,
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "noImplicitThis": false,
+    "alwaysStrict": true,
+
+    "moduleResolution": "node",
+     "experimentalDecorators": true,
+     "emitDecoratorMetadata": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
