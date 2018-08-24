@@ -4,7 +4,7 @@
   to minify top level - easy enough to remove this
 */
 const s = () => {
-  let debug = false
+  let debug = true
   let ctx = debug ? 0 : c.getContext( '2d' )
 
   const settings_tileSize = 16
@@ -19,7 +19,10 @@ const s = () => {
   const index_tree = 8
   const index_food = 9
   const index_health = 10
+  const index_grass = 3
+  const length_grass = 5
   const index_path = 11
+  const length_path = 3
   const index_boatLeft = 5
   const index_boatRight = 6
 
@@ -153,9 +156,11 @@ const s = () => {
     return tiles
   }
 
-  const hasTile = ( x, y ) => tiles.some( t => t[ 0 ] === x && t[ 1 ] === y )
+  const hasTile = ( x, y, target = tiles ) => target.some( t => t[ 0 ] === x && t[ 1 ] === y )
 
-  const waterTiles = () => allTiles().filter( ( [ x, y ] ) => !map[ y ][ x ] )
+  const isWater = ( x, y ) => map[ y ][ x ] === 0 || map[ y ][ x ] === 1
+
+  const waterTiles = () => allTiles().filter( ( [ x, y ] ) => isWater( x, y ) )
 
   const waterNear = ( x1, y1, min, max ) =>
     pick( waterTiles().filter( ( [ x2, y2 ] ) => {
@@ -202,10 +207,10 @@ const s = () => {
     immediateNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !blocks( map[ ny ][ nx ] ) )
 
   const getImmediateWaterNeighbours = ( x, y ) =>
-    immediateNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !map[ ny ][ nx ] )
+    immediateNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && isWater( nx, ny ) )
 
   const getWaterNeighbours = ( x, y ) =>
-    allNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && !map[ ny ][ nx ] )
+    allNeighbours( x, y ).filter( ( [ nx, ny ] ) => inBounds( nx, ny ) && isWater( nx, ny ) )
 
   const delta = ( i, j ) => Math.max( i, j ) - Math.min( i, j )
 
@@ -242,10 +247,35 @@ const s = () => {
     for( let y = 0; y < settings_mapSize; y++ ){
       const row = []
       for( let x = 0; x < settings_mapSize; x++ ){
-        row.push( 0 )
+        // use second water tile so easy to find when post-processing
+        row.push( 1 )
       }
       map.push( row )
     }
+  }
+
+  const floodFill = ( x, y, tileFrom, tileTo ) => {
+    const flooded = []
+    const targets = []
+
+    const floodPoint = ( x, y ) => {
+      if( !inBounds( x, y ) ) return
+      if( map[ y ][ x ] !== tileFrom ) return
+      if( hasTile( x, y, flooded ) ) return
+
+      map[ y ][ x ] = tileTo
+      flooded.push( [ x, y ] )
+
+      targets.push( ...immediateNeighbours( x, y ) )
+    }
+
+    targets.push( [ x, y ] )
+
+    while( targets.length ){
+      floodPoint( ...targets.pop() )
+    }
+
+    return flooded
   }
 
   const expandLand = tileCount => {
@@ -256,7 +286,8 @@ const s = () => {
         if( neighbours.length ){
           const [ nx, ny ] = pick( neighbours )
           tiles.push( [ nx, ny ] )
-          map[ ny ][ nx ] = ~~( Math.random() * 7 ) + 2
+          //map[ ny ][ nx ] = ~~( Math.random() * length_grass ) + index_grass
+          map[ ny ][ nx ] = 2
         }
       }
     }
@@ -280,7 +311,7 @@ const s = () => {
     return [ lx, ly ]
   }
 
-  const addSand = () => {
+  const decorate = () => {
     for( let y = 0; y < settings_mapSize; y++ ){
       for( let x = 0; x < settings_mapSize; x++ ){
         if( map[ y ][ x ] ){
@@ -302,7 +333,7 @@ const s = () => {
     }
   }
 
-  const drunkenWalk2 = ( x1, y1, x2, y2, getTileIndex, d = 0.66 ) => {
+  const drunkenWalk2 = ( x1, y1, x2, y2, getTileIndex, d = 0.5 ) => {
     map[ y1 ][ x1 ] = getTileIndex()
 
     if( !hasTile( x1, y1 ) )
@@ -325,7 +356,7 @@ const s = () => {
     drunkenWalk2( x, y, x2, y2, getTileIndex, d )
   }
 
-  const drunkenWalk = ( x1, y1, x2, y2, getTileIndex, d = 0.66 ) => {
+  const drunkenWalk = ( x1, y1, x2, y2, getTileIndex, d = 0.5 ) => {
     map[ y1 ][ x1 ] = getTileIndex()
 
     if( x1 === x2 && y1 === y2 ) return
@@ -354,25 +385,26 @@ const s = () => {
   const island = () => {
     emptyMap()
 
-    const waypoints = [
+    const clearways = [
       pick( waterTiles().filter( ( [ x, y ] ) => inBorder( x, y ) ) )
     ]
 
-    const waypointSize = 20
+    const clearwayCount = ~~( Math.random() * 10 ) + 15
 
-    for( let w = 1; w < waypointSize; w++ ){
-      const [ cx, cy ] = waypoints[ w - 1 ]
+    for( let w = 1; w < clearwayCount; w++ ){
+      const [ cx, cy ] = clearways[ w - 1 ]
       const [ wx, wy ] = pick( waterTiles().filter( ( [ x, y ] ) => inBorder( x, y ) ) )
-      waypoints.push( [ wx, wy ] )
+      clearways.push( [ wx, wy ] )
 
-      drunkenWalk2( cx, cy, wx, wy, () => ~~( Math.random() * 3 ) + index_path )
+      drunkenWalk2( cx, cy, wx, wy, () => 2 )
     }
 
     const len = settings_mapSize * settings_mapSize
-    const tileCount = ~~( 0.4 * len )
+    const tileCount = ~~( 0.3 * len )
 
     expandLand( tileCount )
-    addSand()
+
+    const sea = floodFill( 0, 0, 1, 0 )
 
     const [ lx, ly ] = leftmostLand()
 
@@ -381,10 +413,26 @@ const s = () => {
     map_boatX = player_x - 2
     map_boatY = player_y
 
-    const hut = waypoints[ 1 ]
+    // const paths = [
+    //   [ lx, ly ]
+    // ]
 
-    map_hutX = hut[ 0 ]
-    map_hutY = hut[ 1 ]
+    // const pathCount = ~~( Math.random() * 5 ) + 10
+
+    // for( let p = 1; p < pathCount; p++ ){
+    //   const [ cx, cy ] = paths[ p - 1 ]
+    //   const [ px, py ] = emptyNear( cx, cy, 15, 25 )
+
+    //   paths.push( [ px, py ] )
+    //   drunkenWalk( cx, cy, px, py, () => ~~( Math.random() * length_path ) + index_path )
+    // }
+
+
+    // const hut = paths[ 1 ]
+    // map_hutX = hut[ 0 ]
+    // map_hutY = hut[ 1 ]
+
+    //decorate()
   }
 
   // nb the text grid is half the size of the tile grid, 8x8 not 16x16
@@ -465,8 +513,28 @@ const s = () => {
         for( let x = 0; x < settings_mapSize; x++ ){
           let color = Jimp.rgbaToInt( 0, 0, 0, 255 )
 
-          if( map[ y ][ x ] ){
-            color = Jimp.rgbaToInt( 255, 255, 255, 255 )
+          if( map[ y ][ x ] === 0 ){
+            color = Jimp.rgbaToInt( 0, 0, 255, 255 )
+          }
+
+          if( map[ y ][ x ] === 1 ){
+            color = Jimp.rgbaToInt( 255, 0, 255, 255 )
+          }
+
+          if( map[ y ][ x ] === 2 ){
+            color = Jimp.rgbaToInt( 128, 255, 128, 255 )
+          }
+
+          if( map[ y ][ x ] >= index_path && map[ y ][ x ] < index_path + length_path ){
+            color = Jimp.rgbaToInt( 128, 128, 128, 255 )
+          }
+
+          if( map[ y ][ x ] >= index_grass && map[ y ][ x ] < index_grass + length_grass ){
+            color = Jimp.rgbaToInt( 32, 255, 64, 255 )
+          }
+
+          if( map[ y ][ x ] === index_tree ){
+            color = Jimp.rgbaToInt( 0, 128, 0, 255 )
           }
 
           if( x === map_hutX && y === map_hutY ){
