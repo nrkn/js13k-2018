@@ -2,6 +2,8 @@
 
 A game for [js13kGames 2018 **Offline**](http://2018.js13kgames.com/)
 
+![Screenshot](screenshot.png)
+
 ## Story
 
 ### Who is the player?
