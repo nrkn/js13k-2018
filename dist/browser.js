@@ -684,10 +684,34 @@ document.onkeyup = e => {
         // close, change selection, confirm selection
     }
 };
-c.ontouchend = () => {
+c.ontouchend = e => {
     const displayItem = api[API_STATE]()[ST_DISPLAY_ITEM];
     if (displayItem[DISPLAY_TYPE] === DTYPE_MAP) {
-        // todo
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const tileSize = c.getBoundingClientRect().width / canvasTiles;
+            const tx = ~~(e.changedTouches[i].clientX / tileSize) - 1;
+            const ty = ~~(e.changedTouches[i].clientY / tileSize) - 1;
+            if (tx === centerTile && ty === centerTile) {
+                // tapped on player
+                return;
+            }
+            if (tx < 0 || ty < 0) {
+                //tapped an interface tile
+                return;
+            }
+            const dx = delta(tx, centerTile);
+            const dy = delta(ty, centerTile);
+            let x = 0;
+            let y = 0;
+            if (dx > dy) {
+                x = tx > centerTile ? 1 : -1;
+            }
+            else if (dx < dy) {
+                y = ty > centerTile ? 1 : -1;
+            }
+            api[API_MOVE](x, y);
+        }
+        return;
     }
     if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE || displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE) {
         api[API_CLOSE]();

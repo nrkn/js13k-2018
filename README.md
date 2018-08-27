@@ -142,8 +142,10 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 5059, Remaining: 8253
 - ~massive speed optimization~
   - Size 5251, Remaining: 8061
+- ~create art - monsters~
+  - ~reinstate touch controls~
+  - Size 5513, Remaining: 7799
 - create art - inside hut
-- create art - monsters
 - monster mechanics
 - scripted intro events
 - create art - more tiles - rocks, flowers, more trees
