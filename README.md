@@ -148,5 +148,7 @@ Player is safe in hut, can sleep to pass the night away
 - create art - inside hut
 - monster mechanics
 - scripted intro events
+- get computers working again
+- quests etc - spend some time figuring out
 - create art - more tiles - rocks, flowers, more trees
 - blue color mode for night instead of invert?
