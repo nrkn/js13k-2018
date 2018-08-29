@@ -164,6 +164,9 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 6244, Remaining: 7068
 - ~BUG: monsters and player can harm each other during day!~
   - Size: 6263, Remaining: 7049
+- ~BUG: food can resurrect you after you die!~
+  - ~BUG: monsters can kill you in the hut~
+  - Size: 6284, Remaining: 7028
 - get computers working again
 - inventory / use item
 - scripted intro events

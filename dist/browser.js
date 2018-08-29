@@ -591,6 +591,8 @@ const Game = () => {
             displayStack = [gameData[DATA_ISLAND]];
     };
     const incTime = () => {
+        if (playerHealth < 1)
+            return;
         minutes++;
         if (minutes === 60) {
             minutes = 0;
@@ -619,6 +621,7 @@ const Game = () => {
             const monster = monsters[i];
             const x = monster[MON_X];
             const y = monster[MON_Y];
+            const currentMapItem = displayStack[displayStack.length - 1];
             const mapItem = gameData[DATA_ISLAND];
             const playerX = mapItem[MAP_PLAYERX];
             const playerY = mapItem[MAP_PLAYERY];
@@ -649,7 +652,9 @@ const Game = () => {
                     monster[MON_FACING] = 0;
                 }
             }
-            if ((hours >= sunset || hours < sunrise) &&
+            if (currentMapItem[DISPLAY_TYPE] === DTYPE_MAP &&
+                currentMapItem[MAP_TYPE] === MT_ISLAND &&
+                (hours >= sunset || hours < sunrise) &&
                 playerX === newLocation[X] && playerY === newLocation[Y] &&
                 randInt(2) && playerHealth > 0 && monster[MON_HEALTH] > 0) {
                 playerHealth--;

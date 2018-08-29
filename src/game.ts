@@ -175,6 +175,8 @@ export const Game = () => {
   }
 
   const incTime = () => {
+    if( playerHealth < 1 ) return
+
     minutes++
     if ( minutes === 60 ) {
       minutes = 0
@@ -201,6 +203,7 @@ export const Game = () => {
       const monster = monsters[ i ]
       const x = monster[ MON_X ]
       const y = monster[ MON_Y ]
+      const currentMapItem = <DisplayMap>displayStack[ displayStack.length - 1 ]
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
       const playerX = mapItem[ MAP_PLAYERX ]
       const playerY = mapItem[ MAP_PLAYERY ]
@@ -236,6 +239,8 @@ export const Game = () => {
       }
 
       if (
+        currentMapItem[ DISPLAY_TYPE ] === DTYPE_MAP &&
+        currentMapItem[ MAP_TYPE ] === MT_ISLAND &&
         ( hours >= sunset || hours < sunrise ) &&
         playerX === newLocation[ X ] && playerY === newLocation[ Y ] &&
         randInt( 2 ) && playerHealth > 0 && monster[ MON_HEALTH ] > 0
