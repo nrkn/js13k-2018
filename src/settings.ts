@@ -9,3 +9,5 @@ export const landBorder = ~~( mapSize / 6 )
 export const gridTiles = 10
 export const gridSize = ~~( mapSize / gridTiles )
 export const initialMonsterCount = ~~( mapSize / 3 )
+export const sunrise = 6
+export const sunset = 18

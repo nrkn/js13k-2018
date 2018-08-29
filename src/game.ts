@@ -3,7 +3,9 @@ import { blocks, createIsland, createHut } from './map'
 import {
   DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
   DATA_C_MAIN, DATA_ISLAND, DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE,
-  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X, Y, MON_HEALTH
+  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R,
+  MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X,
+  MON_Y, MON_FACING, X, Y, MON_HEALTH
 } from './indices'
 
 import {
@@ -11,7 +13,7 @@ import {
 } from './types'
 
 import { inBounds, hasPoint, towards } from './geometry'
-import { initialMonsterCount, mapSize } from './settings';
+import { initialMonsterCount, mapSize, sunrise, sunset } from './settings';
 import { randInt } from './utils';
 
 const gameData: DisplayItem[] = [
@@ -177,11 +179,11 @@ export const Game = () => {
     if ( minutes === 60 ) {
       minutes = 0
       hours++
-      if ( hours === 6 ) {
+      if ( hours === sunrise ) {
         color = ''
         displayStack.push( gameData[ DATA_SUNRISE ] )
       }
-      if ( hours === 18 ) {
+      if ( hours === sunset ) {
         color = 'i'
         displayStack.push( gameData[ DATA_SUNSET ] )
       }
@@ -233,7 +235,11 @@ export const Game = () => {
         }
       }
 
-      if ( ( hours >= 18 || hours < 6 ) && playerX === newLocation[ X ] && playerY === newLocation[ Y ] && randInt( 2 ) && playerHealth > 0 && monster[ MON_HEALTH ] > 0 ){
+      if (
+        ( hours >= sunset || hours < sunrise ) &&
+        playerX === newLocation[ X ] && playerY === newLocation[ Y ] &&
+        randInt( 2 ) && playerHealth > 0 && monster[ MON_HEALTH ] > 0
+      ){
         playerHealth--
       }
     }
@@ -260,7 +266,7 @@ export const Game = () => {
     y = map[ MAP_PLAYERY ] + y
 
     let monsterHere
-    if ( ( hours >= 18 || hours < 6 ) && map[ MAP_TYPE ] === MT_ISLAND ){
+    if ( ( hours >= sunset || hours < sunrise ) && map[ MAP_TYPE ] === MT_ISLAND ){
       for ( let i = 0; i < monsters.length; i++ ) {
         if ( monsters[ i ][ MON_X ] === x && monsters[ i ][ MON_Y ] === y && monsters[ i ][ MON_HEALTH ] > 0 ){
           monsterHere = monsters[ i ]

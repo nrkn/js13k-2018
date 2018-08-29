@@ -9,6 +9,8 @@ const landBorder = ~~(mapSize / 6);
 const gridTiles = 10;
 const gridSize = ~~(mapSize / gridTiles);
 const initialMonsterCount = ~~(mapSize / 3);
+const sunrise = 6;
+const sunset = 18;
 
 const loadImage = (path) => new Promise(resolve => {
     const img = new Image();
@@ -593,11 +595,11 @@ const Game = () => {
         if (minutes === 60) {
             minutes = 0;
             hours++;
-            if (hours === 6) {
+            if (hours === sunrise) {
                 color = '';
                 displayStack.push(gameData[DATA_SUNRISE]);
             }
-            if (hours === 18) {
+            if (hours === sunset) {
                 color = 'i';
                 displayStack.push(gameData[DATA_SUNSET]);
             }
@@ -647,7 +649,9 @@ const Game = () => {
                     monster[MON_FACING] = 0;
                 }
             }
-            if ((hours >= 18 || hours < 6) && playerX === newLocation[X] && playerY === newLocation[Y] && randInt(2) && playerHealth > 0 && monster[MON_HEALTH] > 0) {
+            if ((hours >= sunset || hours < sunrise) &&
+                playerX === newLocation[X] && playerY === newLocation[Y] &&
+                randInt(2) && playerHealth > 0 && monster[MON_HEALTH] > 0) {
                 playerHealth--;
             }
         }
@@ -667,7 +671,7 @@ const Game = () => {
         x = map[MAP_PLAYERX] + x;
         y = map[MAP_PLAYERY] + y;
         let monsterHere;
-        if ((hours >= 18 || hours < 6) && map[MAP_TYPE] === MT_ISLAND) {
+        if ((hours >= sunset || hours < sunrise) && map[MAP_TYPE] === MT_ISLAND) {
             for (let i = 0; i < monsters.length; i++) {
                 if (monsters[i][MON_X] === x && monsters[i][MON_Y] === y && monsters[i][MON_HEALTH] > 0) {
                     monsterHere = monsters[i];
@@ -745,7 +749,7 @@ const drawMap = (time) => {
     const startY = mapItem[MAP_STARTY];
     const playerHealth = api[API_STATE]()[ST_PLAYER_HEALTH];
     const playerFacing = api[API_STATE]()[ST_PLAYER_FACING];
-    const isNight = api[API_STATE]()[ST_HOURS] >= 18 || api[API_STATE]()[ST_HOURS] < 6;
+    const isNight = api[API_STATE]()[ST_HOURS] >= sunset || api[API_STATE]()[ST_HOURS] < sunrise;
     for (let y = 0; y < viewTiles; y++) {
         for (let x = 0; x < viewTiles; x++) {
             const mapX = (playerX - centerTile) + x;
