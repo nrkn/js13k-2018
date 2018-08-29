@@ -732,7 +732,7 @@ const drawMap = (time) => {
                     sx = tileIndex * tileSize;
             }
             ctx.drawImage(tiles, sx, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
-            if (isNight) {
+            if (mapType === MT_ISLAND && isNight) {
                 for (let i = 0; i < monsters.length; i++) {
                     const monster = monsters[i];
                     const mx = monster[MON_X];

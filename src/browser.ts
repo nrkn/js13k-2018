@@ -97,7 +97,7 @@ const drawMap = ( time: number ) => {
         tileSize, tileSize
       )
 
-      if ( isNight ){
+      if ( mapType === MT_ISLAND && isNight ){
         for ( let i = 0; i < monsters.length; i++ ) {
           const monster = monsters[ i ]
           const mx = monster[ MON_X ]
