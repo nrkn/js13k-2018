@@ -156,12 +156,11 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 6147, Remaining: 7165
 - ~blue color mode for night instead of invert~
   - Size: 6137, Remaining: 7175
-- BUG: monsters can move onto player tile!
 - monsters can harm player and vice versa
 - monsters have chance to move towards player
-- scripted intro events
 - get computers working again
 - inventory / use item
+- scripted intro events
 - quests etc - spend some time figuring out
 - win screen
 - restart on death
@@ -173,6 +172,8 @@ Player is safe in hut, can sleep to pass the night away
   - lake
   - forest
   - ???
+- BUG: but maybe keep - monsters can move on both x and y axis each turn
+- BUG: monsters can move onto player tile!
 - BUG: map generation sometimes crashes
 - ISSUE: map generation sometimes very slow
 - loading screen during map gen?
