@@ -3,14 +3,14 @@ import { blocks, createIsland, createHut } from './map'
 import {
   DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
   DATA_C_MAIN, DATA_ISLAND, DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE,
-  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING
+  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X, Y, MON_HEALTH
 } from './indices'
 
 import {
   DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster, Point
 } from './types'
 
-import { inBounds, hasPoint } from './geometry'
+import { inBounds, hasPoint, towards } from './geometry'
 import { initialMonsterCount, mapSize } from './settings';
 import { randInt } from './utils';
 
@@ -199,22 +199,42 @@ export const Game = () => {
       const monster = monsters[ i ]
       const x = monster[ MON_X ]
       const y = monster[ MON_Y ]
-      const newX = x + ( randInt( 3 ) - 1 )
-      const newY = y + ( randInt( 3 ) - 1 )
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
-      const mapTile = mapItem[ MAP_TILES ][ newY ][ newX ]
       const playerX = mapItem[ MAP_PLAYERX ]
       const playerY = mapItem[ MAP_PLAYERY ]
+      const newLocation = [ x, y ]
 
-      if ( !blocks( mapTile ) && !hasPoint( <any>monsters, [ newX, newY ] ) && !( playerX === x && playerY === y ) ){
-        monster[ MON_X ] = newX
-        monster[ MON_Y ] = newY
-        if( newX < x ){
+      if( Math.random() < 0.66 ){
+        const toPlayer = towards( [ x, y ], [ playerX, playerY ] )
+        newLocation[ X ] = toPlayer[ X ]
+        newLocation[ Y ] = toPlayer[ Y ]
+      } else {
+        if( randInt( 2 ) ){
+          newLocation[ X ] = x + ( randInt( 3 ) - 1 )
+        } else {
+          newLocation[ Y ] = y + ( randInt( 3 ) - 1 )
+        }
+      }
+
+      const mapTile = mapItem[ MAP_TILES ][ newLocation[ Y ] ][ newLocation[ X ] ]
+
+      if (
+        !blocks( mapTile ) &&
+        !hasPoint( <any>monsters, [ newLocation[ X ], newLocation[ Y ] ] ) &&
+        !( playerX === newLocation[ X ] && playerY === newLocation[ Y ] )
+      ){
+        monster[ MON_X ] = newLocation[ X ]
+        monster[ MON_Y ] = newLocation[ Y ]
+        if( newLocation[ X ] < x ){
           monster[ MON_FACING ] = 1
         }
-        if( newX > x ){
+        if( newLocation[ X ] > x ){
           monster[ MON_FACING ] = 0
         }
+      }
+
+      if ( playerX === newLocation[ X ] && playerY === newLocation[ Y ] && randInt( 2 ) && playerHealth > 0 && monster[ MON_HEALTH ] > 0 ){
+        playerHealth--
       }
     }
   }
@@ -239,7 +259,16 @@ export const Game = () => {
     x = map[ MAP_PLAYERX ] + x
     y = map[ MAP_PLAYERY ] + y
 
-    if ( playerHealth > 0 && inBounds( [ x, y ] ) && !blocks( map[ MAP_TILES ][ y ][ x ] ) && !hasPoint( <any>monsters, [ x, y ] ) ){
+    let monsterHere
+    if ( map[ MAP_TYPE ] === MT_ISLAND ){
+      for ( let i = 0; i < monsters.length; i++ ) {
+        if ( monsters[ i ][ MON_X ] === x && monsters[ i ][ MON_Y ] === y && monsters[ i ][ MON_HEALTH ] > 0 ){
+          monsterHere = monsters[ i ]
+        }
+      }
+    }
+
+    if ( playerHealth > 0 && inBounds( [ x, y ] ) && !blocks( map[ MAP_TILES ][ y ][ x ] ) && !monsterHere ){
       map[ MAP_PLAYERX ] = x
       map[ MAP_PLAYERY ] = y
     }
@@ -254,6 +283,10 @@ export const Game = () => {
         if( x === map[ MAP_STARTX ] - 1 ){
           displayStack.push( gameData[ DATA_INVESTIGATE ] )
         }
+      }
+
+      if ( monsterHere && randInt( 2 ) ){
+        monsterHere[ MON_HEALTH ]--
       }
     }
 

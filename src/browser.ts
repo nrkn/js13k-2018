@@ -9,7 +9,7 @@ import {
   T_HEALTH, T_FOOD, API_STATE, ST_COLOR, ST_DISPLAY_ITEM, DISPLAY_TYPE,
   DTYPE_MAP, DTYPE_IMAGE, DISPLAY_NAME, DTYPE_MESSAGE, DISPLAY_MESSAGE,
   MAP_TILES, MAP_PLAYERX, MAP_PLAYERY, ST_PLAYER_HEALTH, ST_PLAYER_FACING,
-  ST_PLAYER_FOOD, API_TIMESTR, API_MOVE, API_CLOSE, DTYPE_SCREEN, MAP_TYPE, MAP_STARTX, MAP_STARTY, MT_ISLAND, S_SKELETON, S_BOAT_LEFT, S_BOAT_RIGHT, ST_MONSTERS, ST_HOURS, MON_X, MON_Y, MON_FACING, S_MONSTER
+  ST_PLAYER_FOOD, API_TIMESTR, API_MOVE, API_CLOSE, DTYPE_SCREEN, MAP_TYPE, MAP_STARTX, MAP_STARTY, MT_ISLAND, S_SKELETON, S_BOAT_LEFT, S_BOAT_RIGHT, ST_MONSTERS, ST_HOURS, MON_X, MON_Y, MON_FACING, S_MONSTER, MON_HEALTH
 } from './indices'
 
 import { Game } from './game'
@@ -104,7 +104,7 @@ const drawMap = ( time: number ) => {
           const my = monster[ MON_Y ]
           const monsterFacing = monster[ MON_FACING ]
 
-          if( mx === mapX && my === mapY ){
+          if( mx === mapX && my === mapY && monster[ MON_HEALTH ] > 0 ){
             sx = ( ( S_MONSTER + currentFrame ) * tileSize ) + ( monsterFacing * tileSize * 2 )
 
             ctx.drawImage(

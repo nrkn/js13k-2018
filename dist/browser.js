@@ -617,21 +617,38 @@ const Game = () => {
             const monster = monsters[i];
             const x = monster[MON_X];
             const y = monster[MON_Y];
-            const newX = x + (randInt(3) - 1);
-            const newY = y + (randInt(3) - 1);
             const mapItem = gameData[DATA_ISLAND];
-            const mapTile = mapItem[MAP_TILES][newY][newX];
             const playerX = mapItem[MAP_PLAYERX];
             const playerY = mapItem[MAP_PLAYERY];
-            if (!blocks(mapTile) && !hasPoint(monsters, [newX, newY]) && !(playerX === x && playerY === y)) {
-                monster[MON_X] = newX;
-                monster[MON_Y] = newY;
-                if (newX < x) {
+            const newLocation = [x, y];
+            if (Math.random() < 0.66) {
+                const toPlayer = towards([x, y], [playerX, playerY]);
+                newLocation[X] = toPlayer[X];
+                newLocation[Y] = toPlayer[Y];
+            }
+            else {
+                if (randInt(2)) {
+                    newLocation[X] = x + (randInt(3) - 1);
+                }
+                else {
+                    newLocation[Y] = y + (randInt(3) - 1);
+                }
+            }
+            const mapTile = mapItem[MAP_TILES][newLocation[Y]][newLocation[X]];
+            if (!blocks(mapTile) &&
+                !hasPoint(monsters, [newLocation[X], newLocation[Y]]) &&
+                !(playerX === newLocation[X] && playerY === newLocation[Y])) {
+                monster[MON_X] = newLocation[X];
+                monster[MON_Y] = newLocation[Y];
+                if (newLocation[X] < x) {
                     monster[MON_FACING] = 1;
                 }
-                if (newX > x) {
+                if (newLocation[X] > x) {
                     monster[MON_FACING] = 0;
                 }
+            }
+            if (playerX === newLocation[X] && playerY === newLocation[Y] && randInt(2) && playerHealth > 0 && monster[MON_HEALTH] > 0) {
+                playerHealth--;
             }
         }
     };
@@ -649,7 +666,15 @@ const Game = () => {
         }
         x = map[MAP_PLAYERX] + x;
         y = map[MAP_PLAYERY] + y;
-        if (playerHealth > 0 && inBounds([x, y]) && !blocks(map[MAP_TILES][y][x]) && !hasPoint(monsters, [x, y])) {
+        let monsterHere;
+        if (map[MAP_TYPE] === MT_ISLAND) {
+            for (let i = 0; i < monsters.length; i++) {
+                if (monsters[i][MON_X] === x && monsters[i][MON_Y] === y && monsters[i][MON_HEALTH] > 0) {
+                    monsterHere = monsters[i];
+                }
+            }
+        }
+        if (playerHealth > 0 && inBounds([x, y]) && !blocks(map[MAP_TILES][y][x]) && !monsterHere) {
             map[MAP_PLAYERX] = x;
             map[MAP_PLAYERY] = y;
         }
@@ -662,6 +687,9 @@ const Game = () => {
                 if (x === map[MAP_STARTX] - 1) {
                     displayStack.push(gameData[DATA_INVESTIGATE]);
                 }
+            }
+            if (monsterHere && randInt(2)) {
+                monsterHere[MON_HEALTH]--;
             }
         }
         if (map[MAP_TYPE] === MT_HUT) {
@@ -738,7 +766,7 @@ const drawMap = (time) => {
                     const mx = monster[MON_X];
                     const my = monster[MON_Y];
                     const monsterFacing = monster[MON_FACING];
-                    if (mx === mapX && my === mapY) {
+                    if (mx === mapX && my === mapY && monster[MON_HEALTH] > 0) {
                         sx = ((S_MONSTER + currentFrame) * tileSize) + (monsterFacing * tileSize * 2);
                         ctx.drawImage(player, sx, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
                     }
