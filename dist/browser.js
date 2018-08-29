@@ -647,7 +647,7 @@ const Game = () => {
                     monster[MON_FACING] = 0;
                 }
             }
-            if (playerX === newLocation[X] && playerY === newLocation[Y] && randInt(2) && playerHealth > 0 && monster[MON_HEALTH] > 0) {
+            if ((hours >= 18 || hours < 6) && playerX === newLocation[X] && playerY === newLocation[Y] && randInt(2) && playerHealth > 0 && monster[MON_HEALTH] > 0) {
                 playerHealth--;
             }
         }
@@ -667,7 +667,7 @@ const Game = () => {
         x = map[MAP_PLAYERX] + x;
         y = map[MAP_PLAYERY] + y;
         let monsterHere;
-        if (map[MAP_TYPE] === MT_ISLAND) {
+        if ((hours >= 18 || hours < 6) && map[MAP_TYPE] === MT_ISLAND) {
             for (let i = 0; i < monsters.length; i++) {
                 if (monsters[i][MON_X] === x && monsters[i][MON_Y] === y && monsters[i][MON_HEALTH] > 0) {
                     monsterHere = monsters[i];

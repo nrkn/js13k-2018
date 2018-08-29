@@ -162,6 +162,8 @@ Player is safe in hut, can sleep to pass the night away
   - ~BUG: but maybe keep - monsters can move on both x and y axis each turn~
   - ~BUG: monsters can move onto player tile!~
   - Size: 6244, Remaining: 7068
+- ~BUG: monsters and player can harm each other during day!~
+  - Size: 6263, Remaining: 7049
 - get computers working again
 - inventory / use item
 - scripted intro events
