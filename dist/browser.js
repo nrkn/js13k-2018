@@ -41,6 +41,7 @@ const T_HUT_L = 21;
 const T_HUT_M = 22;
 const T_HUT_R = 23;
 const T_BLACK = 24;
+const S_SKELETON = 4;
 const S_BOAT_LEFT = 5;
 const S_BOAT_RIGHT = 6;
 // state indices
@@ -73,10 +74,17 @@ const DATA_C_MAIN = 4;
 const DATA_C_DIAGNOSTICS = 5;
 const DATA_C_SYNTH = 6;
 const DATA_ISLAND = 7;
+const DATA_INVESTIGATE = 8;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
 const MAP_TILES = 3;
+const MAP_TYPE = 4;
+const MAP_STARTX = 5;
+const MAP_STARTY = 6;
+// map type indices
+const MT_ISLAND = 0;
+const MT_HUT = 1;
 // display item indices
 const DISPLAY_TYPE = 0;
 const DISPLAY_NAME = 1;
@@ -354,7 +362,7 @@ const createHut = () => {
     tiles[landBorder + 1][landBorder - 2] = T_HUT_L;
     tiles[landBorder + 1][landBorder - 1] = T_HUT_M;
     tiles[landBorder + 1][landBorder] = T_HUT_R;
-    return [DTYPE_MAP, landBorder, landBorder, tiles];
+    return [DTYPE_MAP, landBorder, landBorder, tiles, MT_HUT, landBorder, landBorder];
 };
 const createIsland = () => {
     const tiles = createMap();
@@ -417,7 +425,7 @@ const createIsland = () => {
         // }
         tiles[wy][wx] = T_HUT;
     }
-    return [DTYPE_MAP, playerX, playerY, tiles];
+    return [DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY];
 };
 const blocks = i => i < 2 || i === T_TREE || i === T_HUT || i === T_BLACK || i === T_HUT_L ||
     i === T_HUT_M || i === T_HUT_R || i === T_COMPUTER || i === T_SYNTH ||
@@ -426,9 +434,9 @@ const blocks = i => i < 2 || i === T_TREE || i === T_HUT || i === T_BLACK || i =
 
 
 const gameData = [
-    // I_SPLASH
+    // DATA_SPLASH
     [DTYPE_IMAGE, 's.png'],
-    // M_INTRO
+    // DATA_INTRO
     [DTYPE_MESSAGE,
         [
             'Lost contact with',
@@ -436,21 +444,21 @@ const gameData = [
             'and investigate.'
         ]
     ],
-    // M_SUNRISE
+    // DATA_SUNRISE
     [
         DTYPE_MESSAGE,
         [
             'Sunrise'
         ]
     ],
-    // M_SUNSET
+    // DATA_SUNSET
     [
         DTYPE_MESSAGE,
         [
             'Sunset'
         ]
     ],
-    // S_MAIN
+    // DATA_C_MAIN
     [
         DTYPE_SCREEN,
         [
@@ -467,7 +475,7 @@ const gameData = [
             ['SYNTHESIZE', DATA_C_SYNTH]
         ]
     ],
-    // S_DIAGNOSTICS
+    // DATA_C_DIAGNOSTICS
     [
         DTYPE_SCREEN,
         [
@@ -484,7 +492,7 @@ const gameData = [
         ],
         []
     ],
-    // S_SYNTH
+    // DATA_C_SYNTH
     [
         DTYPE_SCREEN,
         [
@@ -500,8 +508,16 @@ const gameData = [
             ['BASIC RATIONS', DATA_C_MAIN] // need to implement
         ]
     ],
-    // MAP_ISLAND
-    createIsland()
+    // DATA_ISLAND
+    createIsland(),
+    // DATA_INVESTIGATE
+    [
+        DTYPE_MESSAGE,
+        [
+            'I should',
+            'investigate'
+        ]
+    ]
 ];
 const Game = () => {
     let playerFacing;
@@ -592,11 +608,20 @@ const Game = () => {
             map[MAP_PLAYERY] = y;
         }
         // bumps
-        if (map[MAP_TILES][y][x] === T_HUT) {
-            displayStack.push(createHut());
+        if (map[MAP_TYPE] === MT_ISLAND) {
+            if (map[MAP_TILES][y][x] === T_HUT) {
+                displayStack.push(createHut());
+            }
+            if (y === map[MAP_STARTY]) {
+                if (x === map[MAP_STARTX] - 1) {
+                    displayStack.push(gameData[DATA_INVESTIGATE]);
+                }
+            }
         }
-        if (map[MAP_TILES][y][x] === T_HUT_R) {
-            displayStack.pop();
+        if (map[MAP_TYPE] === MT_HUT) {
+            if (map[MAP_TILES][y][x] === T_HUT_R) {
+                displayStack.pop();
+            }
         }
     };
     reset();
@@ -640,6 +665,9 @@ const drawMap = (time) => {
     const map = mapItem[MAP_TILES];
     const playerX = mapItem[MAP_PLAYERX];
     const playerY = mapItem[MAP_PLAYERY];
+    const mapType = mapItem[MAP_TYPE];
+    const startX = mapItem[MAP_STARTX];
+    const startY = mapItem[MAP_STARTY];
     const playerHealth = api[API_STATE]()[ST_PLAYER_HEALTH];
     const playerFacing = api[API_STATE]()[ST_PLAYER_FACING];
     for (let y = 0; y < viewTiles; y++) {
@@ -661,9 +689,15 @@ const drawMap = (time) => {
                     sx = (currentFrame * tileSize) + (playerFacing * tileSize * 2);
                 }
                 else {
-                    sx = 4 * tileSize;
+                    sx = S_SKELETON * tileSize;
                 }
                 ctx.drawImage(player, sx, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
+            }
+            if (mapType === MT_ISLAND && mapX === startX - 2 && mapY === startY) {
+                ctx.drawImage(player, S_BOAT_LEFT * tileSize, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
+            }
+            if (mapType === MT_ISLAND && mapX === startX - 1 && mapY === startY) {
+                ctx.drawImage(player, S_BOAT_RIGHT * tileSize, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
             }
         }
     }

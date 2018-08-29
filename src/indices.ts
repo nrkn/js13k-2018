@@ -19,6 +19,7 @@ export const T_HUT_L = 21
 export const T_HUT_M = 22
 export const T_HUT_R = 23
 export const T_BLACK = 24
+export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
 
@@ -55,11 +56,19 @@ export const DATA_C_MAIN = 4
 export const DATA_C_DIAGNOSTICS = 5
 export const DATA_C_SYNTH = 6
 export const DATA_ISLAND = 7
+export const DATA_INVESTIGATE = 8
 
 // map data indices
 export const MAP_PLAYERX = 1
 export const MAP_PLAYERY = 2
 export const MAP_TILES = 3
+export const MAP_TYPE = 4
+export const MAP_STARTX = 5
+export const MAP_STARTY = 6
+
+// map type indices
+export const MT_ISLAND = 0
+export const MT_HUT = 1
 
 // display item indices
 export const DISPLAY_TYPE = 0

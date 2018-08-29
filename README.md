@@ -146,7 +146,11 @@ Player is safe in hut, can sleep to pass the night away
   - ~reinstate touch controls~
   - Size 5513, Remaining: 7799
 - ~create art - inside hut~
+  - ~enter and exit huts~
   - Size: 5819, Remaining: 7493
+- ~reinstate boat~
+  - ~message if bump boat~
+  - Size: 5903, Remaining: 7409
 - monster mechanics
 - scripted intro events
 - get computers working again

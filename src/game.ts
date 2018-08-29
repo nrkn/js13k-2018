@@ -3,7 +3,7 @@ import { blocks, createIsland, createHut } from './map'
 import {
   DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
   DATA_C_MAIN, DATA_ISLAND, DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE,
-  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R
+  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE
 } from './indices'
 
 import {
@@ -13,10 +13,10 @@ import {
 import { inBounds } from './geometry'
 
 const gameData: DisplayItem[] = [
-  // I_SPLASH
+  // DATA_SPLASH
   [ DTYPE_IMAGE, 's.png' ],
 
-  // M_INTRO
+  // DATA_INTRO
   [ DTYPE_MESSAGE,
     [
       'Lost contact with',
@@ -25,7 +25,7 @@ const gameData: DisplayItem[] = [
     ]
   ],
 
-  // M_SUNRISE
+  // DATA_SUNRISE
   [
     DTYPE_MESSAGE,
     [
@@ -33,7 +33,7 @@ const gameData: DisplayItem[] = [
     ]
   ],
 
-  // M_SUNSET
+  // DATA_SUNSET
   [
     DTYPE_MESSAGE,
     [
@@ -41,7 +41,7 @@ const gameData: DisplayItem[] = [
     ]
   ],
 
-  // S_MAIN
+  // DATA_C_MAIN
   [
     DTYPE_SCREEN,
     [
@@ -59,7 +59,7 @@ const gameData: DisplayItem[] = [
     ]
   ],
 
-  // S_DIAGNOSTICS
+  // DATA_C_DIAGNOSTICS
   [
     DTYPE_SCREEN,
     [
@@ -77,7 +77,7 @@ const gameData: DisplayItem[] = [
     []
   ],
 
-  // S_SYNTH
+  // DATA_C_SYNTH
   [
     DTYPE_SCREEN,
     [
@@ -94,8 +94,17 @@ const gameData: DisplayItem[] = [
     ]
   ],
 
-  // MAP_ISLAND
-  createIsland()
+  // DATA_ISLAND
+  createIsland(),
+
+  // DATA_INVESTIGATE
+  [
+    DTYPE_MESSAGE,
+    [
+      'I should',
+      'investigate'
+    ]
+  ]
 ]
 
 export const Game = () => {
@@ -194,12 +203,22 @@ export const Game = () => {
     }
 
     // bumps
-    if ( map[ MAP_TILES ][ y ][ x ] === T_HUT ){
-      displayStack.push( createHut() )
+    if( map[ MAP_TYPE ] === MT_ISLAND ){
+      if ( map[ MAP_TILES ][ y ][ x ] === T_HUT ) {
+        displayStack.push( createHut() )
+      }
+
+      if( y === map[ MAP_STARTY ] ){
+        if( x === map[ MAP_STARTX ] - 1 ){
+          displayStack.push( gameData[ DATA_INVESTIGATE ] )
+        }
+      }
     }
 
-    if ( map[ MAP_TILES ][ y ][ x ] === T_HUT_R ){
-      displayStack.pop()
+    if ( map[ MAP_TYPE ] === MT_HUT ) {
+      if ( map[ MAP_TILES ][ y ][ x ] === T_HUT_R ) {
+        displayStack.pop()
+      }
     }
   }
 

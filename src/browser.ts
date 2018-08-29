@@ -9,7 +9,7 @@ import {
   T_HEALTH, T_FOOD, API_STATE, ST_COLOR, ST_DISPLAY_ITEM, DISPLAY_TYPE,
   DTYPE_MAP, DTYPE_IMAGE, DISPLAY_NAME, DTYPE_MESSAGE, DISPLAY_MESSAGE,
   MAP_TILES, MAP_PLAYERX, MAP_PLAYERY, ST_PLAYER_HEALTH, ST_PLAYER_FACING,
-  ST_PLAYER_FOOD, API_TIMESTR, API_MOVE, API_CLOSE, DTYPE_SCREEN
+  ST_PLAYER_FOOD, API_TIMESTR, API_MOVE, API_CLOSE, DTYPE_SCREEN, MAP_TYPE, MAP_STARTX, MAP_STARTY, MT_ISLAND, S_SKELETON, S_BOAT_LEFT, S_BOAT_RIGHT
 } from './indices'
 
 import { Game } from './game'
@@ -65,6 +65,9 @@ const drawMap = ( time: number ) => {
   const map = mapItem[ MAP_TILES ]
   const playerX = mapItem[ MAP_PLAYERX ]
   const playerY = mapItem[ MAP_PLAYERY ]
+  const mapType = mapItem[ MAP_TYPE ]
+  const startX = mapItem[ MAP_STARTX ]
+  const startY = mapItem[ MAP_STARTY ]
   const playerHealth = api[ API_STATE ]()[ ST_PLAYER_HEALTH ]
   const playerFacing = api[ API_STATE ]()[ ST_PLAYER_FACING ]
 
@@ -96,12 +99,32 @@ const drawMap = ( time: number ) => {
         if ( playerHealth ) {
           sx = ( currentFrame * tileSize ) + ( playerFacing * tileSize * 2 )
         } else {
-          sx = 4 * tileSize
+          sx = S_SKELETON * tileSize
         }
 
         ctx.drawImage(
           player,
           sx, 0,
+          tileSize, tileSize,
+          ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
+          tileSize, tileSize
+        )
+      }
+
+      if ( mapType === MT_ISLAND && mapX === startX - 2 && mapY === startY ) {
+        ctx.drawImage(
+          player,
+          S_BOAT_LEFT * tileSize, 0,
+          tileSize, tileSize,
+          ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
+          tileSize, tileSize
+        )
+      }
+
+      if ( mapType === MT_ISLAND && mapX === startX - 1 && mapY === startY ) {
+        ctx.drawImage(
+          player,
+          S_BOAT_RIGHT * tileSize, 0,
           tileSize, tileSize,
           ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
           tileSize, tileSize

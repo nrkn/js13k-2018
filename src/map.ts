@@ -1,4 +1,4 @@
-import { T_TREE, DTYPE_MAP, Y, X, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_PATH, T_PATH_L, T_SAND_L, T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED } from './indices'
+import { T_TREE, DTYPE_MAP, Y, X, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_PATH, T_PATH_L, T_SAND_L, T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED, MT_ISLAND, MT_HUT } from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
 import { MapTiles, MapRow, DisplayMap, Point, FloodPoint } from './types'
 import { randInt, pick } from './utils'
@@ -86,7 +86,7 @@ export const createHut = (): DisplayMap => {
   tiles[ landBorder + 1 ][ landBorder - 1 ] = T_HUT_M
   tiles[ landBorder + 1 ][ landBorder ] = T_HUT_R
 
-  return [ DTYPE_MAP, landBorder, landBorder, tiles ]
+  return [ DTYPE_MAP, landBorder, landBorder, tiles, MT_HUT, landBorder, landBorder ]
 }
 
 export const createIsland = (): DisplayMap => {
@@ -167,7 +167,7 @@ export const createIsland = (): DisplayMap => {
     tiles[ wy ][ wx ] = T_HUT
   }
 
-  return [ DTYPE_MAP, playerX, playerY, tiles ]
+  return [ DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY ]
 }
 
 export const blocks = i =>
