@@ -17,7 +17,8 @@ export type GameState = [
   number,
   number,
   GameColor,
-  DisplayItem
+  DisplayItem,
+  Monster[]
 ]
 
 export type GameAPI = [
@@ -41,3 +42,5 @@ export type DisplayItem = DisplayImage | DisplayMessage | DisplayScreen | Displa
 export type Edge = 0 | 1 | 2 | 3
 
 export type MapType = 0 | 1
+
+export type Monster = [ number, number, number, number ]

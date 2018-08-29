@@ -3,14 +3,16 @@ import { blocks, createIsland, createHut } from './map'
 import {
   DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
   DATA_C_MAIN, DATA_ISLAND, DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE,
-  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE
+  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING
 } from './indices'
 
 import {
-  DisplayItem, GameColor, GameState, DisplayMap, GameAPI
+  DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster, Point
 } from './types'
 
-import { inBounds } from './geometry'
+import { inBounds, hasPoint } from './geometry'
+import { initialMonsterCount, mapSize } from './settings';
+import { randInt } from './utils';
 
 const gameData: DisplayItem[] = [
   // DATA_SPLASH
@@ -116,14 +118,15 @@ export const Game = () => {
   let minutes: number
   let color: GameColor
   let displayStack: DisplayItem[]
+  let monsters: Monster[]
 
   const reset = () => {
     playerFacing = 0
     playerFood = 5
     playerHealth = 2
     playerMaxHealth = 10
-    hours = 6
-    minutes = 5
+    hours = 17
+    minutes = 55
     gameData[ DATA_ISLAND ] = createIsland()
     displayStack = [
       gameData[ DATA_ISLAND ],
@@ -131,6 +134,22 @@ export const Game = () => {
       gameData[ DATA_SPLASH ]
     ]
     color = ''
+    monsters = []
+
+    while( monsters.length < initialMonsterCount ){
+      const x = randInt( mapSize )
+      const y = randInt( mapSize )
+      const facing = randInt( 2 )
+      const health = randInt( 2 ) + 1
+
+      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+      const mapTile = mapItem[ MAP_TILES ][ y ][ x ]
+      const playerX = mapItem[ MAP_PLAYERX ]
+      const playerY = mapItem[ MAP_PLAYERY ]
+
+      if( !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) && !( playerX === x && playerY === y ) )
+        monsters.push([ x, y, facing, health ])
+    }
   }
 
   const currentColor = (): GameColor => {
@@ -143,7 +162,8 @@ export const Game = () => {
   const state = (): GameState => [
     playerFacing, playerFood, playerHealth, playerMaxHealth, hours, minutes,
     currentColor(),
-    displayStack[ displayStack.length - 1 ]
+    displayStack[ displayStack.length - 1 ],
+    monsters
   ]
 
   const close = () => {
@@ -175,6 +195,28 @@ export const Game = () => {
     if ( hours === 24 ) {
       hours = 0
     }
+    for( let i = 0; i < monsters.length; i++ ){
+      const monster = monsters[ i ]
+      const x = monster[ MON_X ]
+      const y = monster[ MON_Y ]
+      const newX = x + ( randInt( 3 ) - 1 )
+      const newY = y + ( randInt( 3 ) - 1 )
+      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+      const mapTile = mapItem[ MAP_TILES ][ newY ][ newX ]
+      const playerX = mapItem[ MAP_PLAYERX ]
+      const playerY = mapItem[ MAP_PLAYERY ]
+
+      if ( !blocks( mapTile ) && !hasPoint( <any>monsters, [ newX, newY ] ) && !( playerX === x && playerY === y ) ){
+        monster[ MON_X ] = newX
+        monster[ MON_Y ] = newY
+        if( newX < x ){
+          monster[ MON_FACING ] = 1
+        }
+        if( newX > x ){
+          monster[ MON_FACING ] = 0
+        }
+      }
+    }
   }
 
   const timeStr = () => `${ hours < 10 ? '0' : '' }${ hours }:${ minutes < 10 ? '0' : '' }${ minutes }`
@@ -197,7 +239,7 @@ export const Game = () => {
     x = map[ MAP_PLAYERX ] + x
     y = map[ MAP_PLAYERY ] + y
 
-    if ( playerHealth > 0 && inBounds( [ x, y ] ) && !blocks( map[ MAP_TILES ][ y ][ x ] ) ){
+    if ( playerHealth > 0 && inBounds( [ x, y ] ) && !blocks( map[ MAP_TILES ][ y ][ x ] ) && !hasPoint( <any>monsters, [ x, y ] ) ){
       map[ MAP_PLAYERX ] = x
       map[ MAP_PLAYERY ] = y
     }

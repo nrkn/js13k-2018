@@ -22,7 +22,7 @@ export const T_BLACK = 24
 export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
-
+export const S_MONSTER = 7
 // state indices
 export const ST_PLAYER_FACING = 0
 export const ST_PLAYER_FOOD = 1
@@ -32,6 +32,7 @@ export const ST_HOURS = 4
 export const ST_MINUTES = 5
 export const ST_COLOR = 6
 export const ST_DISPLAY_ITEM = 7
+export const ST_MONSTERS = 8
 
 // api indices
 export const API_STATE = 0
@@ -80,8 +81,13 @@ export const X = 0
 export const Y = 1
 
 // edges
-
 export const TOP = 0
 export const RIGHT = 1
 export const BOTTOM = 2
 export const LEFT = 3
+
+//monster
+export const MON_X = 0
+export const MON_Y = 1
+export const MON_FACING = 2
+export const MON_HEALTH = 3

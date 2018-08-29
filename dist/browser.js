@@ -8,6 +8,7 @@ const waterBorder = ~~(mapSize / 16);
 const landBorder = ~~(mapSize / 6);
 const gridTiles = 10;
 const gridSize = ~~(mapSize / gridTiles);
+const initialMonsterCount = ~~(mapSize / 3);
 
 const loadImage = (path) => new Promise(resolve => {
     const img = new Image();
@@ -44,6 +45,7 @@ const T_BLACK = 24;
 const S_SKELETON = 4;
 const S_BOAT_LEFT = 5;
 const S_BOAT_RIGHT = 6;
+const S_MONSTER = 7;
 // state indices
 const ST_PLAYER_FACING = 0;
 const ST_PLAYER_FOOD = 1;
@@ -53,6 +55,7 @@ const ST_HOURS = 4;
 const ST_MINUTES = 5;
 const ST_COLOR = 6;
 const ST_DISPLAY_ITEM = 7;
+const ST_MONSTERS = 8;
 // api indices
 const API_STATE = 0;
 const API_RESET = 1;
@@ -97,6 +100,11 @@ const TOP = 0;
 const RIGHT = 1;
 const BOTTOM = 2;
 const LEFT = 3;
+//monster
+const MON_X = 0;
+const MON_Y = 1;
+const MON_FACING = 2;
+const MON_HEALTH = 3;
 
 const delta = (i, j) => Math.max(i, j) - Math.min(i, j);
 const immediateNeighbours = ([x, y]) => [
@@ -433,6 +441,8 @@ const blocks = i => i < 2 || i === T_TREE || i === T_HUT || i === T_BLACK || i =
 
 
 
+
+
 const gameData = [
     // DATA_SPLASH
     [DTYPE_IMAGE, 's.png'],
@@ -528,13 +538,14 @@ const Game = () => {
     let minutes;
     let color;
     let displayStack;
+    let monsters;
     const reset = () => {
         playerFacing = 0;
         playerFood = 5;
         playerHealth = 2;
         playerMaxHealth = 10;
-        hours = 6;
-        minutes = 5;
+        hours = 17;
+        minutes = 55;
         gameData[DATA_ISLAND] = createIsland();
         displayStack = [
             gameData[DATA_ISLAND],
@@ -542,6 +553,19 @@ const Game = () => {
             gameData[DATA_SPLASH]
         ];
         color = '';
+        monsters = [];
+        while (monsters.length < initialMonsterCount) {
+            const x = randInt(mapSize);
+            const y = randInt(mapSize);
+            const facing = randInt(2);
+            const health = randInt(2) + 1;
+            const mapItem = gameData[DATA_ISLAND];
+            const mapTile = mapItem[MAP_TILES][y][x];
+            const playerX = mapItem[MAP_PLAYERX];
+            const playerY = mapItem[MAP_PLAYERY];
+            if (!blocks(mapTile) && !hasPoint(monsters, [x, y]) && !(playerX === x && playerY === y))
+                monsters.push([x, y, facing, health]);
+        }
     };
     const currentColor = () => {
         if (displayStack[displayStack.length - 1][DISPLAY_TYPE] === DTYPE_IMAGE)
@@ -555,7 +579,8 @@ const Game = () => {
     const state = () => [
         playerFacing, playerFood, playerHealth, playerMaxHealth, hours, minutes,
         currentColor(),
-        displayStack[displayStack.length - 1]
+        displayStack[displayStack.length - 1],
+        monsters
     ];
     const close = () => {
         // can use this to toggle inventory for map
@@ -588,6 +613,27 @@ const Game = () => {
         if (hours === 24) {
             hours = 0;
         }
+        for (let i = 0; i < monsters.length; i++) {
+            const monster = monsters[i];
+            const x = monster[MON_X];
+            const y = monster[MON_Y];
+            const newX = x + (randInt(3) - 1);
+            const newY = y + (randInt(3) - 1);
+            const mapItem = gameData[DATA_ISLAND];
+            const mapTile = mapItem[MAP_TILES][newY][newX];
+            const playerX = mapItem[MAP_PLAYERX];
+            const playerY = mapItem[MAP_PLAYERY];
+            if (!blocks(mapTile) && !hasPoint(monsters, [newX, newY]) && !(playerX === x && playerY === y)) {
+                monster[MON_X] = newX;
+                monster[MON_Y] = newY;
+                if (newX < x) {
+                    monster[MON_FACING] = 1;
+                }
+                if (newX > x) {
+                    monster[MON_FACING] = 0;
+                }
+            }
+        }
     };
     const timeStr = () => `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
     const move = (x, y) => {
@@ -603,7 +649,7 @@ const Game = () => {
         }
         x = map[MAP_PLAYERX] + x;
         y = map[MAP_PLAYERY] + y;
-        if (playerHealth > 0 && inBounds([x, y]) && !blocks(map[MAP_TILES][y][x])) {
+        if (playerHealth > 0 && inBounds([x, y]) && !blocks(map[MAP_TILES][y][x]) && !hasPoint(monsters, [x, y])) {
             map[MAP_PLAYERX] = x;
             map[MAP_PLAYERY] = y;
         }
@@ -661,6 +707,7 @@ const drawMessage = (lines) => {
 };
 const drawMap = (time) => {
     const currentFrame = ~~(time / animTime) % 2 ? 0 : 1;
+    const monsters = api[API_STATE]()[ST_MONSTERS];
     const mapItem = api[API_STATE]()[ST_DISPLAY_ITEM];
     const map = mapItem[MAP_TILES];
     const playerX = mapItem[MAP_PLAYERX];
@@ -670,6 +717,7 @@ const drawMap = (time) => {
     const startY = mapItem[MAP_STARTY];
     const playerHealth = api[API_STATE]()[ST_PLAYER_HEALTH];
     const playerFacing = api[API_STATE]()[ST_PLAYER_FACING];
+    const isNight = api[API_STATE]()[ST_HOURS] >= 18 || api[API_STATE]()[ST_HOURS] < 6;
     for (let y = 0; y < viewTiles; y++) {
         for (let x = 0; x < viewTiles; x++) {
             const mapX = (playerX - centerTile) + x;
@@ -684,6 +732,18 @@ const drawMap = (time) => {
                     sx = tileIndex * tileSize;
             }
             ctx.drawImage(tiles, sx, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
+            if (isNight) {
+                for (let i = 0; i < monsters.length; i++) {
+                    const monster = monsters[i];
+                    const mx = monster[MON_X];
+                    const my = monster[MON_Y];
+                    const monsterFacing = monster[MON_FACING];
+                    if (mx === mapX && my === mapY) {
+                        sx = ((S_MONSTER + currentFrame) * tileSize) + (monsterFacing * tileSize * 2);
+                        ctx.drawImage(player, sx, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
+                    }
+                }
+            }
             if (x === centerTile && y === centerTile) {
                 if (playerHealth) {
                     sx = (currentFrame * tileSize) + (playerFacing * tileSize * 2);

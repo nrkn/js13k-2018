@@ -152,6 +152,9 @@ Player is safe in hut, can sleep to pass the night away
   - ~message if bump boat~
   - Size: 5903, Remaining: 7409
 - monster mechanics
+  - ~monsters created and move randomly~
+  - Size: 6147, Remaining: 7165
+  - monsters can harm player and vice versa
 - scripted intro events
 - get computers working again
 - quests etc - spend some time figuring out
