@@ -34,6 +34,13 @@ const T_PATH_L = 3;
 const T_SAND = 14;
 const T_SAND_L = 3;
 const T_HUT = 17;
+const T_COMPUTER = 18;
+const T_SYNTH = 19;
+const T_BED = 20;
+const T_HUT_L = 21;
+const T_HUT_M = 22;
+const T_HUT_R = 23;
+const T_BLACK = 24;
 const S_BOAT_LEFT = 5;
 const S_BOAT_RIGHT = 6;
 // state indices
@@ -334,6 +341,21 @@ const decorate = (tiles, clear) => {
         }
     }
 };
+const createHut = () => {
+    const tiles = createMap();
+    const black = floodFill([0, 0], ([tx, ty]) => tiles[ty][tx] === T_WATER);
+    drawTilesToMap(tiles, black, () => T_BLACK);
+    tiles[landBorder - 1][landBorder - 2] = T_COMPUTER;
+    tiles[landBorder - 1][landBorder - 1] = T_SYNTH;
+    tiles[landBorder - 1][landBorder] = T_BED;
+    tiles[landBorder][landBorder - 2] = T_LAND;
+    tiles[landBorder][landBorder - 1] = T_LAND;
+    tiles[landBorder][landBorder] = T_LAND;
+    tiles[landBorder + 1][landBorder - 2] = T_HUT_L;
+    tiles[landBorder + 1][landBorder - 1] = T_HUT_M;
+    tiles[landBorder + 1][landBorder] = T_HUT_R;
+    return [DTYPE_MAP, landBorder, landBorder, tiles];
+};
 const createIsland = () => {
     const tiles = createMap();
     const clearwayCount = randInt(15, 10);
@@ -397,7 +419,9 @@ const createIsland = () => {
     }
     return [DTYPE_MAP, playerX, playerY, tiles];
 };
-const blocks = i => i < 2 || i === T_TREE;
+const blocks = i => i < 2 || i === T_TREE || i === T_HUT || i === T_BLACK || i === T_HUT_L ||
+    i === T_HUT_M || i === T_HUT_R || i === T_COMPUTER || i === T_SYNTH ||
+    i === T_BED;
 
 
 
@@ -566,6 +590,13 @@ const Game = () => {
         if (playerHealth > 0 && inBounds([x, y]) && !blocks(map[MAP_TILES][y][x])) {
             map[MAP_PLAYERX] = x;
             map[MAP_PLAYERY] = y;
+        }
+        // bumps
+        if (map[MAP_TILES][y][x] === T_HUT) {
+            displayStack.push(createHut());
+        }
+        if (map[MAP_TILES][y][x] === T_HUT_R) {
+            displayStack.pop();
         }
     };
     reset();

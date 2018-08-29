@@ -1,9 +1,9 @@
-import { blocks, createIsland } from './map'
+import { blocks, createIsland, createHut } from './map'
 
 import {
   DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
   DATA_C_MAIN, DATA_ISLAND, DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE,
-  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES
+  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R
 } from './indices'
 
 import {
@@ -191,6 +191,15 @@ export const Game = () => {
     if ( playerHealth > 0 && inBounds( [ x, y ] ) && !blocks( map[ MAP_TILES ][ y ][ x ] ) ){
       map[ MAP_PLAYERX ] = x
       map[ MAP_PLAYERY ] = y
+    }
+
+    // bumps
+    if ( map[ MAP_TILES ][ y ][ x ] === T_HUT ){
+      displayStack.push( createHut() )
+    }
+
+    if ( map[ MAP_TILES ][ y ][ x ] === T_HUT_R ){
+      displayStack.pop()
     }
   }
 

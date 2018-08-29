@@ -12,6 +12,13 @@ export const T_PATH_L = 3
 export const T_SAND = 14
 export const T_SAND_L = 3
 export const T_HUT = 17
+export const T_COMPUTER = 18
+export const T_SYNTH = 19
+export const T_BED = 20
+export const T_HUT_L = 21
+export const T_HUT_M = 22
+export const T_HUT_R = 23
+export const T_BLACK = 24
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
 
