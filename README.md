@@ -161,7 +161,11 @@ Player is safe in hut, can sleep to pass the night away
 - monsters have chance to move towards player
 - scripted intro events
 - get computers working again
+- inventory / use item
 - quests etc - spend some time figuring out
+- win screen
+- restart on death
+- fog of war and/or minimap
 - create art - more tiles - rocks, flowers, more trees
 - add biomes - use the water inside map we currently turn into forests - art
   - mountain
@@ -169,3 +173,6 @@ Player is safe in hut, can sleep to pass the night away
   - lake
   - forest
   - ???
+- BUG: map generation sometimes crashes
+- ISSUE: map generation sometimes very slow
+- loading screen during map gen?
