@@ -151,7 +151,7 @@ Player is safe in hut, can sleep to pass the night away
 - ~reinstate boat~
   - ~message if bump boat~
   - Size: 5903, Remaining: 7409
-- monster mechanics
+- ~monster mechanics~
   - ~monsters created and move randomly~
   - Size: 6147, Remaining: 7165
 - ~blue color mode for night instead of invert~
@@ -163,3 +163,9 @@ Player is safe in hut, can sleep to pass the night away
 - get computers working again
 - quests etc - spend some time figuring out
 - create art - more tiles - rocks, flowers, more trees
+- add biomes - use the water inside map we currently turn into forests - art
+  - mountain
+  - swamp?
+  - lake
+  - forest
+  - ???
