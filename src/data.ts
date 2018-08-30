@@ -1,7 +1,7 @@
-import { DisplayItem } from './types'
+import { DisplayItem, GameAPI } from './types'
 import {
   DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
-  DATA_C_MAIN
+  DATA_C_MAIN, DTYPE_ACTION, API_SLEEP, DATA_SLEEP
 } from './indices'
 
 import { createIsland } from './map'
@@ -42,12 +42,12 @@ export const gameData: DisplayItem[] = [
       'RSOS v3.27',
       '--------------------',
       'MAIN MENU',
-      '--------------------',
+      '',
       'ERROR:',
       ' SYSTEM OFFLINE',
       '',
       'EMERGENCY OPS:',
-      '===================='
+      ''
     ],
     [
       [ 'DIAGNOSTICS', DATA_C_DIAGNOSTICS ],
@@ -64,7 +64,7 @@ export const gameData: DisplayItem[] = [
       'RSOS v3.27',
       '--------------------',
       'DIAGNOSTICS MENU',
-      '--------------------',
+      '',
       'MAIN SYSTEM:',
       ' OFFLINE',
       '',
@@ -86,12 +86,12 @@ export const gameData: DisplayItem[] = [
       'RSOS v3.27',
       '--------------------',
       'SYNTHESIZER MENU',
-      '--------------------',
+      '',
       'SYNTHDB:',
       ' OFFLINE',
       '',
       'EMERGENCY OPS:',
-      '===================='
+      ''
     ],
     [
       [ 'BASIC RATIONS', DATA_C_MAIN ] // need to implement
@@ -110,5 +110,33 @@ export const gameData: DisplayItem[] = [
       'I should',
       'investigate'
     ]
+  ],
+
+  // DATA_BED
+  [
+    DTYPE_SCREEN,
+    [
+      'Sleep?'
+    ],
+    [
+      [ 'Yes', DATA_SLEEP ],
+      [ 'No', -1 ]
+    ],
+    0,
+    'g'
+  ],
+
+  // DATA_NOT_TIRED
+  [
+    DTYPE_MESSAGE,
+    [
+      `I'm not tired!`
+    ]
+  ],
+
+  // DATA_SLEEP
+  [
+    DTYPE_ACTION,
+    ( api: GameAPI ) => api[ API_SLEEP ]()
   ]
 ]

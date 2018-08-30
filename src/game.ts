@@ -6,11 +6,11 @@ import {
   MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND,
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
-  OPTION_DATA_INDEX, SCREEN_COLOR
+  OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED, DTYPE_ACTION, ACTION_FN
 } from './indices'
 
 import {
-  DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster, DisplayScreen
+  DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster, DisplayScreen, DisplayAction
 } from './types'
 
 import { inBounds, hasPoint, towards } from './geometry'
@@ -34,7 +34,7 @@ export const Game = () => {
     playerFood = 5
     playerHealth = 2
     playerMaxHealth = 10
-    hours = 6
+    hours = 17
     minutes = 55
     gameData[ DATA_ISLAND ] = createIsland()
     displayStack = [
@@ -246,6 +246,14 @@ export const Game = () => {
       if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
         displayStack.push( gameData[ DATA_C_MAIN ] )
       }
+
+      if( map[ MAP_TILES ][ y ][ x ] === T_BED ){
+        if( hours >= sunset || hours < sunrise ){
+          displayStack.push( gameData[ DATA_BED ] )
+        } else {
+          displayStack.push( gameData[ DATA_NOT_TIRED ] )
+        }
+      }
     }
   }
 
@@ -264,13 +272,38 @@ export const Game = () => {
       const screen = <DisplayScreen>displayStack[ displayStack.length - 1 ]
       const selected = screen[ SCREEN_SELECTION ]
       const dataIndex = screen[ SCREEN_OPTIONS ][ selected ][ OPTION_DATA_INDEX ]
-      displayStack.push( gameData[ dataIndex ] )
+
+      if( dataIndex === -1 ){
+        close()
+      } else if( gameData[ dataIndex ][ DISPLAY_TYPE ] === DTYPE_ACTION ){
+        ( <DisplayAction>gameData[ dataIndex ] )[ ACTION_FN ]( api )
+        displayStack.pop()
+      } else {
+        displayStack.push( gameData[ dataIndex ] )
+      }
+    }
+  }
+
+  const sleep = () => {
+    while( !( hours === ( sunrise - 1 ) && minutes === 59 ) ){
+      minutes++
+      if ( minutes === 60 ) {
+        minutes = 0
+        hours++
+        if ( playerHealth < playerMaxHealth ) playerHealth++
+      }
+      if ( hours === 24 ) {
+        hours = 0
+      }
+      updateMonsters()
     }
   }
 
   reset()
 
-  return <GameAPI>[
-    state, reset, timeStr, incTime, move, close, select, confirmSelection
+  const api: GameAPI = [
+    state, reset, timeStr, incTime, move, close, select, confirmSelection, sleep
   ]
+
+  return api
 }

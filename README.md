@@ -169,7 +169,8 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 6284, Remaining: 7028
 - ~get computers working again~
   - Size: 6516, Remaining: 6796
-- bed in hut to sleep
+- ~bed in hut to sleep~
+  - Size: 6675, Remaining: 6637
 - inventory / use item
 - scripted intro events
 - quests etc - spend some time figuring out

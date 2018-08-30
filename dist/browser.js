@@ -67,6 +67,7 @@ const API_MOVE = 4;
 const API_CLOSE = 5;
 const API_SELECT = 6;
 const API_CONFIRM_SELECT = 7;
+const API_SLEEP = 8;
 // display item types
 const DTYPE_IMAGE = 0;
 const DTYPE_MESSAGE = 1;
@@ -83,7 +84,9 @@ const DATA_C_DIAGNOSTICS = 5;
 const DATA_C_SYNTH = 6;
 const DATA_ISLAND = 7;
 const DATA_INVESTIGATE = 8;
-const DATA_SLEEP = 9;
+const DATA_BED = 9;
+const DATA_NOT_TIRED = 10;
+const DATA_SLEEP = 11;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -98,6 +101,8 @@ const MT_HUT = 1;
 const DISPLAY_TYPE = 0;
 const DISPLAY_NAME = 1;
 const DISPLAY_MESSAGE = 1;
+// actions
+const ACTION_FN = 1;
 // screen indices
 const SCREEN_MESSAGE = 1;
 const SCREEN_OPTIONS = 2;
@@ -554,6 +559,31 @@ const gameData = [
             'I should',
             'investigate'
         ]
+    ],
+    // DATA_BED
+    [
+        DTYPE_SCREEN,
+        [
+            'Sleep?'
+        ],
+        [
+            ['Yes', DATA_SLEEP],
+            ['No', -1]
+        ],
+        0,
+        'g'
+    ],
+    // DATA_NOT_TIRED
+    [
+        DTYPE_MESSAGE,
+        [
+            `I'm not tired!`
+        ]
+    ],
+    // DATA_SLEEP
+    [
+        DTYPE_ACTION,
+        (api) => api[API_SLEEP]()
     ]
 ];
 
@@ -572,7 +602,7 @@ const Game = () => {
         playerFood = 5;
         playerHealth = 2;
         playerMaxHealth = 10;
-        hours = 6;
+        hours = 17;
         minutes = 55;
         gameData[DATA_ISLAND] = createIsland();
         displayStack = [
@@ -744,6 +774,14 @@ const Game = () => {
             if (map[MAP_TILES][y][x] === T_COMPUTER) {
                 displayStack.push(gameData[DATA_C_MAIN]);
             }
+            if (map[MAP_TILES][y][x] === T_BED) {
+                if (hours >= sunset || hours < sunrise) {
+                    displayStack.push(gameData[DATA_BED]);
+                }
+                else {
+                    displayStack.push(gameData[DATA_NOT_TIRED]);
+                }
+            }
         }
     };
     const select = (i) => {
@@ -756,13 +794,38 @@ const Game = () => {
             const screen = displayStack[displayStack.length - 1];
             const selected = screen[SCREEN_SELECTION];
             const dataIndex = screen[SCREEN_OPTIONS][selected][OPTION_DATA_INDEX];
-            displayStack.push(gameData[dataIndex]);
+            if (dataIndex === -1) {
+                close();
+            }
+            else if (gameData[dataIndex][DISPLAY_TYPE] === DTYPE_ACTION) {
+                gameData[dataIndex][ACTION_FN](api);
+                displayStack.pop();
+            }
+            else {
+                displayStack.push(gameData[dataIndex]);
+            }
+        }
+    };
+    const sleep = () => {
+        while (!(hours === (sunrise - 1) && minutes === 59)) {
+            minutes++;
+            if (minutes === 60) {
+                minutes = 0;
+                hours++;
+                if (playerHealth < playerMaxHealth)
+                    playerHealth++;
+            }
+            if (hours === 24) {
+                hours = 0;
+            }
+            updateMonsters();
         }
     };
     reset();
-    return [
-        state, reset, timeStr, incTime, move, close, select, confirmSelection
+    const api = [
+        state, reset, timeStr, incTime, move, close, select, confirmSelection, sleep
     ];
+    return api;
 };
 
 const draw = (time) => {
