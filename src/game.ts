@@ -60,7 +60,8 @@ const gameData: DisplayItem[] = [
     [
       [ 'DIAGNOSTICS', DATA_C_DIAGNOSTICS ],
       [ 'SYNTHESIZE', DATA_C_SYNTH ]
-    ]
+    ],
+    0
   ],
 
   // DATA_C_DIAGNOSTICS
@@ -78,7 +79,8 @@ const gameData: DisplayItem[] = [
       'SYNTHESIZE:',
       ' ONLINE'
     ],
-    []
+    [],
+    0
   ],
 
   // DATA_C_SYNTH
@@ -95,7 +97,8 @@ const gameData: DisplayItem[] = [
     ],
     [
       [ 'BASIC RATIONS', DATA_C_MAIN ] // need to implement
-    ]
+    ],
+    0
   ],
 
   // DATA_ISLAND
@@ -138,20 +141,7 @@ export const Game = () => {
     color = ''
     monsters = []
 
-    while( monsters.length < initialMonsterCount ){
-      const x = randInt( mapSize )
-      const y = randInt( mapSize )
-      const facing = randInt( 2 )
-      const health = randInt( 2 ) + 1
-
-      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
-      const mapTile = mapItem[ MAP_TILES ][ y ][ x ]
-      const playerX = mapItem[ MAP_PLAYERX ]
-      const playerY = mapItem[ MAP_PLAYERY ]
-
-      if( !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) && !( playerX === x && playerY === y ) )
-        monsters.push([ x, y, facing, health ])
-    }
+    createMonsters()
   }
 
   const currentColor = (): GameColor => {
@@ -171,7 +161,77 @@ export const Game = () => {
   const close = () => {
     // can use this to toggle inventory for map
     displayStack.pop()
+
     if( !displayStack.length ) displayStack = [ gameData[ DATA_ISLAND ] ]
+  }
+
+  const createMonsters = () => {
+    while ( monsters.length < initialMonsterCount ) {
+      const x = randInt( mapSize )
+      const y = randInt( mapSize )
+      const facing = randInt( 2 )
+      const health = randInt( 2 ) + 1
+
+      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+      const mapTile = mapItem[ MAP_TILES ][ y ][ x ]
+      const playerX = mapItem[ MAP_PLAYERX ]
+      const playerY = mapItem[ MAP_PLAYERY ]
+
+      if ( !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) && !( playerX === x && playerY === y ) )
+        monsters.push( [ x, y, facing, health ] )
+    }
+  }
+
+  const updateMonsters = () => {
+    for ( let i = 0; i < monsters.length; i++ ) {
+      const monster = monsters[ i ]
+      const x = monster[ MON_X ]
+      const y = monster[ MON_Y ]
+      const currentMapItem = <DisplayMap>displayStack[ displayStack.length - 1 ]
+      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+      const playerX = mapItem[ MAP_PLAYERX ]
+      const playerY = mapItem[ MAP_PLAYERY ]
+      const newLocation = [ x, y ]
+
+      if ( Math.random() < 0.66 ) {
+        const toPlayer = towards( [ x, y ], [ playerX, playerY ] )
+        newLocation[ X ] = toPlayer[ X ]
+        newLocation[ Y ] = toPlayer[ Y ]
+      } else {
+        if ( randInt( 2 ) ) {
+          newLocation[ X ] = x + ( randInt( 3 ) - 1 )
+        } else {
+          newLocation[ Y ] = y + ( randInt( 3 ) - 1 )
+        }
+      }
+
+      const mapTile = mapItem[ MAP_TILES ][ newLocation[ Y ] ][ newLocation[ X ] ]
+
+      if (
+        !blocks( mapTile ) &&
+        !hasPoint( <any>monsters, [ newLocation[ X ], newLocation[ Y ] ] ) &&
+        !( playerX === newLocation[ X ] && playerY === newLocation[ Y ] )
+      ) {
+        monster[ MON_X ] = newLocation[ X ]
+        monster[ MON_Y ] = newLocation[ Y ]
+        if ( newLocation[ X ] < x ) {
+          monster[ MON_FACING ] = 1
+        }
+        if ( newLocation[ X ] > x ) {
+          monster[ MON_FACING ] = 0
+        }
+      }
+
+      if (
+        currentMapItem[ DISPLAY_TYPE ] === DTYPE_MAP &&
+        currentMapItem[ MAP_TYPE ] === MT_ISLAND &&
+        ( hours >= sunset || hours < sunrise ) &&
+        playerX === newLocation[ X ] && playerY === newLocation[ Y ] &&
+        randInt( 2 ) && playerHealth > 0 && monster[ MON_HEALTH ] > 0
+      ) {
+        playerHealth--
+      }
+    }
   }
 
   const incTime = () => {
@@ -199,55 +259,7 @@ export const Game = () => {
     if ( hours === 24 ) {
       hours = 0
     }
-    for( let i = 0; i < monsters.length; i++ ){
-      const monster = monsters[ i ]
-      const x = monster[ MON_X ]
-      const y = monster[ MON_Y ]
-      const currentMapItem = <DisplayMap>displayStack[ displayStack.length - 1 ]
-      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
-      const playerX = mapItem[ MAP_PLAYERX ]
-      const playerY = mapItem[ MAP_PLAYERY ]
-      const newLocation = [ x, y ]
-
-      if( Math.random() < 0.66 ){
-        const toPlayer = towards( [ x, y ], [ playerX, playerY ] )
-        newLocation[ X ] = toPlayer[ X ]
-        newLocation[ Y ] = toPlayer[ Y ]
-      } else {
-        if( randInt( 2 ) ){
-          newLocation[ X ] = x + ( randInt( 3 ) - 1 )
-        } else {
-          newLocation[ Y ] = y + ( randInt( 3 ) - 1 )
-        }
-      }
-
-      const mapTile = mapItem[ MAP_TILES ][ newLocation[ Y ] ][ newLocation[ X ] ]
-
-      if (
-        !blocks( mapTile ) &&
-        !hasPoint( <any>monsters, [ newLocation[ X ], newLocation[ Y ] ] ) &&
-        !( playerX === newLocation[ X ] && playerY === newLocation[ Y ] )
-      ){
-        monster[ MON_X ] = newLocation[ X ]
-        monster[ MON_Y ] = newLocation[ Y ]
-        if( newLocation[ X ] < x ){
-          monster[ MON_FACING ] = 1
-        }
-        if( newLocation[ X ] > x ){
-          monster[ MON_FACING ] = 0
-        }
-      }
-
-      if (
-        currentMapItem[ DISPLAY_TYPE ] === DTYPE_MAP &&
-        currentMapItem[ MAP_TYPE ] === MT_ISLAND &&
-        ( hours >= sunset || hours < sunrise ) &&
-        playerX === newLocation[ X ] && playerY === newLocation[ Y ] &&
-        randInt( 2 ) && playerHealth > 0 && monster[ MON_HEALTH ] > 0
-      ){
-        playerHealth--
-      }
-    }
+    updateMonsters()
   }
 
   const timeStr = () => `${ hours < 10 ? '0' : '' }${ hours }:${ minutes < 10 ? '0' : '' }${ minutes }`

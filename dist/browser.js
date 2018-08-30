@@ -94,6 +94,9 @@ const MT_HUT = 1;
 const DISPLAY_TYPE = 0;
 const DISPLAY_NAME = 1;
 const DISPLAY_MESSAGE = 1;
+// screen indices
+const SCREEN_OPTIONS = 2;
+const SCREEN_SELECTION = 3;
 // point
 const X = 0;
 const Y = 1;
@@ -485,7 +488,8 @@ const gameData = [
         [
             ['DIAGNOSTICS', DATA_C_DIAGNOSTICS],
             ['SYNTHESIZE', DATA_C_SYNTH]
-        ]
+        ],
+        0
     ],
     // DATA_C_DIAGNOSTICS
     [
@@ -502,7 +506,8 @@ const gameData = [
             'SYNTHESIZE:',
             ' ONLINE'
         ],
-        []
+        [],
+        0
     ],
     // DATA_C_SYNTH
     [
@@ -518,7 +523,8 @@ const gameData = [
         ],
         [
             ['BASIC RATIONS', DATA_C_MAIN] // need to implement
-        ]
+        ],
+        0
     ],
     // DATA_ISLAND
     createIsland(),
@@ -556,18 +562,7 @@ const Game = () => {
         ];
         color = '';
         monsters = [];
-        while (monsters.length < initialMonsterCount) {
-            const x = randInt(mapSize);
-            const y = randInt(mapSize);
-            const facing = randInt(2);
-            const health = randInt(2) + 1;
-            const mapItem = gameData[DATA_ISLAND];
-            const mapTile = mapItem[MAP_TILES][y][x];
-            const playerX = mapItem[MAP_PLAYERX];
-            const playerY = mapItem[MAP_PLAYERY];
-            if (!blocks(mapTile) && !hasPoint(monsters, [x, y]) && !(playerX === x && playerY === y))
-                monsters.push([x, y, facing, health]);
-        }
+        createMonsters();
     };
     const currentColor = () => {
         if (displayStack[displayStack.length - 1][DISPLAY_TYPE] === DTYPE_IMAGE)
@@ -590,33 +585,21 @@ const Game = () => {
         if (!displayStack.length)
             displayStack = [gameData[DATA_ISLAND]];
     };
-    const incTime = () => {
-        if (playerHealth < 1)
-            return;
-        minutes++;
-        if (minutes === 60) {
-            minutes = 0;
-            hours++;
-            if (hours === sunrise) {
-                color = '';
-                displayStack.push(gameData[DATA_SUNRISE]);
-            }
-            if (hours === sunset) {
-                color = 'i';
-                displayStack.push(gameData[DATA_SUNSET]);
-            }
-            if (playerFood > 0) {
-                playerFood--;
-                if (playerHealth < playerMaxHealth)
-                    playerHealth++;
-            }
-            else {
-                playerHealth--;
-            }
+    const createMonsters = () => {
+        while (monsters.length < initialMonsterCount) {
+            const x = randInt(mapSize);
+            const y = randInt(mapSize);
+            const facing = randInt(2);
+            const health = randInt(2) + 1;
+            const mapItem = gameData[DATA_ISLAND];
+            const mapTile = mapItem[MAP_TILES][y][x];
+            const playerX = mapItem[MAP_PLAYERX];
+            const playerY = mapItem[MAP_PLAYERY];
+            if (!blocks(mapTile) && !hasPoint(monsters, [x, y]) && !(playerX === x && playerY === y))
+                monsters.push([x, y, facing, health]);
         }
-        if (hours === 24) {
-            hours = 0;
-        }
+    };
+    const updateMonsters = () => {
         for (let i = 0; i < monsters.length; i++) {
             const monster = monsters[i];
             const x = monster[MON_X];
@@ -660,6 +643,35 @@ const Game = () => {
                 playerHealth--;
             }
         }
+    };
+    const incTime = () => {
+        if (playerHealth < 1)
+            return;
+        minutes++;
+        if (minutes === 60) {
+            minutes = 0;
+            hours++;
+            if (hours === sunrise) {
+                color = '';
+                displayStack.push(gameData[DATA_SUNRISE]);
+            }
+            if (hours === sunset) {
+                color = 'i';
+                displayStack.push(gameData[DATA_SUNSET]);
+            }
+            if (playerFood > 0) {
+                playerFood--;
+                if (playerHealth < playerMaxHealth)
+                    playerHealth++;
+            }
+            else {
+                playerHealth--;
+            }
+        }
+        if (hours === 24) {
+            hours = 0;
+        }
+        updateMonsters();
     };
     const timeStr = () => `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
     const move = (x, y) => {

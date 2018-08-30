@@ -184,3 +184,4 @@ Player is safe in hut, can sleep to pass the night away
 - BUG: map generation sometimes crashes
 - ISSUE: map generation sometimes very slow
 - loading screen during map gen?
+- if room left, consider adding transitional tiles to make slightly less blocky

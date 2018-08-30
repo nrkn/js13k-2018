@@ -35,7 +35,7 @@ export type GameColor = '' | 'i' | 'g' | 'a'
 export type DisplayImage = [ 0, string ]
 export type DisplayMessage = [ 1, string[] ]
 export type DisplaySelection = [ string, number ]
-export type DisplayScreen = [ 2, string[], DisplaySelection[] ]
+export type DisplayScreen = [ 2, string[], DisplaySelection[], number ]
 export type DisplayMap = [ 3, number, number, MapTiles, MapType, number, number ]
 export type DisplayItem = DisplayImage | DisplayMessage | DisplayScreen | DisplayMap
 

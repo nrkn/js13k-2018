@@ -76,6 +76,10 @@ export const DISPLAY_TYPE = 0
 export const DISPLAY_NAME = 1
 export const DISPLAY_MESSAGE = 1
 
+// screen indices
+export const SCREEN_OPTIONS = 2
+export const SCREEN_SELECTION = 3
+
 // point
 export const X = 0
 export const Y = 1
