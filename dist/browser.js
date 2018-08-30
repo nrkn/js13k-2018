@@ -812,6 +812,10 @@ const Game = () => {
     const confirmSelection = () => {
         if (displayStack[displayStack.length - 1][DISPLAY_TYPE] === DTYPE_SCREEN) {
             const screen = displayStack[displayStack.length - 1];
+            if (!screen[SCREEN_OPTIONS].length) {
+                displayStack.pop();
+                return;
+            }
             const selected = screen[SCREEN_SELECTION];
             const dataIndex = screen[SCREEN_OPTIONS][selected][OPTION_DATA_INDEX];
             if (dataIndex === -1) {
