@@ -43,7 +43,6 @@ export const API_MOVE = 4
 export const API_CLOSE = 5
 export const API_SELECT = 6
 export const API_CONFIRM_SELECT = 7
-export const API_SLEEP = 8
 
 // display item types
 export const DTYPE_IMAGE = 0
@@ -65,6 +64,7 @@ export const DATA_INVESTIGATE = 8
 export const DATA_BED = 9
 export const DATA_NOT_TIRED = 10
 export const DATA_SLEEP = 11
+export const DATA_HUNGRY = 12
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -84,7 +84,7 @@ export const DISPLAY_NAME = 1
 export const DISPLAY_MESSAGE = 1
 
 // actions
-export const ACTION_FN = 1
+export const ACTION_INDEX = 1
 
 // screen indices
 export const SCREEN_MESSAGE = 1
@@ -109,3 +109,6 @@ export const MON_X = 0
 export const MON_Y = 1
 export const MON_FACING = 2
 export const MON_HEALTH = 3
+
+// actions
+export const ACTION_SLEEP = 0

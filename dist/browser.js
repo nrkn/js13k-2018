@@ -67,7 +67,6 @@ const API_MOVE = 4;
 const API_CLOSE = 5;
 const API_SELECT = 6;
 const API_CONFIRM_SELECT = 7;
-const API_SLEEP = 8;
 // display item types
 const DTYPE_IMAGE = 0;
 const DTYPE_MESSAGE = 1;
@@ -87,6 +86,7 @@ const DATA_INVESTIGATE = 8;
 const DATA_BED = 9;
 const DATA_NOT_TIRED = 10;
 const DATA_SLEEP = 11;
+const DATA_HUNGRY = 12;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -102,7 +102,7 @@ const DISPLAY_TYPE = 0;
 const DISPLAY_NAME = 1;
 const DISPLAY_MESSAGE = 1;
 // actions
-const ACTION_FN = 1;
+const ACTION_INDEX = 1;
 // screen indices
 const SCREEN_MESSAGE = 1;
 const SCREEN_OPTIONS = 2;
@@ -123,6 +123,8 @@ const MON_X = 0;
 const MON_Y = 1;
 const MON_FACING = 2;
 const MON_HEALTH = 3;
+// actions
+const ACTION_SLEEP = 0;
 
 const delta = (i, j) => Math.max(i, j) - Math.min(i, j);
 const immediateNeighbours = ([x, y]) => [
@@ -495,12 +497,12 @@ const gameData = [
             'RSOS v3.27',
             '--------------------',
             'MAIN MENU',
-            '--------------------',
+            '',
             'ERROR:',
             ' SYSTEM OFFLINE',
             '',
             'EMERGENCY OPS:',
-            '===================='
+            ''
         ],
         [
             ['DIAGNOSTICS', DATA_C_DIAGNOSTICS],
@@ -516,7 +518,7 @@ const gameData = [
             'RSOS v3.27',
             '--------------------',
             'DIAGNOSTICS MENU',
-            '--------------------',
+            '',
             'MAIN SYSTEM:',
             ' OFFLINE',
             '',
@@ -537,15 +539,15 @@ const gameData = [
             'RSOS v3.27',
             '--------------------',
             'SYNTHESIZER MENU',
-            '--------------------',
+            '',
             'SYNTHDB:',
             ' OFFLINE',
             '',
             'EMERGENCY OPS:',
-            '===================='
+            ''
         ],
         [
-            ['BASIC RATIONS', DATA_C_MAIN] // need to implement
+            ['BASIC RATIONS', -1] // need to implement
         ],
         0,
         'a'
@@ -583,7 +585,14 @@ const gameData = [
     // DATA_SLEEP
     [
         DTYPE_ACTION,
-        (api) => api[API_SLEEP]()
+        ACTION_SLEEP
+    ],
+    // DATA_HUNGRY
+    [
+        DTYPE_MESSAGE,
+        [
+            `I'm hungry!`
+        ]
     ]
 ];
 
@@ -696,8 +705,9 @@ const Game = () => {
         }
     };
     const incTime = () => {
-        if (playerHealth < 1)
+        if (playerHealth < 1) {
             return;
+        }
         minutes++;
         if (minutes === 60) {
             minutes = 0;
@@ -717,6 +727,7 @@ const Game = () => {
             }
             else {
                 playerHealth--;
+                displayStack.push(gameData[DATA_HUNGRY]);
             }
         }
         if (hours === 24) {
@@ -798,7 +809,7 @@ const Game = () => {
                 close();
             }
             else if (gameData[dataIndex][DISPLAY_TYPE] === DTYPE_ACTION) {
-                gameData[dataIndex][ACTION_FN](api);
+                actions[gameData[dataIndex][ACTION_INDEX]]();
                 displayStack.pop();
             }
             else {
@@ -806,24 +817,27 @@ const Game = () => {
             }
         }
     };
-    const sleep = () => {
-        while (!(hours === (sunrise - 1) && minutes === 59)) {
-            minutes++;
-            if (minutes === 60) {
-                minutes = 0;
-                hours++;
-                if (playerHealth < playerMaxHealth)
-                    playerHealth++;
+    const actions = [
+        // ACTION_SLEEP
+        () => {
+            while (!(hours === (sunrise - 1) && minutes === 59)) {
+                minutes++;
+                if (minutes === 60) {
+                    minutes = 0;
+                    hours++;
+                    if (playerHealth < playerMaxHealth)
+                        playerHealth++;
+                }
+                if (hours === 24) {
+                    hours = 0;
+                }
+                updateMonsters();
             }
-            if (hours === 24) {
-                hours = 0;
-            }
-            updateMonsters();
         }
-    };
+    ];
     reset();
     const api = [
-        state, reset, timeStr, incTime, move, close, select, confirmSelection, sleep
+        state, reset, timeStr, incTime, move, close, select, confirmSelection
     ];
     return api;
 };
@@ -997,55 +1011,63 @@ document.onkeyup = e => {
         }
     }
 };
-c.ontouchend = e => {
+const clickOrTouch = ([x, y]) => {
     const displayItem = api[API_STATE]()[ST_DISPLAY_ITEM];
-    for (let i = 0; i < e.changedTouches.length; i++) {
-        const tileSize = c.getBoundingClientRect().width / canvasTiles;
-        const tx = ~~(e.changedTouches[i].clientX / tileSize) - 1;
-        const ty = ~~(e.changedTouches[i].clientY / tileSize) - 1;
-        if (displayItem[DISPLAY_TYPE] === DTYPE_MAP) {
-            if (tx === centerTile && ty === centerTile) {
-                // tapped on player
-                return;
-            }
-            if (tx < 0 || ty < 0) {
-                //tapped an interface tile
-                return;
-            }
-            const dx = delta(tx, centerTile);
-            const dy = delta(ty, centerTile);
-            let x = 0;
-            let y = 0;
-            if (dx > dy) {
-                x = tx > centerTile ? 1 : -1;
-            }
-            else if (dx < dy) {
-                y = ty > centerTile ? 1 : -1;
-            }
-            api[API_MOVE](x, y);
+    const tileSize = c.getBoundingClientRect().width / canvasTiles;
+    const tx = ~~((x - c.getBoundingClientRect().left) / tileSize) - 1;
+    const ty = ~~((y - c.getBoundingClientRect().top) / tileSize) - 1;
+    if (displayItem[DISPLAY_TYPE] === DTYPE_MAP) {
+        if (tx === centerTile && ty === centerTile) {
+            // tapped on player
+            return;
         }
-        if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE || displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE) {
+        if (tx < 0 || ty < 0) {
+            //tapped an interface tile
+            return;
+        }
+        const dx = delta(tx, centerTile);
+        const dy = delta(ty, centerTile);
+        let x = 0;
+        let y = 0;
+        if (dx > dy) {
+            x = tx > centerTile ? 1 : -1;
+        }
+        else if (dx < dy) {
+            y = ty > centerTile ? 1 : -1;
+        }
+        api[API_MOVE](x, y);
+    }
+    if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE || displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE) {
+        api[API_CLOSE]();
+    }
+    if (displayItem[DISPLAY_TYPE] === DTYPE_SCREEN) {
+        if (ty < 0) {
             api[API_CLOSE]();
         }
-        if (displayItem[DISPLAY_TYPE] === DTYPE_SCREEN) {
-            if (ty < 0) {
-                api[API_CLOSE]();
+        const screen = displayItem;
+        const optionOffset = screen[SCREEN_MESSAGE].length % 2 ? 1 : 0;
+        const selectionStartY = (screen[SCREEN_MESSAGE].length + optionOffset) / 2;
+        const selectionSize = screen[SCREEN_OPTIONS].length;
+        const selection = ty - selectionStartY + 1;
+        if (selection >= 0 && selection < selectionSize) {
+            if (selection === screen[SCREEN_SELECTION]) {
+                api[API_CONFIRM_SELECT]();
             }
-            const screen = displayItem;
-            const optionOffset = screen[SCREEN_MESSAGE].length % 2 ? 1 : 0;
-            const selectionStartY = (screen[SCREEN_MESSAGE].length + optionOffset) / 2;
-            const selectionSize = screen[SCREEN_OPTIONS].length;
-            const selection = ty - selectionStartY + 1;
-            if (selection >= 0 && selection < selectionSize) {
-                if (selection === screen[SCREEN_SELECTION]) {
-                    api[API_CONFIRM_SELECT]();
-                }
-                else {
-                    api[API_SELECT](selection);
-                }
+            else {
+                api[API_SELECT](selection);
             }
         }
     }
+};
+c.ontouchend = e => {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        clickOrTouch([e.changedTouches[i].clientX, e.changedTouches[i].clientY]);
+    }
+};
+c.onclick = e => {
+    e.preventDefault();
+    clickOrTouch([e.clientX, e.clientY]);
 };
 loadImages('f.gif', 't.gif', 'p.gif', 's.png').then(imgs => {
     [font, tiles, player, splash] = imgs;

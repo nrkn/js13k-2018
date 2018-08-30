@@ -29,7 +29,6 @@ export type GameAPI = [
   ( x: number, y: number ) => void,
   () => void,
   ( selection: number ) => void,
-  () => void,
   () => void
 ]
 
@@ -40,7 +39,7 @@ export type DisplayMessage = [ 1, string[] ]
 export type DisplaySelection = [ string, number ]
 export type DisplayScreen = [ 2, string[], DisplaySelection[], number, GameColor ]
 export type DisplayMap = [ 3, number, number, MapTiles, MapType, number, number ]
-export type DisplayAction = [ 4, ( api: GameAPI ) => void ]
+export type DisplayAction = [ 4, number ]
 export type DisplayItem = DisplayImage | DisplayMessage | DisplayScreen | DisplayMap | DisplayAction
 
 export type Edge = 0 | 1 | 2 | 3

@@ -1,7 +1,7 @@
-import { DisplayItem, GameAPI } from './types'
+import { DisplayItem } from './types'
 import {
   DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
-  DATA_C_MAIN, DTYPE_ACTION, API_SLEEP, DATA_SLEEP
+  DATA_C_MAIN, DTYPE_ACTION, DATA_SLEEP, ACTION_SLEEP
 } from './indices'
 
 import { createIsland } from './map'
@@ -94,7 +94,7 @@ export const gameData: DisplayItem[] = [
       ''
     ],
     [
-      [ 'BASIC RATIONS', DATA_C_MAIN ] // need to implement
+      [ 'BASIC RATIONS', -1 ] // need to implement
     ],
     0,
     'a'
@@ -137,6 +137,16 @@ export const gameData: DisplayItem[] = [
   // DATA_SLEEP
   [
     DTYPE_ACTION,
-    ( api: GameAPI ) => api[ API_SLEEP ]()
+    ACTION_SLEEP
+  ],
+
+  // DATA_HUNGRY
+  [
+    DTYPE_MESSAGE,
+    [
+      `I'm hungry!`
+    ]
   ]
+
+
 ]

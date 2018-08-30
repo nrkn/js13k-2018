@@ -171,8 +171,10 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 6516, Remaining: 6796
 - ~bed in hut to sleep~
   - Size: 6675, Remaining: 6637
-- inventory / use item
+- ~hungry message~
+  - Size: 6685, Remaining: 6627
 - scripted intro events
+- inventory / use item
 - quests etc - spend some time figuring out
 - win screen
 - restart on death
@@ -189,3 +191,4 @@ Player is safe in hut, can sleep to pass the night away
 - loading screen during map gen?
 - if room left, consider adding transitional tiles to make slightly less blocky
 - consider adding padding to SCREENs, will look better (but more math)
+- gamepad support if room left

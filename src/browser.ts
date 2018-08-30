@@ -17,7 +17,7 @@ import {
 } from './indices'
 
 import { Game } from './game'
-import { DisplayMap, DisplayScreen } from './types'
+import { DisplayMap, DisplayScreen, Point } from './types'
 
 declare const c: HTMLCanvasElement
 
@@ -284,63 +284,74 @@ document.onkeyup = e => {
   }
 }
 
-c.ontouchend = e => {
+const clickOrTouch = ( [ x, y ]: Point ) => {
   const displayItem = api[ API_STATE ]()[ ST_DISPLAY_ITEM ]
+  const tileSize = c.getBoundingClientRect().width / canvasTiles
+  const tx = ~~( ( x - c.getBoundingClientRect().left ) / tileSize ) - 1
+  const ty = ~~( ( y - c.getBoundingClientRect().top ) / tileSize ) - 1
 
-  for ( let i = 0; i < e.changedTouches.length; i++ ) {
-    const tileSize = c.getBoundingClientRect().width / canvasTiles
-    const tx = ~~( e.changedTouches[ i ].clientX / tileSize ) - 1
-    const ty = ~~( e.changedTouches[ i ].clientY / tileSize ) - 1
-
-    if ( displayItem[ DISPLAY_TYPE ] === DTYPE_MAP ) {
-      if ( tx === centerTile && ty === centerTile ){
-        // tapped on player
-        return
-      }
-
-      if ( tx < 0 || ty < 0 ) {
-        //tapped an interface tile
-        return
-      }
-
-      const dx = delta( tx, centerTile )
-      const dy = delta( ty, centerTile )
-
-      let x = 0
-      let y = 0
-      if ( dx > dy ) {
-        x = tx > centerTile ? 1 : -1
-      } else if ( dx < dy ) {
-        y = ty > centerTile ? 1 : -1
-      }
-
-      api[ API_MOVE ]( x, y )
+  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_MAP ) {
+    if ( tx === centerTile && ty === centerTile ) {
+      // tapped on player
+      return
     }
 
-    if ( displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE || displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ) {
+    if ( tx < 0 || ty < 0 ) {
+      //tapped an interface tile
+      return
+    }
+
+    const dx = delta( tx, centerTile )
+    const dy = delta( ty, centerTile )
+
+    let x = 0
+    let y = 0
+    if ( dx > dy ) {
+      x = tx > centerTile ? 1 : -1
+    } else if ( dx < dy ) {
+      y = ty > centerTile ? 1 : -1
+    }
+
+    api[ API_MOVE ]( x, y )
+  }
+
+  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE || displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ) {
+    api[ API_CLOSE ]()
+  }
+
+  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_SCREEN ) {
+    if ( ty < 0 ) {
       api[ API_CLOSE ]()
     }
 
-    if ( displayItem[ DISPLAY_TYPE ] === DTYPE_SCREEN ) {
-      if( ty < 0 ){
-        api[ API_CLOSE ]()
-      }
+    const screen = <DisplayScreen>displayItem
+    const optionOffset = screen[ SCREEN_MESSAGE ].length % 2 ? 1 : 0
+    const selectionStartY = ( screen[ SCREEN_MESSAGE ].length + optionOffset ) / 2
+    const selectionSize = screen[ SCREEN_OPTIONS ].length
+    const selection = ty - selectionStartY + 1
 
-      const screen = <DisplayScreen>displayItem
-      const optionOffset = screen[ SCREEN_MESSAGE ].length % 2 ? 1 : 0
-      const selectionStartY = ( screen[ SCREEN_MESSAGE ].length + optionOffset ) / 2
-      const selectionSize = screen[ SCREEN_OPTIONS ].length
-      const selection = ty - selectionStartY + 1
-
-      if( selection >= 0 && selection < selectionSize ){
-        if( selection === screen[ SCREEN_SELECTION ] ){
-          api[ API_CONFIRM_SELECT ]()
-        } else {
-          api[ API_SELECT ]( selection )
-        }
+    if ( selection >= 0 && selection < selectionSize ) {
+      if ( selection === screen[ SCREEN_SELECTION ] ) {
+        api[ API_CONFIRM_SELECT ]()
+      } else {
+        api[ API_SELECT ]( selection )
       }
     }
   }
+}
+
+c.ontouchend = e => {
+  e.preventDefault()
+
+  for ( let i = 0; i < e.changedTouches.length; i++ ) {
+    clickOrTouch( [ e.changedTouches[ i ].clientX, e.changedTouches[ i ].clientY ] )
+  }
+}
+
+c.onclick = e => {
+  e.preventDefault()
+
+  clickOrTouch( [ e.clientX, e.clientY ] )
 }
 
 loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( imgs => {
