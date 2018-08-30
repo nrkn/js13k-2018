@@ -7,7 +7,7 @@ import {
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
   OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY
+  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD
 } from './indices'
 
 import {
@@ -70,7 +70,7 @@ export const Game = () => {
     // can use this to toggle inventory for map
     displayStack.pop()
 
-    if( !displayStack.length ) displayStack = [ gameData[ DATA_ISLAND ] ]
+    if( !displayStack.length ) reset()
   }
 
   const createMonsters = () => {
@@ -146,6 +146,7 @@ export const Game = () => {
 
   const incTime = () => {
     if( playerHealth < 1 ){
+      displayStack = [ gameData[ DATA_DEAD ] ]
       return
     }
 

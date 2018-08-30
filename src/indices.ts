@@ -65,6 +65,7 @@ export const DATA_BED = 9
 export const DATA_NOT_TIRED = 10
 export const DATA_SLEEP = 11
 export const DATA_HUNGRY = 12
+export const DATA_DEAD = 13
 
 // map data indices
 export const MAP_PLAYERX = 1

@@ -146,7 +146,13 @@ export const gameData: DisplayItem[] = [
     [
       `I'm hungry!`
     ]
+  ],
+
+  // DATA_DEAD
+  [
+    DTYPE_MESSAGE,
+    [
+      'You died'
+    ]
   ]
-
-
 ]

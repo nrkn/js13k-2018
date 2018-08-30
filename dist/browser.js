@@ -87,6 +87,7 @@ const DATA_BED = 9;
 const DATA_NOT_TIRED = 10;
 const DATA_SLEEP = 11;
 const DATA_HUNGRY = 12;
+const DATA_DEAD = 13;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -593,6 +594,13 @@ const gameData = [
         [
             `I'm hungry!`
         ]
+    ],
+    // DATA_DEAD
+    [
+        DTYPE_MESSAGE,
+        [
+            'You died'
+        ]
     ]
 ];
 
@@ -642,7 +650,7 @@ const Game = () => {
         // can use this to toggle inventory for map
         displayStack.pop();
         if (!displayStack.length)
-            displayStack = [gameData[DATA_ISLAND]];
+            reset();
     };
     const createMonsters = () => {
         while (monsters.length < initialMonsterCount) {
@@ -706,6 +714,7 @@ const Game = () => {
     };
     const incTime = () => {
         if (playerHealth < 1) {
+            displayStack = [gameData[DATA_DEAD]];
             return;
         }
         minutes++;

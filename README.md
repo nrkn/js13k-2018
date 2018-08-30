@@ -173,11 +173,12 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 6675, Remaining: 6637
 - ~hungry message~
   - Size: 6685, Remaining: 6627
+- ~restart on death~
+  - Size: 6754, Remaining: 6558
 - scripted intro events
 - inventory / use item
 - quests etc - spend some time figuring out
 - win screen
-- restart on death
 - fog of war and/or minimap
 - create art - more tiles - rocks, flowers, more trees
 - add biomes - use the water inside map we currently turn into forests - art
