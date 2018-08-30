@@ -167,7 +167,9 @@ Player is safe in hut, can sleep to pass the night away
 - ~BUG: food can resurrect you after you die!~
   - ~BUG: monsters can kill you in the hut~
   - Size: 6284, Remaining: 7028
-- get computers working again
+- ~get computers working again~
+  - Size: 6516, Remaining: 6796
+- bed in hut to sleep
 - inventory / use item
 - scripted intro events
 - quests etc - spend some time figuring out
@@ -185,3 +187,4 @@ Player is safe in hut, can sleep to pass the night away
 - ISSUE: map generation sometimes very slow
 - loading screen during map gen?
 - if room left, consider adding transitional tiles to make slightly less blocky
+- consider adding padding to SCREENs, will look better (but more math)

@@ -11,11 +11,13 @@ import {
   MAP_TILES, MAP_PLAYERX, MAP_PLAYERY, ST_PLAYER_HEALTH, ST_PLAYER_FACING,
   ST_PLAYER_FOOD, API_TIMESTR, API_MOVE, API_CLOSE, DTYPE_SCREEN, MAP_TYPE,
   MAP_STARTX, MAP_STARTY, MT_ISLAND, S_SKELETON, S_BOAT_LEFT, S_BOAT_RIGHT,
-  ST_MONSTERS, ST_HOURS, MON_X, MON_Y, MON_FACING, S_MONSTER, MON_HEALTH
+  ST_MONSTERS, ST_HOURS, MON_X, MON_Y, MON_FACING, S_MONSTER, MON_HEALTH,
+  SCREEN_MESSAGE, SCREEN_OPTIONS, OPTION_MESSAGE, SCREEN_SELECTION, API_SELECT,
+  API_CONFIRM_SELECT
 } from './indices'
 
 import { Game } from './game'
-import { DisplayMap } from './types'
+import { DisplayMap, DisplayScreen } from './types'
 
 declare const c: HTMLCanvasElement
 
@@ -41,6 +43,10 @@ const draw = ( time: number ) => {
     drawMessage( <string[]>displayItem[ DISPLAY_MESSAGE ] )
   }
 
+  if( displayItem[ DISPLAY_TYPE ] === DTYPE_SCREEN ){
+    drawScreen( <DisplayScreen>displayItem )
+  }
+
   requestAnimationFrame( draw )
 }
 
@@ -58,6 +64,30 @@ const drawMessage = ( lines: string[] ) => {
   for( let y = 0; y < lines.length; y++ ){
     const dx = ~~( ( canvasTiles * 2 - lines[ y ].length ) / 2 )
     drawText( lines[ y ], dx, dy + y )
+  }
+}
+
+const drawScreen = ( screen: DisplayScreen ) => {
+  for( let y = 0; y < screen[ SCREEN_MESSAGE ].length; y++ ){
+    drawText( screen[ SCREEN_MESSAGE ][ y ], 0, y )
+  }
+
+  drawText( '<X>', 17, 0 )
+
+  const optionOffset = screen[ SCREEN_MESSAGE ].length % 2 ? 1 : 0
+
+  for ( let y = 0; y < screen[ SCREEN_OPTIONS ].length; y++ ){
+    drawText(
+      `${ y + 1 } ${
+        y === screen[ SCREEN_SELECTION ] ? '<' : ' '
+      }${
+        screen[ SCREEN_OPTIONS ][ y ][ OPTION_MESSAGE ]
+      }${
+        y === screen[ SCREEN_SELECTION ] ? '>' : ' '
+      }`,
+      0,
+      y * 2 + screen[ SCREEN_MESSAGE ].length + optionOffset
+    )
   }
 }
 
@@ -220,25 +250,49 @@ document.onkeyup = e => {
   }
 
   if ( displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE || displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ) {
+    // space or esc or enter
     if ( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ) {
       api[ API_CLOSE ]()
     }
   }
 
   if ( displayItem[ DISPLAY_TYPE ] === DTYPE_SCREEN ) {
-    // close, change selection, confirm selection
+    const screen = <DisplayScreen>displayItem
+
+    // esc
+    if ( e.keyCode === 27 ) {
+      api[ API_CLOSE ]()
+    }
+
+    // up
+    if ( e.keyCode === 87 || e.keyCode === 38 ) {
+      if( screen[ SCREEN_SELECTION ] > 0 ){
+        api[ API_SELECT ]( screen[ SCREEN_SELECTION ] - 1 )
+      }
+    }
+    // down
+    if ( e.keyCode === 83 || e.keyCode === 40 ) {
+      if ( screen[ SCREEN_SELECTION ] < screen[ SCREEN_OPTIONS ].length - 1 ) {
+        api[ API_SELECT ]( screen[ SCREEN_SELECTION ] + 1 )
+      }
+    }
+
+    // space or enter
+    if ( e.keyCode === 32 || e.keyCode === 13 ) {
+      api[ API_CONFIRM_SELECT ]()
+    }
   }
 }
 
 c.ontouchend = e => {
   const displayItem = api[ API_STATE ]()[ ST_DISPLAY_ITEM ]
 
-  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_MAP ) {
-    for ( let i = 0; i < e.changedTouches.length; i++ ) {
-      const tileSize = c.getBoundingClientRect().width / canvasTiles
-      const tx = ~~( e.changedTouches[ i ].clientX / tileSize ) - 1
-      const ty = ~~( e.changedTouches[ i ].clientY / tileSize ) - 1
+  for ( let i = 0; i < e.changedTouches.length; i++ ) {
+    const tileSize = c.getBoundingClientRect().width / canvasTiles
+    const tx = ~~( e.changedTouches[ i ].clientX / tileSize ) - 1
+    const ty = ~~( e.changedTouches[ i ].clientY / tileSize ) - 1
 
+    if ( displayItem[ DISPLAY_TYPE ] === DTYPE_MAP ) {
       if ( tx === centerTile && ty === centerTile ){
         // tapped on player
         return
@@ -263,15 +317,29 @@ c.ontouchend = e => {
       api[ API_MOVE ]( x, y )
     }
 
-    return
-  }
+    if ( displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE || displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ) {
+      api[ API_CLOSE ]()
+    }
 
-  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE || displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ) {
-    api[ API_CLOSE ]()
-  }
+    if ( displayItem[ DISPLAY_TYPE ] === DTYPE_SCREEN ) {
+      if( ty < 0 ){
+        api[ API_CLOSE ]()
+      }
 
-  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_SCREEN ) {
-    // close, change selection, confirm selection
+      const screen = <DisplayScreen>displayItem
+      const optionOffset = screen[ SCREEN_MESSAGE ].length % 2 ? 1 : 0
+      const selectionStartY = ( screen[ SCREEN_MESSAGE ].length + optionOffset ) / 2
+      const selectionSize = screen[ SCREEN_OPTIONS ].length
+      const selection = ty - selectionStartY + 1
+
+      if( selection >= 0 && selection < selectionSize ){
+        if( selection === screen[ SCREEN_SELECTION ] ){
+          api[ API_CONFIRM_SELECT ]()
+        } else {
+          api[ API_SELECT ]( selection )
+        }
+      }
+    }
   }
 }
 

@@ -1,118 +1,22 @@
 import { blocks, createIsland, createHut } from './map'
 
 import {
-  DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_DIAGNOSTICS, DATA_C_SYNTH,
-  DATA_C_MAIN, DATA_ISLAND, DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE,
-  DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R,
-  MAP_STARTY, MT_ISLAND, MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X,
-  MON_Y, MON_FACING, X, Y, MON_HEALTH
+  DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_MAIN, DATA_ISLAND,
+  DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE, DATA_SUNSET, DTYPE_MAP,
+  MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND,
+  MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
+  Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
+  OPTION_DATA_INDEX, SCREEN_COLOR
 } from './indices'
 
 import {
-  DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster, Point
+  DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster, DisplayScreen
 } from './types'
 
 import { inBounds, hasPoint, towards } from './geometry'
-import { initialMonsterCount, mapSize, sunrise, sunset } from './settings';
-import { randInt } from './utils';
-
-const gameData: DisplayItem[] = [
-  // DATA_SPLASH
-  [ DTYPE_IMAGE, 's.png' ],
-
-  // DATA_INTRO
-  [ DTYPE_MESSAGE,
-    [
-      'Lost contact with',
-      'RANGER. Take boat',
-      'and investigate.'
-    ]
-  ],
-
-  // DATA_SUNRISE
-  [
-    DTYPE_MESSAGE,
-    [
-      'Sunrise'
-    ]
-  ],
-
-  // DATA_SUNSET
-  [
-    DTYPE_MESSAGE,
-    [
-      'Sunset'
-    ]
-  ],
-
-  // DATA_C_MAIN
-  [
-    DTYPE_SCREEN,
-    [
-      'RSOS v3.27',
-      '',
-      'ERROR:',
-      ' SYSTEM OFFLINE',
-      '',
-      'EMERGENCY OPS:',
-      ''
-    ],
-    [
-      [ 'DIAGNOSTICS', DATA_C_DIAGNOSTICS ],
-      [ 'SYNTHESIZE', DATA_C_SYNTH ]
-    ],
-    0
-  ],
-
-  // DATA_C_DIAGNOSTICS
-  [
-    DTYPE_SCREEN,
-    [
-      'DIAGNOSTICS',
-      '',
-      'MAIN SYSTEM:',
-      ' OFFLINE',
-      '',
-      ' PROBLEM:',
-      '  6 CAPS BLOWN',
-      '',
-      'SYNTHESIZE:',
-      ' ONLINE'
-    ],
-    [],
-    0
-  ],
-
-  // DATA_C_SYNTH
-  [
-    DTYPE_SCREEN,
-    [
-      'SYNTHESIZE',
-      '',
-      'SYNTHDB:',
-      ' OFFLINE',
-      '',
-      'EMERGENCY OPS:',
-      ''
-    ],
-    [
-      [ 'BASIC RATIONS', DATA_C_MAIN ] // need to implement
-    ],
-    0
-  ],
-
-  // DATA_ISLAND
-  createIsland(),
-
-  // DATA_INVESTIGATE
-  [
-    DTYPE_MESSAGE,
-    [
-      'I should',
-      'investigate'
-    ]
-  ]
-]
+import { initialMonsterCount, mapSize, sunrise, sunset } from './settings'
+import { randInt } from './utils'
+import { gameData } from './data';
 
 export const Game = () => {
   let playerFacing: 0 | 1
@@ -130,7 +34,7 @@ export const Game = () => {
     playerFood = 5
     playerHealth = 2
     playerMaxHealth = 10
-    hours = 17
+    hours = 6
     minutes = 55
     gameData[ DATA_ISLAND ] = createIsland()
     displayStack = [
@@ -147,7 +51,9 @@ export const Game = () => {
   const currentColor = (): GameColor => {
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_IMAGE ) return 'g'
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_MESSAGE ) return 'g'
-    if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN ) return 'a'
+    if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN )
+      return (<DisplayScreen>displayStack[ displayStack.length - 1 ])[ SCREEN_COLOR ]
+
     return color
   }
 
@@ -177,8 +83,10 @@ export const Game = () => {
       const playerX = mapItem[ MAP_PLAYERX ]
       const playerY = mapItem[ MAP_PLAYERY ]
 
-      if ( !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) && !( playerX === x && playerY === y ) )
-        monsters.push( [ x, y, facing, health ] )
+      if (
+        !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) &&
+        !( playerX === x && playerY === y )
+      ) monsters.push( [ x, y, facing, health ] )
     }
   }
 
@@ -191,33 +99,33 @@ export const Game = () => {
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
       const playerX = mapItem[ MAP_PLAYERX ]
       const playerY = mapItem[ MAP_PLAYERY ]
-      const newLocation = [ x, y ]
+      const next = [ x, y ]
 
       if ( Math.random() < 0.66 ) {
         const toPlayer = towards( [ x, y ], [ playerX, playerY ] )
-        newLocation[ X ] = toPlayer[ X ]
-        newLocation[ Y ] = toPlayer[ Y ]
+        next[ X ] = toPlayer[ X ]
+        next[ Y ] = toPlayer[ Y ]
       } else {
         if ( randInt( 2 ) ) {
-          newLocation[ X ] = x + ( randInt( 3 ) - 1 )
+          next[ X ] = x + ( randInt( 3 ) - 1 )
         } else {
-          newLocation[ Y ] = y + ( randInt( 3 ) - 1 )
+          next[ Y ] = y + ( randInt( 3 ) - 1 )
         }
       }
 
-      const mapTile = mapItem[ MAP_TILES ][ newLocation[ Y ] ][ newLocation[ X ] ]
+      const mapTile = mapItem[ MAP_TILES ][ next[ Y ] ][ next[ X ] ]
 
       if (
         !blocks( mapTile ) &&
-        !hasPoint( <any>monsters, [ newLocation[ X ], newLocation[ Y ] ] ) &&
-        !( playerX === newLocation[ X ] && playerY === newLocation[ Y ] )
+        !hasPoint( <any>monsters, [ next[ X ], next[ Y ] ] ) &&
+        !( playerX === next[ X ] && playerY === next[ Y ] )
       ) {
-        monster[ MON_X ] = newLocation[ X ]
-        monster[ MON_Y ] = newLocation[ Y ]
-        if ( newLocation[ X ] < x ) {
+        monster[ MON_X ] = next[ X ]
+        monster[ MON_Y ] = next[ Y ]
+        if ( next[ X ] < x ) {
           monster[ MON_FACING ] = 1
         }
-        if ( newLocation[ X ] > x ) {
+        if ( next[ X ] > x ) {
           monster[ MON_FACING ] = 0
         }
       }
@@ -226,7 +134,7 @@ export const Game = () => {
         currentMapItem[ DISPLAY_TYPE ] === DTYPE_MAP &&
         currentMapItem[ MAP_TYPE ] === MT_ISLAND &&
         ( hours >= sunset || hours < sunrise ) &&
-        playerX === newLocation[ X ] && playerY === newLocation[ Y ] &&
+        playerX === next[ X ] && playerY === next[ Y ] &&
         randInt( 2 ) && playerHealth > 0 && monster[ MON_HEALTH ] > 0
       ) {
         playerHealth--
@@ -262,7 +170,15 @@ export const Game = () => {
     updateMonsters()
   }
 
-  const timeStr = () => `${ hours < 10 ? '0' : '' }${ hours }:${ minutes < 10 ? '0' : '' }${ minutes }`
+  const timeStr = () => `${
+    hours < 10 ? '0' : ''
+  }${
+    hours
+  }:${
+    minutes < 10 ? '0' : ''
+  }${
+    minutes
+  }`
 
   const move = ( x: number, y: number ) => {
     const map = <DisplayMap>displayStack[ displayStack.length - 1 ]
@@ -283,15 +199,24 @@ export const Game = () => {
     y = map[ MAP_PLAYERY ] + y
 
     let monsterHere
-    if ( ( hours >= sunset || hours < sunrise ) && map[ MAP_TYPE ] === MT_ISLAND ){
+    if (
+      ( hours >= sunset || hours < sunrise ) &&
+      map[ MAP_TYPE ] === MT_ISLAND
+    ){
       for ( let i = 0; i < monsters.length; i++ ) {
-        if ( monsters[ i ][ MON_X ] === x && monsters[ i ][ MON_Y ] === y && monsters[ i ][ MON_HEALTH ] > 0 ){
+        if (
+          monsters[ i ][ MON_X ] === x && monsters[ i ][ MON_Y ] === y &&
+          monsters[ i ][ MON_HEALTH ] > 0
+        ){
           monsterHere = monsters[ i ]
         }
       }
     }
 
-    if ( playerHealth > 0 && inBounds( [ x, y ] ) && !blocks( map[ MAP_TILES ][ y ][ x ] ) && !monsterHere ){
+    if (
+      playerHealth > 0 && inBounds( [ x, y ] ) &&
+      !blocks( map[ MAP_TILES ][ y ][ x ] ) && !monsterHere
+    ){
       map[ MAP_PLAYERX ] = x
       map[ MAP_PLAYERY ] = y
     }
@@ -317,10 +242,35 @@ export const Game = () => {
       if ( map[ MAP_TILES ][ y ][ x ] === T_HUT_R ) {
         displayStack.pop()
       }
+
+      if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
+        displayStack.push( gameData[ DATA_C_MAIN ] )
+      }
+    }
+  }
+
+  const select = ( i: number ) => {
+    if (
+      displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN
+    ){
+      displayStack[ displayStack.length - 1 ][ SCREEN_SELECTION ] = i
+    }
+  }
+
+  const confirmSelection = () => {
+    if (
+      displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN
+    ) {
+      const screen = <DisplayScreen>displayStack[ displayStack.length - 1 ]
+      const selected = screen[ SCREEN_SELECTION ]
+      const dataIndex = screen[ SCREEN_OPTIONS ][ selected ][ OPTION_DATA_INDEX ]
+      displayStack.push( gameData[ dataIndex ] )
     }
   }
 
   reset()
 
-  return <GameAPI>[ state, reset, timeStr, incTime, move, close ]
+  return <GameAPI>[
+    state, reset, timeStr, incTime, move, close, select, confirmSelection
+  ]
 }

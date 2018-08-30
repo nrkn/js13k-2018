@@ -41,12 +41,15 @@ export const API_TIMESTR = 2
 export const API_INCTIME = 3
 export const API_MOVE = 4
 export const API_CLOSE = 5
+export const API_SELECT = 6
+export const API_CONFIRM_SELECT = 7
 
 // display item types
 export const DTYPE_IMAGE = 0
 export const DTYPE_MESSAGE = 1
 export const DTYPE_SCREEN = 2
 export const DTYPE_MAP = 3
+export const DTYPE_ACTION = 4
 
 // game data indices
 export const DATA_SPLASH = 0
@@ -58,6 +61,7 @@ export const DATA_C_DIAGNOSTICS = 5
 export const DATA_C_SYNTH = 6
 export const DATA_ISLAND = 7
 export const DATA_INVESTIGATE = 8
+export const DATA_SLEEP = 9
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -77,8 +81,12 @@ export const DISPLAY_NAME = 1
 export const DISPLAY_MESSAGE = 1
 
 // screen indices
+export const SCREEN_MESSAGE = 1
 export const SCREEN_OPTIONS = 2
 export const SCREEN_SELECTION = 3
+export const SCREEN_COLOR = 4
+export const OPTION_MESSAGE = 0
+export const OPTION_DATA_INDEX = 1
 
 // point
 export const X = 0
