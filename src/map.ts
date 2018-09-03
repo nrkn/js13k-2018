@@ -159,11 +159,6 @@ export const createIsland = (): DisplayMap => {
 
   for( let i = 2; i < waypointCount; i++ ){
     const [ wx, wy ] = waypoints[ i ]
-    // const neighbours = allNeighbours( [ wx, wy ] )
-    // for( let n = 0; n < neighbours.length; n++ ){
-    //   const [ nx, ny ] = neighbours[ n ]
-    //   if( blocks( tiles[ ny ][ nx ] ) ) tiles[ ny ][ nx ] = T_LAND
-    // }
     tiles[ wy ][ wx ] = T_HUT
   }
 
