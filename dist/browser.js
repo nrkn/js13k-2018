@@ -1,6 +1,8 @@
 const s = () => {const tileSize = 16;
+const fontSize = 8;
 const viewTiles = 9;
 const canvasTiles = viewTiles + 1;
+const fontTiles = canvasTiles * 2;
 const centerTile = ~~(viewTiles / 2);
 const mapSize = 128;
 const animTime = 500;
@@ -28,22 +30,25 @@ const T_SEA = 0;
 const T_WATER = 1;
 const T_LAND = 2;
 const T_GRASS = 3;
-const T_GRASS_L = 5;
-const T_TREE = 8;
-const T_FOOD = 9;
-const T_HEALTH = 10;
-const T_PATH = 11;
-const T_PATH_L = 3;
-const T_SAND = 14;
+const T_GRASS_L = 8;
+const T_TREE = 11;
+const T_TREE_L = 4;
+const T_FOOD = 15;
+const T_HEALTH = 16;
+const T_SAND = 17;
 const T_SAND_L = 3;
-const T_HUT = 17;
-const T_COMPUTER = 18;
-const T_SYNTH = 19;
-const T_BED = 20;
-const T_HUT_L = 21;
-const T_HUT_M = 22;
-const T_HUT_R = 23;
-const T_BLACK = 24;
+const T_HUT = 20;
+const T_COMPUTER = 21;
+const T_SYNTH = 22;
+const T_BED = 23;
+const T_HUT_L = 24;
+const T_HUT_M = 25;
+const T_HUT_R = 26;
+const T_BLACK = 27;
+const T_RUINS = 28;
+const T_RUINS_L = 3;
+const T_MOUNTAINS = 31;
+const T_MOUNTAINS_L = 3;
 const S_SKELETON = 4;
 const S_BOAT_LEFT = 5;
 const S_BOAT_RIGHT = 6;
@@ -364,16 +369,31 @@ const decorate = (tiles, clear) => {
                 else {
                     if (hasPoint(clear, [x, y])) {
                         // no trees
-                        tiles[y][x] = randInt(6) + T_LAND;
+                        tiles[y][x] = randInt(9) + T_LAND;
                     }
                     else {
                         // all land tiles including trees
-                        tiles[y][x] = randInt(7) + T_LAND;
+                        tiles[y][x] = randInt(13) + T_LAND;
                     }
                 }
             }
             if (tiles[y][x] === T_WATER) {
-                tiles[y][x] = randInt(2) + (T_TREE - 1);
+                const flood = floodFill([x, y], ([tx, ty]) => tiles[ty][tx] === T_WATER);
+                if (randInt(3)) {
+                    // all trees
+                    drawTilesToMap(tiles, flood, () => randInt(T_TREE_L) + T_TREE);
+                }
+                else if (randInt(3)) {
+                    // mountains
+                    drawTilesToMap(tiles, flood, () => randInt(T_MOUNTAINS_L) + T_MOUNTAINS);
+                }
+                else if (randInt(3)) {
+                    // no trees
+                    drawTilesToMap(tiles, flood, () => randInt(9) + T_LAND);
+                }
+                else {
+                    drawTilesToMap(tiles, flood, () => T_SEA);
+                }
             }
         }
     }
@@ -421,7 +441,11 @@ const createIsland = () => {
         r = withinDist(clear, [playerX, playerY], randInt(5) + 10, randInt(5) + 20);
     }
     const [rangerX, rangerY] = r;
-    const [hutX, hutY] = withinDist(clear, [rangerX, rangerY], randInt(5) + 10, randInt(5) + 20);
+    let h;
+    while (!h) {
+        h = withinDist(clear, [rangerX, rangerY], randInt(5) + 10, randInt(5) + 20);
+    }
+    const [hutX, hutY] = h;
     const waypoints = [
         [playerX, playerY],
         [rangerX, rangerY],
@@ -447,18 +471,20 @@ const createIsland = () => {
     }
     for (let i = 2; i < waypointCount; i++) {
         const [wx, wy] = waypoints[i];
-        // const neighbours = allNeighbours( [ wx, wy ] )
-        // for( let n = 0; n < neighbours.length; n++ ){
-        //   const [ nx, ny ] = neighbours[ n ]
-        //   if( blocks( tiles[ ny ][ nx ] ) ) tiles[ ny ][ nx ] = T_LAND
-        // }
-        tiles[wy][wx] = T_HUT;
+        if (randInt(3)) {
+            tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
+        }
+        else {
+            tiles[wy][wx] = T_HUT;
+        }
     }
     return [DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY];
 };
-const blocks = i => i < 2 || i === T_TREE || i === T_HUT || i === T_BLACK || i === T_HUT_L ||
-    i === T_HUT_M || i === T_HUT_R || i === T_COMPUTER || i === T_SYNTH ||
-    i === T_BED;
+const blocks = i => i < 2 || (i >= T_TREE && i < T_TREE + T_TREE_L) || i === T_HUT ||
+    i === T_BLACK || i === T_HUT_L || i === T_HUT_M || i === T_HUT_R ||
+    i === T_COMPUTER || i === T_SYNTH || i === T_BED ||
+    (i >= T_RUINS && i < T_RUINS + T_RUINS_L) ||
+    (i >= T_MOUNTAINS && i < T_MOUNTAINS + T_MOUNTAINS_L);
 
 
 
@@ -877,15 +903,15 @@ const draw = (time) => {
     }
     requestAnimationFrame(draw);
 };
-const drawChar = (ch = '', tx = 0, ty = 0) => ctx.drawImage(font, (ch.charCodeAt(0) - 32) * 8, 0, 8, 8, tx * 8, ty * 8, 8, 8);
+const drawChar = (ch = '', tx = 0, ty = 0) => ctx.drawImage(font, (ch.charCodeAt(0) - 32) * fontSize, 0, fontSize, fontSize, tx * fontSize, ty * fontSize, fontSize, fontSize);
 const drawText = (str = '', tx = 0, ty = 0) => {
     for (let i = 0; i < str.length; i++)
         drawChar(str[i], tx + i, ty);
 };
 const drawMessage = (lines) => {
-    const dy = ~~((canvasTiles * 2 - lines.length) / 2);
+    const dy = ~~((fontTiles - lines.length) / 2);
     for (let y = 0; y < lines.length; y++) {
-        const dx = ~~((canvasTiles * 2 - lines[y].length) / 2);
+        const dx = ~~((fontTiles - lines[y].length) / 2);
         drawText(lines[y], dx, dy + y);
     }
 };
@@ -893,7 +919,7 @@ const drawScreen = (screen) => {
     for (let y = 0; y < screen[SCREEN_MESSAGE].length; y++) {
         drawText(screen[SCREEN_MESSAGE][y], 0, y);
     }
-    drawText('<X>', 17, 0);
+    drawText('<X>', fontTiles - 3, 0);
     const optionOffset = screen[SCREEN_MESSAGE].length % 2 ? 1 : 0;
     for (let y = 0; y < screen[SCREEN_OPTIONS].length; y++) {
         drawText(`${y + 1} ${y === screen[SCREEN_SELECTION] ? '<' : ' '}${screen[SCREEN_OPTIONS][y][OPTION_MESSAGE]}${y === screen[SCREEN_SELECTION] ? '>' : ' '}`, 0, y * 2 + screen[SCREEN_MESSAGE].length + optionOffset);

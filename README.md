@@ -175,19 +175,15 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 6685, Remaining: 6627
 - ~restart on death~
   - Size: 6754, Remaining: 6558
+- ~biomes~
+  - ~BUG: map generation sometimes crashes~
+  - ~create art - more tiles - rocks, flowers, more trees~
+  - Size: 7941, Remaining: 5371
 - scripted intro events
 - inventory / use item
 - quests etc - spend some time figuring out
 - win screen
 - fog of war and/or minimap
-- create art - more tiles - rocks, flowers, more trees
-- add biomes - use the water inside map we currently turn into forests - art
-  - mountain
-  - swamp?
-  - lake
-  - forest
-  - ???
-- BUG: map generation sometimes crashes
 - ISSUE: map generation sometimes very slow
 - loading screen during map gen?
 - if room left, consider adding transitional tiles to make slightly less blocky

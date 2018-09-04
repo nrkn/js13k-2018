@@ -1,5 +1,5 @@
 node_modules
 dist/browser
 dist/node
-debug
-zip
+debug/island.png
+zip/offline.zip

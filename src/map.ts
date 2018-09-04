@@ -1,7 +1,7 @@
 import {
   T_TREE, DTYPE_MAP, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_SAND_L,
   T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED,
-  MT_ISLAND, MT_HUT
+  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS
 } from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
 import { MapTiles, MapRow, DisplayMap, Point, FloodPoint } from './types'
@@ -58,15 +58,27 @@ export const decorate = ( tiles: MapTiles, clear: Point[] ) => {
         } else {
           if( hasPoint( clear, [ x, y ] ) ){
             // no trees
-            tiles[ y ][ x ] = randInt( 6 ) + T_LAND
+            tiles[ y ][ x ] = randInt( 9 ) + T_LAND
           } else {
             // all land tiles including trees
-            tiles[ y ][ x ] = randInt( 7 ) + T_LAND
+            tiles[ y ][ x ] = randInt( 13 ) + T_LAND
           }
         }
       }
-      if( tiles[ y ][ x ] === T_WATER ){
-        tiles[ y ][ x ] = randInt( 2 ) + ( T_TREE - 1 )
+      if( tiles[ y ][ x ] === T_WATER ){        
+        const flood = floodFill( [ x, y ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )
+        if( randInt( 3 ) ){
+          // all trees
+          drawTilesToMap( tiles, flood, () => randInt( T_TREE_L ) + T_TREE )
+        } else if( randInt( 3 ) ) {
+          // mountains
+          drawTilesToMap( tiles, flood, () => randInt( T_MOUNTAINS_L ) + T_MOUNTAINS )
+        } else if( randInt( 3 ) ) {
+          // no trees
+          drawTilesToMap( tiles, flood, () => randInt( 9 ) + T_LAND )
+        } else {
+          drawTilesToMap( tiles, flood, () => T_SEA )
+        }
       }
     }
   }
@@ -130,7 +142,11 @@ export const createIsland = (): DisplayMap => {
   }
   const [ rangerX, rangerY ] = r
 
-  const [ hutX, hutY ] = withinDist( clear, [ rangerX, rangerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
+  let h
+  while( !h ){
+    h = withinDist( clear, [ rangerX, rangerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
+  }
+  const [ hutX, hutY ] = h
 
   const waypoints: Point[] = [
     [ playerX, playerY ],
@@ -160,13 +176,20 @@ export const createIsland = (): DisplayMap => {
 
   for( let i = 2; i < waypointCount; i++ ){
     const [ wx, wy ] = waypoints[ i ]
-    tiles[ wy ][ wx ] = T_HUT
+    if( randInt( 3 ) ){
+      tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS      
+    } else {
+      tiles[ wy ][ wx ] = T_HUT
+    }
+    
   }
 
   return [ DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY ]
 }
 
 export const blocks = i =>
-  i < 2 || i === T_TREE || i === T_HUT || i === T_BLACK || i === T_HUT_L ||
-  i === T_HUT_M || i === T_HUT_R || i === T_COMPUTER || i === T_SYNTH ||
-  i === T_BED
+  i < 2 || ( i >= T_TREE && i < T_TREE + T_TREE_L ) || i === T_HUT || 
+  i === T_BLACK || i === T_HUT_L || i === T_HUT_M || i === T_HUT_R || 
+  i === T_COMPUTER || i === T_SYNTH || i === T_BED || 
+  ( i >= T_RUINS && i < T_RUINS + T_RUINS_L ) ||
+  ( i >= T_MOUNTAINS && i < T_MOUNTAINS + T_MOUNTAINS_L )

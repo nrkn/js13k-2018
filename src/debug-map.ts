@@ -3,11 +3,8 @@ const Jimp = require( 'jimp' )
 import { mapSize } from './settings'
 import { createIsland } from './map'
 import {
-  MAP_TILES, T_PATH, T_PATH_L, T_GRASS, T_GRASS_L, T_TREE, MAP_PLAYERX,
-  MAP_PLAYERY,
-  T_SAND,
-  T_SAND_L,
-  T_HUT
+  MAP_TILES, T_GRASS, T_GRASS_L, T_TREE, T_TREE_L, MAP_PLAYERX, MAP_PLAYERY, 
+  T_SAND, T_SAND_L, T_HUT, T_MOUNTAINS, T_MOUNTAINS_L
 } from './indices'
 
 const start = process.hrtime()
@@ -41,16 +38,20 @@ new Jimp( mapSize, mapSize, ( err, image ) => {
         color = Jimp.rgbaToInt( 128, 255, 128, 255 )
       }
 
-      if ( map[ y ][ x ] >= T_PATH && map[ y ][ x ] < T_PATH + T_PATH_L ) {
-        color = Jimp.rgbaToInt( 128, 128, 128, 255 )
-      }
-
       if ( map[ y ][ x ] >= T_GRASS && map[ y ][ x ] < T_GRASS + T_GRASS_L ) {
         color = Jimp.rgbaToInt( 32, 255, 64, 255 )
       }
 
-      if ( map[ y ][ x ] === T_TREE ) {
+      if ( map[ y ][ x ] >= T_TREE && map[ y ][x ] < T_TREE + T_TREE_L ) {
         color = Jimp.rgbaToInt( 0, 128, 0, 255 )
+      }
+
+      if ( map[ y ][ x ] >= T_SAND && map[ y ][ x ] < T_SAND + T_SAND_L ) {
+        color = Jimp.rgbaToInt( 255, 255, 0, 255 )
+      }
+
+      if ( map[ y ][ x ] >= T_MOUNTAINS && map[ y ][ x ] < T_MOUNTAINS + T_MOUNTAINS_L ) {
+        color = Jimp.rgbaToInt( 128, 64, 0, 255 )
       }
 
       if ( map[ y ][ x ] >= T_SAND && map[ y ][ x ] < T_SAND + T_SAND_L ) {
