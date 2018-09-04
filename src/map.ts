@@ -1,14 +1,15 @@
-import { T_TREE, DTYPE_MAP, Y, X, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_PATH, T_PATH_L, T_SAND_L, T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED, MT_ISLAND, MT_HUT } from './indices'
+import {
+  T_TREE, DTYPE_MAP, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_SAND_L,
+  T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED,
+  MT_ISLAND, MT_HUT
+} from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
 import { MapTiles, MapRow, DisplayMap, Point, FloodPoint } from './types'
 import { randInt, pick } from './utils'
 import {
   drunkenWalk, randomPointInLandBorder, inWaterBorder, expandLand,
   findTilePoints, randomLandEdge, floodFill, leftMost, findPath,
-  getImmediateNeighbours,
-  hasPoint,
-  withinDist,
-  allNeighbours
+  getImmediateNeighbours, hasPoint, withinDist
 } from './geometry'
 
 export const createMap = () => {

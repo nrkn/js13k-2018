@@ -23,6 +23,7 @@ export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
 export const S_MONSTER = 7
+
 // state indices
 export const ST_PLAYER_FACING = 0
 export const ST_PLAYER_FOOD = 1

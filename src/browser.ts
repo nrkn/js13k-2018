@@ -1,5 +1,5 @@
 import {
-  animTime, tileSize, canvasTiles, viewTiles, centerTile, sunset, sunrise
+  animTime, tileSize, canvasTiles, viewTiles, centerTile, sunset, sunrise, fontSize, fontTiles
 } from './settings'
 
 import { loadImages } from './utils'
@@ -51,7 +51,13 @@ const draw = ( time: number ) => {
 }
 
 const drawChar = ( ch = '', tx = 0, ty = 0 ) =>
-  ctx.drawImage( font, ( ch.charCodeAt( 0 ) - 32 ) * 8, 0, 8, 8, tx * 8, ty * 8, 8, 8 )
+  ctx.drawImage(
+    font,
+    ( ch.charCodeAt( 0 ) - 32 ) * fontSize, 0,
+    fontSize, fontSize,
+    tx * fontSize, ty * fontSize,
+    fontSize, fontSize
+  )
 
 const drawText = ( str = '', tx = 0, ty = 0 ) => {
   for ( let i = 0; i < str.length; i++ )
@@ -59,10 +65,10 @@ const drawText = ( str = '', tx = 0, ty = 0 ) => {
 }
 
 const drawMessage = ( lines: string[] ) => {
-  const dy = ~~( ( canvasTiles * 2 - lines.length ) / 2 )
+  const dy = ~~( (fontTiles - lines.length ) / 2 )
 
   for( let y = 0; y < lines.length; y++ ){
-    const dx = ~~( ( canvasTiles * 2 - lines[ y ].length ) / 2 )
+    const dx = ~~( (fontTiles - lines[ y ].length ) / 2 )
     drawText( lines[ y ], dx, dy + y )
   }
 }
@@ -72,7 +78,7 @@ const drawScreen = ( screen: DisplayScreen ) => {
     drawText( screen[ SCREEN_MESSAGE ][ y ], 0, y )
   }
 
-  drawText( '<X>', 17, 0 )
+  drawText( '<X>', fontTiles - 3, 0 )
 
   const optionOffset = screen[ SCREEN_MESSAGE ].length % 2 ? 1 : 0
 
