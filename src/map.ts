@@ -1,15 +1,15 @@
 import {
   T_TREE, DTYPE_MAP, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_SAND_L,
   T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED,
-  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS
+  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L
 } from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
 import { MapTiles, MapRow, DisplayMap, Point, FloodPoint } from './types'
-import { randInt, pick } from './utils'
+import { randInt, pick, shuffle } from './utils'
 import {
   drunkenWalk, randomPointInLandBorder, inWaterBorder, expandLand,
   findTilePoints, randomLandEdge, floodFill, leftMost, findPath,
-  getImmediateNeighbours, hasPoint, withinDist
+  getImmediateNeighbours, hasPoint, withinDist, nearest, unique, immediateNeighbours, allNeighbours, expanded
 } from './geometry'
 
 export const createMap = () => {
@@ -47,7 +47,58 @@ export const drawTilesToMap = ( tiles: MapTiles, points: Point[] | FloodPoint[],
   }
 }
 
-export const decorate = ( tiles: MapTiles, clear: Point[] ) => {
+export const addBiomes = ( tiles: MapTiles ) => {
+  let i = 0;
+  const oneOfEachBiome = shuffle( [ 0, 3, 6, 9 ] )
+  for( let y = 0; y < mapSize; y++ ){
+    for( let x = 0; x < mapSize; x++ ){
+      if( tiles[ y ][ x ] === T_WATER ){        
+        const flood = floodFill( [ x, y ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )        
+        
+        let biome = 0
+
+        if( flood.length > 5 ){
+          if( i < 4 ){
+            biome = oneOfEachBiome[ i ]
+          } else {
+            biome = randInt( 10 )
+          }        
+          i++
+        } 
+        
+        // 0 1 2
+        if( biome < 3 ){
+          // meadow, no trees
+          drawTilesToMap( tiles, flood, () => 
+            randInt( T_GRASS_L + 1 ) + T_LAND 
+          )
+        } 
+        // 3 4 5
+        else if( biome < 6 ) {
+          // 75% trees, 25% meadow
+          drawTilesToMap( tiles, flood, () => 
+            randInt( 3 ) ? 
+              randInt( T_TREE_L ) + T_TREE :
+              randInt( T_GRASS_L + 1 ) + T_LAND 
+          )
+        } 
+        // 6 7 8
+        else if( biome < 9 ) {
+          // 75% mountains, 25% meadow
+          drawTilesToMap( tiles, flood, () =>             
+            randInt( 4 ) ? 
+              randInt( T_MOUNTAINS_L ) + T_MOUNTAINS :
+              randInt( T_GRASS_L + 1 ) + T_LAND 
+          )
+        } else {
+          drawTilesToMap( tiles, flood, () => T_SEA )
+        }
+      }
+    }
+  }
+} 
+
+export const decorate = ( tiles: MapTiles ) => {
   for( let y = 0; y < mapSize; y++ ){
     for( let x = 0; x < mapSize; x++ ){
       if ( tiles[ y ][ x ] === T_LAND ){
@@ -56,28 +107,8 @@ export const decorate = ( tiles: MapTiles, clear: Point[] ) => {
         if ( neighbours.length ) {
           tiles[ y ][ x ] = randInt( T_SAND_L ) + T_SAND
         } else {
-          if( hasPoint( clear, [ x, y ] ) ){
-            // no trees
-            tiles[ y ][ x ] = randInt( 9 ) + T_LAND
-          } else {
-            // all land tiles including trees
-            tiles[ y ][ x ] = randInt( 13 ) + T_LAND
-          }
-        }
-      }
-      if( tiles[ y ][ x ] === T_WATER ){        
-        const flood = floodFill( [ x, y ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )
-        if( randInt( 3 ) ){
-          // all trees
-          drawTilesToMap( tiles, flood, () => randInt( T_TREE_L ) + T_TREE )
-        } else if( randInt( 3 ) ) {
-          // mountains
-          drawTilesToMap( tiles, flood, () => randInt( T_MOUNTAINS_L ) + T_MOUNTAINS )
-        } else if( randInt( 3 ) ) {
-          // no trees
-          drawTilesToMap( tiles, flood, () => randInt( 9 ) + T_LAND )
-        } else {
-          drawTilesToMap( tiles, flood, () => T_SEA )
+          // The 1 is for the bare land tile: T_GRASS_L + T_TREE_L + 1
+          tiles[ y ][ x ] = randInt( T_GRASS_L + T_TREE_L + 1 ) + T_LAND
         }
       }
     }
@@ -105,7 +136,8 @@ export const createHut = (): DisplayMap => {
 export const createIsland = (): DisplayMap => {
   const tiles = createMap()
 
-  const clearwayCount = randInt( 15, 10 )
+  // choose clearways (waypoints)
+  const clearwayCount = randInt( 10, 40 )
   const clearways: Point[] = [
     randomLandEdge( TOP ),
     randomLandEdge( RIGHT ),
@@ -113,77 +145,66 @@ export const createIsland = (): DisplayMap => {
     randomLandEdge( LEFT )
   ]
 
-  for( let i = 4; i < clearwayCount; i++ ){
+  while( clearways.length < clearwayCount ){
     clearways.push( randomPointInLandBorder() )
+  } 
+
+  // make paths between them
+  const paths: Point[] = []
+  const pathSegs = clearways.slice()
+  let current = pathSegs.pop()!
+  const start = current
+
+  while( pathSegs.length ){
+    const near = nearest( current, pathSegs )
+    const steps = drunkenWalk( current, near, inWaterBorder, 0.33 )
+
+    paths.push( ...steps )
+
+    current = pathSegs.pop()!
   }
 
-  for( let i = 1; i < clearwayCount; i++ ){
-    const steps = drunkenWalk( clearways[ i - 1 ], clearways[ i ], inWaterBorder )
+  const steps = drunkenWalk( current, start, inWaterBorder, 0.33 )
+  paths.push( ...steps )  
 
-    drawTilesToMap( tiles, steps, () => T_LAND )
+  for( let i = 0; i < 10; i++ ){
+    const steps = drunkenWalk( pick( clearways ), pick( clearways ), inWaterBorder, 0.33 )
+    paths.push( ...steps )  
   }
 
-  const land = findTilePoints( tiles, T_LAND )
-  const clear = land.slice()
+  const clearings: Point[] = []
+  for( let i = 0; i < clearways.length; i++ ){
+    clearings.push( ...allNeighbours( clearways[ i ] ) )
+  }
 
-  expandLand( tiles, land )
+  const land = unique( [ ...clearways, ...clearings, ...paths ] )
+  const expandedLand = expanded( land )
+
+  const [ playerX, playerY ] = leftMost( expandedLand )   
+  drawTilesToMap( tiles, expandedLand, () => T_LAND )
 
   const sea = floodFill( [ 0, 0 ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )
 
   drawTilesToMap( tiles, sea, () => T_SEA )
 
-  decorate( tiles, clear )
+  addBiomes( tiles )
+  decorate( tiles )
 
-  const [ playerX, playerY ] = leftMost( land )
-
-  let r
-  while( !r ){
-    r = withinDist( clear, [ playerX, playerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
-  }
-  const [ rangerX, rangerY ] = r
-
-  let h
-  while( !h ){
-    h = withinDist( clear, [ rangerX, rangerY ], randInt( 5 ) + 10, randInt( 5 ) + 20 )
-  }
-  const [ hutX, hutY ] = h
-
-  const waypoints: Point[] = [
-    [ playerX, playerY ],
-    [ rangerX, rangerY ],
-    [ hutX, hutY ]
-  ]
-
-  const waypointCount = 15
-
-  while ( waypoints.length < waypointCount ){
-    const [ px, py ] = pick( waypoints )
-    const gx = randInt( gridTiles ) * gridSize
-    const gy = randInt( gridTiles ) * gridSize
-    const w = withinDist( clear, [ gx, gy ], 1, gridSize )
-    const flood = floodFill( [ px, py ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] !== T_SEA )
-    if ( w && flood.length ) {
-      const pathToNext = findPath( flood, w )
-      waypoints.push( w )
-      drawTilesToMap( tiles, pathToNext, ( [ wx, wy ] ) => {
-        if ( tiles[ wy ][ wx ] >= T_SAND && tiles[ wy ][ wx ] < T_SAND + T_SAND_L ){
-          return tiles[ wy ][ wx ]
-        }
-        return T_LAND
-      })
+  drawTilesToMap( tiles, paths, ( [ wx, wy ] ) => {
+    if ( tiles[ wy ][ wx ] >= T_SAND && tiles[ wy ][ wx ] < T_SAND + T_SAND_L ){
+      return tiles[ wy ][ wx ]
     }
-  }
-
-  for( let i = 2; i < waypointCount; i++ ){
-    const [ wx, wy ] = waypoints[ i ]
-    if( randInt( 3 ) ){
-      tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS      
-    } else {
-      tiles[ wy ][ wx ] = T_HUT
+    return T_LAND
+  })  
+  drawTilesToMap( tiles, clearings, ( [ wx, wy ] ) => {
+    if ( tiles[ wy ][ wx ] >= T_SAND && tiles[ wy ][ wx ] < T_SAND + T_SAND_L ){
+      return tiles[ wy ][ wx ]
     }
-    
-  }
-
+    return randInt( T_GRASS_L + 1 ) + T_LAND
+  })   
+  // insert various quest elements here instead of just hut  
+  drawTilesToMap( tiles, clearways, () => T_HUT )
+ 
   return [ DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY ]
 }
 

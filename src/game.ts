@@ -33,8 +33,8 @@ export const Game = () => {
 
   const reset = () => {
     playerFacing = 0
-    playerFood = 5
-    playerHealth = 2
+    playerFood = 10
+    playerHealth = 10
     playerMaxHealth = 10
     hours = 17
     minutes = 55

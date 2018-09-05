@@ -4,10 +4,10 @@ const viewTiles = 9;
 const canvasTiles = viewTiles + 1;
 const fontTiles = canvasTiles * 2;
 const centerTile = ~~(viewTiles / 2);
-const mapSize = 128;
+const mapSize = tileSize * canvasTiles;
 const animTime = 500;
-const waterBorder = ~~(mapSize / 16);
-const landBorder = ~~(mapSize / 6);
+const waterBorder = ~~(mapSize / 20);
+const landBorder = ~~(mapSize / 8);
 const gridTiles = 10;
 const gridSize = ~~(mapSize / gridTiles);
 const initialMonsterCount = ~~(mapSize / 3);
@@ -22,6 +22,7 @@ const loadImage = (path) => new Promise(resolve => {
 const loadImages = (...paths) => Promise.all(paths.map(loadImage));
 const pick = (arr) => arr[randInt(arr.length)];
 const randInt = (exclMax, min = 0) => ~~(Math.random() * exclMax) + min;
+const shuffle = (arr) => arr.slice().sort(() => randInt(3) - 1);
 
 
 
@@ -159,6 +160,32 @@ const withinDist = (tiles, [x, y], min, max) => {
     });
     return pick(candidates);
 };
+const dist = ([x1, y1], [x2, y2]) => Math.hypot(delta(x1, x2), delta(y1, y2));
+const nearest = (p1, points) => {
+    let d = mapSize * mapSize;
+    let p;
+    for (let i = 0; i < points.length; i++) {
+        const currentDist = dist(p1, points[i]);
+        if (currentDist < d) {
+            d = currentDist;
+            p = points[i];
+        }
+    }
+    return p;
+};
+const unique = (points) => {
+    const result = [];
+    const cache = [];
+    for (let i = 0; i < points.length; i++) {
+        const [x, y] = points[i];
+        if (!cache[y * mapSize + x]) {
+            result.push(points[i]);
+            cache[y * mapSize + x] = 1;
+        }
+    }
+    console.log('unique', points.length, result.length);
+    return result;
+};
 const floodFill = ([x, y], canFlood) => {
     const flooded = [];
     const queue = [[x, y, 0]];
@@ -171,7 +198,7 @@ const floodFill = ([x, y], canFlood) => {
         if (cache[y * mapSize + x])
             return;
         flooded.push([x, y, d]);
-        cache[y * mapSize + x] = true;
+        cache[y * mapSize + x] = 1;
         queue.push(...immediateNeighbours([x, y]).map(([x, y]) => [x, y, d + 1]));
     };
     while (queue.length) {
@@ -241,9 +268,12 @@ const towards = ([x1, y1], [x2, y2]) => {
 };
 const drunkenWalk = ([x1, y1], [x2, y2], allowed = inBounds, drunkenness = 0.66) => {
     const steps = [];
+    const cache = [];
     const step = ([x, y]) => {
-        if (!hasPoint(steps, [x, y]))
+        if (!cache[y * mapSize + x]) {
             steps.push([x, y]);
+            cache[y * mapSize + x] = 1;
+        }
         if (x === x2 && y === y2)
             return;
         step(Math.random() < drunkenness ?
@@ -253,7 +283,7 @@ const drunkenWalk = ([x1, y1], [x2, y2], allowed = inBounds, drunkenness = 0.66)
     step([x1, y1]);
     return steps;
 };
-const expandLand = (mapTiles, landTiles, tileCount = ~~((mapSize * mapSize) * 0.25)) => {
+const expandLand = (mapTiles, landTiles, tileCount = ~~((mapSize * mapSize) * 0.2)) => {
     while (landTiles.length < tileCount) {
         const [cx, cy] = pick(landTiles);
         const neighbours = getImmediateNeighbours(mapTiles, [cx, cy], T_WATER).filter(inWaterBorder);
@@ -265,6 +295,26 @@ const expandLand = (mapTiles, landTiles, tileCount = ~~((mapSize * mapSize) * 0.
             }
         }
     }
+};
+const expanded = (points, tileCount = ~~((mapSize * mapSize) * 0.33)) => {
+    const expandedPoints = points.slice();
+    const cache = [];
+    for (let i = 0; i < expandedPoints.length; i++) {
+        const [x, y] = expandedPoints[i];
+        cache[y * mapSize + x] = 1;
+    }
+    while (expandedPoints.length < tileCount) {
+        const [cx, cy] = pick(expandedPoints);
+        const neighbours = immediateNeighbours([cx, cy]);
+        if (neighbours.length) {
+            const [nx, ny] = pick(neighbours);
+            if (!cache[ny * mapSize + nx]) {
+                expandedPoints.push([nx, ny]);
+                cache[ny * mapSize + nx] = 1;
+            }
+        }
+    }
+    return expandedPoints;
 };
 const randomPoint = () => [randInt(mapSize), randInt(mapSize)];
 const randomLandEdge = (edge) => [
@@ -358,7 +408,50 @@ const drawTilesToMap = (tiles, points, getTileIndex) => {
         tiles[py][px] = getTileIndex([px, py]);
     }
 };
-const decorate = (tiles, clear) => {
+const addBiomes = (tiles) => {
+    let i = 0;
+    const oneOfEachBiome = shuffle([0, 3, 6, 9]);
+    for (let y = 0; y < mapSize; y++) {
+        for (let x = 0; x < mapSize; x++) {
+            if (tiles[y][x] === T_WATER) {
+                const flood = floodFill([x, y], ([tx, ty]) => tiles[ty][tx] === T_WATER);
+                let biome = 0;
+                if (flood.length > 5) {
+                    if (i < 4) {
+                        biome = oneOfEachBiome[i];
+                    }
+                    else {
+                        biome = randInt(10);
+                    }
+                    i++;
+                }
+                // 0 1 2
+                if (biome < 3) {
+                    // meadow, no trees
+                    drawTilesToMap(tiles, flood, () => randInt(T_GRASS_L + 1) + T_LAND);
+                }
+                // 3 4 5
+                else if (biome < 6) {
+                    // 75% trees, 25% meadow
+                    drawTilesToMap(tiles, flood, () => randInt(3) ?
+                        randInt(T_TREE_L) + T_TREE :
+                        randInt(T_GRASS_L + 1) + T_LAND);
+                }
+                // 6 7 8
+                else if (biome < 9) {
+                    // 75% mountains, 25% meadow
+                    drawTilesToMap(tiles, flood, () => randInt(4) ?
+                        randInt(T_MOUNTAINS_L) + T_MOUNTAINS :
+                        randInt(T_GRASS_L + 1) + T_LAND);
+                }
+                else {
+                    drawTilesToMap(tiles, flood, () => T_SEA);
+                }
+            }
+        }
+    }
+};
+const decorate = (tiles) => {
     for (let y = 0; y < mapSize; y++) {
         for (let x = 0; x < mapSize; x++) {
             if (tiles[y][x] === T_LAND) {
@@ -367,32 +460,8 @@ const decorate = (tiles, clear) => {
                     tiles[y][x] = randInt(T_SAND_L) + T_SAND;
                 }
                 else {
-                    if (hasPoint(clear, [x, y])) {
-                        // no trees
-                        tiles[y][x] = randInt(9) + T_LAND;
-                    }
-                    else {
-                        // all land tiles including trees
-                        tiles[y][x] = randInt(13) + T_LAND;
-                    }
-                }
-            }
-            if (tiles[y][x] === T_WATER) {
-                const flood = floodFill([x, y], ([tx, ty]) => tiles[ty][tx] === T_WATER);
-                if (randInt(3)) {
-                    // all trees
-                    drawTilesToMap(tiles, flood, () => randInt(T_TREE_L) + T_TREE);
-                }
-                else if (randInt(3)) {
-                    // mountains
-                    drawTilesToMap(tiles, flood, () => randInt(T_MOUNTAINS_L) + T_MOUNTAINS);
-                }
-                else if (randInt(3)) {
-                    // no trees
-                    drawTilesToMap(tiles, flood, () => randInt(9) + T_LAND);
-                }
-                else {
-                    drawTilesToMap(tiles, flood, () => T_SEA);
+                    // The 1 is for the bare land tile: T_GRASS_L + T_TREE_L + 1
+                    tiles[y][x] = randInt(T_GRASS_L + T_TREE_L + 1) + T_LAND;
                 }
             }
         }
@@ -415,69 +484,60 @@ const createHut = () => {
 };
 const createIsland = () => {
     const tiles = createMap();
-    const clearwayCount = randInt(15, 10);
+    // choose clearways (waypoints)
+    const clearwayCount = randInt(10, 40);
     const clearways = [
         randomLandEdge(TOP),
         randomLandEdge(RIGHT),
         randomLandEdge(BOTTOM),
         randomLandEdge(LEFT)
     ];
-    for (let i = 4; i < clearwayCount; i++) {
+    while (clearways.length < clearwayCount) {
         clearways.push(randomPointInLandBorder());
     }
-    for (let i = 1; i < clearwayCount; i++) {
-        const steps = drunkenWalk(clearways[i - 1], clearways[i], inWaterBorder);
-        drawTilesToMap(tiles, steps, () => T_LAND);
+    // make paths between them
+    const paths = [];
+    const pathSegs = clearways.slice();
+    let current = pathSegs.pop();
+    const start = current;
+    while (pathSegs.length) {
+        const near = nearest(current, pathSegs);
+        const steps = drunkenWalk(current, near, inWaterBorder, 0.33);
+        paths.push(...steps);
+        current = pathSegs.pop();
     }
-    const land = findTilePoints(tiles, T_LAND);
-    const clear = land.slice();
-    expandLand(tiles, land);
+    const steps = drunkenWalk(current, start, inWaterBorder, 0.33);
+    paths.push(...steps);
+    for (let i = 0; i < 10; i++) {
+        const steps = drunkenWalk(pick(clearways), pick(clearways), inWaterBorder, 0.33);
+        paths.push(...steps);
+    }
+    const clearings = [];
+    for (let i = 0; i < clearways.length; i++) {
+        clearings.push(...allNeighbours(clearways[i]));
+    }
+    const land = unique([...clearways, ...clearings, ...paths]);
+    const expandedLand = expanded(land);
+    const [playerX, playerY] = leftMost(expandedLand);
+    drawTilesToMap(tiles, expandedLand, () => T_LAND);
     const sea = floodFill([0, 0], ([tx, ty]) => tiles[ty][tx] === T_WATER);
     drawTilesToMap(tiles, sea, () => T_SEA);
-    decorate(tiles, clear);
-    const [playerX, playerY] = leftMost(land);
-    let r;
-    while (!r) {
-        r = withinDist(clear, [playerX, playerY], randInt(5) + 10, randInt(5) + 20);
-    }
-    const [rangerX, rangerY] = r;
-    let h;
-    while (!h) {
-        h = withinDist(clear, [rangerX, rangerY], randInt(5) + 10, randInt(5) + 20);
-    }
-    const [hutX, hutY] = h;
-    const waypoints = [
-        [playerX, playerY],
-        [rangerX, rangerY],
-        [hutX, hutY]
-    ];
-    const waypointCount = 15;
-    while (waypoints.length < waypointCount) {
-        const [px, py] = pick(waypoints);
-        const gx = randInt(gridTiles) * gridSize;
-        const gy = randInt(gridTiles) * gridSize;
-        const w = withinDist(clear, [gx, gy], 1, gridSize);
-        const flood = floodFill([px, py], ([tx, ty]) => tiles[ty][tx] !== T_SEA);
-        if (w && flood.length) {
-            const pathToNext = findPath(flood, w);
-            waypoints.push(w);
-            drawTilesToMap(tiles, pathToNext, ([wx, wy]) => {
-                if (tiles[wy][wx] >= T_SAND && tiles[wy][wx] < T_SAND + T_SAND_L) {
-                    return tiles[wy][wx];
-                }
-                return T_LAND;
-            });
+    addBiomes(tiles);
+    decorate(tiles);
+    drawTilesToMap(tiles, paths, ([wx, wy]) => {
+        if (tiles[wy][wx] >= T_SAND && tiles[wy][wx] < T_SAND + T_SAND_L) {
+            return tiles[wy][wx];
         }
-    }
-    for (let i = 2; i < waypointCount; i++) {
-        const [wx, wy] = waypoints[i];
-        if (randInt(3)) {
-            tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
+        return T_LAND;
+    });
+    drawTilesToMap(tiles, clearings, ([wx, wy]) => {
+        if (tiles[wy][wx] >= T_SAND && tiles[wy][wx] < T_SAND + T_SAND_L) {
+            return tiles[wy][wx];
         }
-        else {
-            tiles[wy][wx] = T_HUT;
-        }
-    }
+        return randInt(T_GRASS_L + 1) + T_LAND;
+    });
+    // insert various quest elements here instead of just hut  
+    drawTilesToMap(tiles, clearways, () => T_HUT);
     return [DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY];
 };
 const blocks = i => i < 2 || (i >= T_TREE && i < T_TREE + T_TREE_L) || i === T_HUT ||
@@ -642,8 +702,8 @@ const Game = () => {
     let monsters;
     const reset = () => {
         playerFacing = 0;
-        playerFood = 5;
-        playerHealth = 2;
+        playerFood = 10;
+        playerHealth = 10;
         playerMaxHealth = 10;
         hours = 17;
         minutes = 55;

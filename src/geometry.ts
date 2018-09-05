@@ -37,10 +37,45 @@ export const withinDist = ( tiles: Point[], [ x , y ]: Point, min: number, max: 
   return <Point>pick( candidates )
 }
 
+export const dist = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point ) =>
+  Math.hypot( delta( x1, x2 ), delta( y1, y2 ) )
+
+export const nearest = ( p1: Point, points: Point[] ) => {
+  let d = mapSize * mapSize
+  let p
+
+  for( let i = 0; i < points.length; i++ ){
+    const currentDist = dist( p1, points[ i ] )
+    if( currentDist < d ){
+      d = currentDist
+      p = points[ i ]
+    }
+  }
+
+  return p
+}
+
+export const unique = ( points: Point[] ) => {
+  const result: Point[] = []
+  const cache: number[] = []
+
+  for( let i = 0; i < points.length; i++ ){
+    const [ x, y ] = points[ i ]
+    if( !cache[ y * mapSize + x ] ){
+      result.push( points[ i ] )
+      cache[ y * mapSize + x ] = 1
+    }
+  }
+
+  console.log( 'unique', points.length, result.length  )
+  
+  return result
+}
+
 export const floodFill = ( [ x, y ]: Point, canFlood: ( p: Point ) => boolean ) => {
   const flooded: FloodPoint[] = []
   const queue: FloodPoint[] = [ [ x, y, 0 ] ]
-  const cache: boolean[] = []
+  const cache: number[] = []
 
   const floodPoint = ( [ x, y, d ]: FloodPoint ) => {
     if ( !inBounds( [ x, y ] ) ) return
@@ -48,7 +83,7 @@ export const floodFill = ( [ x, y ]: Point, canFlood: ( p: Point ) => boolean ) 
     if ( cache[ y * mapSize + x ] ) return
 
     flooded.push( [ x, y, d ] )
-    cache[ y * mapSize + x ] = true
+    cache[ y * mapSize + x ] = 1
 
     queue.push(
       ...immediateNeighbours( [ x, y ] ).map(
@@ -137,10 +172,14 @@ export const towards = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point ): Point => {
 
 export const drunkenWalk = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point, allowed = inBounds, drunkenness = 0.66 ) => {
   const steps: Point[] = []
+  const cache: number[] = []
 
   const step = ( [ x, y ]: Point ) => {
-    if ( !hasPoint( steps, [ x, y ] ) )
+    if ( !cache[ y * mapSize + x ] ){
       steps.push( [ x, y ] )
+      cache[ y * mapSize + x ] = 1
+    }
+     
 
     if( x === x2 && y === y2 ) return
 
@@ -156,7 +195,7 @@ export const drunkenWalk = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point, allowed = inB
   return steps
 }
 
-export const expandLand = ( mapTiles: MapTiles, landTiles: Point[], tileCount = ~~( ( mapSize * mapSize ) * 0.25 ) ) => {
+export const expandLand = ( mapTiles: MapTiles, landTiles: Point[], tileCount = ~~( ( mapSize * mapSize ) * 0.2 ) ) => {
   while ( landTiles.length < tileCount ) {
     const [ cx, cy ] = pick( landTiles )
     const neighbours = getImmediateNeighbours( mapTiles, [ cx, cy ], T_WATER ).filter( inWaterBorder )
@@ -169,6 +208,30 @@ export const expandLand = ( mapTiles: MapTiles, landTiles: Point[], tileCount = 
       }
     }
   }
+}
+
+export const expanded = ( points: Point[], tileCount = ~~( ( mapSize * mapSize ) * 0.33 ) ) => {
+  const expandedPoints = points.slice()
+  const cache: number[] = []
+  for( let i = 0; i < expandedPoints.length; i++ ){
+    const [ x, y ] = expandedPoints[ i ]
+    cache[ y * mapSize + x ] = 1 
+  }
+
+  while( expandedPoints.length < tileCount ){
+    const [ cx, cy ] = pick( expandedPoints )
+    const neighbours = immediateNeighbours( [ cx, cy ] )
+
+    if ( neighbours.length ) {
+      const [ nx, ny ] = pick( neighbours )
+      if( !cache[ ny * mapSize + nx ] ){
+        expandedPoints.push( [ nx, ny ] )
+        cache[ ny * mapSize + nx ] = 1
+      }
+    }
+  }
+
+  return expandedPoints
 }
 
 export const randomPoint = (): Point =>

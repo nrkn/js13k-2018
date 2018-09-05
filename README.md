@@ -179,13 +179,15 @@ Player is safe in hut, can sleep to pass the night away
   - ~BUG: map generation sometimes crashes~
   - ~create art - more tiles - rocks, flowers, more trees~
   - Size: 7941, Remaining: 5371
+- ~ISSUE: map generation sometimes very slow~
+  - ~create quest art: satellite~
+  - ~create quest art: portal~
+  - Size: 8057, Remaining: 5255
 - scripted intro events
 - inventory / use item
 - quests etc - spend some time figuring out
 - win screen
 - fog of war and/or minimap
-- ISSUE: map generation sometimes very slow
-- loading screen during map gen?
 - if room left, consider adding transitional tiles to make slightly less blocky
 - consider adding padding to SCREENs, will look better (but more math)
 - gamepad support if room left
