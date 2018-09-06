@@ -7,7 +7,7 @@ import {
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
   OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER
+  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH
 } from './indices'
 
 import {
@@ -21,6 +21,7 @@ import { randInt } from './utils'
 import { gameData } from './data';
 
 export const Game = () => {
+  // state
   let hutCache: HutState[]
   let playerFacing: 0 | 1
   let playerFood: number
@@ -34,8 +35,10 @@ export const Game = () => {
   let color: GameColor
   let displayStack: DisplayItem[]
   let monsters: Monster[]
+  // internal state
   let seenRangerMessage: number
   let currentHut: HutState
+  let madeFoodToday: number
 
   const reset = () => {
     hutCache = []
@@ -57,6 +60,7 @@ export const Game = () => {
     color = ''
     monsters = []
     seenRangerMessage = 0
+    madeFoodToday = 0
 
     createMonsters()
   }
@@ -170,7 +174,7 @@ export const Game = () => {
     }
   }
 
-  const incTime = () => {
+  const incTime = ( sleeping = 0 ) => {
     if( playerHealth < 1 ){
       displayStack = [ gameData[ DATA_DEAD ] ]
       return
@@ -180,23 +184,31 @@ export const Game = () => {
     if ( minutes === 60 ) {
       minutes = 0
       hours++
-      if ( hours === sunrise ) {
-        color = ''
-        displayStack.push( gameData[ DATA_SUNRISE ] )
-      }
-      if ( hours === sunset ) {
-        color = 'i'
-        displayStack.push( gameData[ DATA_SUNSET ] )
-      }
-      if ( playerFood > 0 ) {
-        playerFood--
+      if( sleeping ){
         if ( playerHealth < playerMaxHealth ) playerHealth++
+        if ( hours === sunrise ) {
+          color = ''
+        }
       } else {
-        playerHealth--
-        displayStack.push( gameData[ DATA_HUNGRY ] )
+        if ( hours === sunrise ) {
+          color = ''
+          displayStack.push( gameData[ DATA_SUNRISE ] )
+        }
+        if ( hours === sunset ) {
+          color = 'i'
+          displayStack.push( gameData[ DATA_SUNSET ] )
+        }
+        if ( playerFood > 0 ) {
+          playerFood--
+          if ( playerHealth < playerMaxHealth ) playerHealth++
+        } else {
+          playerHealth--
+          displayStack.push( gameData[ DATA_HUNGRY ] )
+        } 
       }
     }
     if ( hours === 24 ) {      
+      madeFoodToday = 0
       hours = 0
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
       for( let y = 0; y < mapSize; y++ ){
@@ -360,17 +372,8 @@ export const Game = () => {
   const actions: (()=>void)[] = [
     // ACTION_SLEEP
     () => {
-      while ( !( hours === ( sunrise - 1 ) && minutes === 59 ) ) {
-        minutes++
-        if ( minutes === 60 ) {
-          minutes = 0
-          hours++
-          if ( playerHealth < playerMaxHealth ) playerHealth++
-        }
-        if ( hours === 24 ) {
-          hours = 0
-        }
-        updateMonsters()
+      while ( hours !== sunrise ) {
+        incTime( 1 )
       }
     },
     // ACTION_UNLOCK
@@ -438,7 +441,22 @@ export const Game = () => {
       displayStack.push( [ DTYPE_MESSAGE, [ 'Replaced 6 caps' ] ] )
       playerCaps -= 6
       currentHut[ HUT_COMPUTER_FIXED ] = 1
-    }
+    },
+    // ACTION_CREATE_FOOD
+    () => {
+      const food = randInt( 3 ) + 6
+      madeFoodToday = 1
+      playerFood += food
+      displayStack.push( [ DTYPE_MESSAGE, [ `Synthesized ${ food } food` ] ] )
+    },
+    // ACTION_SHOW_SYNTH
+    () => {
+      if( madeFoodToday ){
+        displayStack.push( gameData[ DATA_C_SYNTH_CHARGING ] )
+      } else {
+        displayStack.push( gameData[ DATA_C_SYNTH ] )
+      }
+    },
   ]
 
   reset()

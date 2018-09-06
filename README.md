@@ -196,7 +196,9 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 8756, Remaining: 4556
 - ~if enough caps, can fix computer~
   - Size: 8838, Remaining: 4474
-- synthesize food once per day
+- ~synthesize food once per day~
+  - Size: 8917, Remaining: 4395
+- BUG - can sometimes synth food multiple times
 - restore backups to get notes from RANGER
 - satellite, offline message
 - quests etc - spend some time figuring out

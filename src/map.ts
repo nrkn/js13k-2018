@@ -218,27 +218,31 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
     // dead ranger
     if( i === 0 ){
       tiles[ wy ][ wx ] = T_RANGER
-    } else
+    } 
     // hut
-    if( i === 1 ){
+    else if( i === 1 ){
       tiles[ wy ][ wx ] = T_HUT
       hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
-    } else
-    // satellite
-    if( i === waypoints.length - 1 ){
-      tiles[ wy ][ wx ] = T_SATELLITE
-    } else
-    // ruins, 0 1 2 3 4 5
-    if( type < 6 ){
+    } 
+    // ruins
+    else if( i === 2 ){
       tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
-    } else  
+    }
+    // satellite
+    else if( i === waypoints.length - 1 ){
+      tiles[ wy ][ wx ] = T_SATELLITE
+    } 
+    // ruins, 0 1 2 3 4 5
+    else if( type < 6 ){
+      tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
+    }   
     // hut 6 7 8 
-    if( type < 9 ){
+    else if( type < 9 ){
       tiles[ wy ][ wx ] = T_HUT
       hutCache[ wy * mapSize + wx ] = [ 0, 0 ]      
-    } else
+    } 
     // portal 9
-    {
+    else {
       tiles[ wy ][ wx ] = T_PORTAL
     } 
   }

@@ -114,6 +114,9 @@ const DATA_USE_COMPUTER = 21;
 const DATA_FIXABLE_COMPUTER = 22;
 const DATA_FIX_COMPUTER = 23;
 const DATA_C_FIXED = 24;
+const DATA_C_SYNTH_CHARGING = 25;
+const DATA_CREATE_FOOD = 26;
+const DATA_SYNTH = 27;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -156,6 +159,8 @@ const ACTION_UNLOCK = 1;
 const ACTION_SEARCH = 2;
 const ACTION_USE_COMPUTER = 3;
 const ACTION_FIX_COMPUTER = 4;
+const ACTION_CREATE_FOOD = 5;
+const ACTION_SHOW_SYNTH = 6;
 // hut state
 const HUT_UNLOCKED = 0;
 const HUT_COMPUTER_FIXED = 1;
@@ -575,31 +580,30 @@ const createIsland = (hutCache) => {
         if (i === 0) {
             tiles[wy][wx] = T_RANGER;
         }
-        else 
         // hut
-        if (i === 1) {
+        else if (i === 1) {
             tiles[wy][wx] = T_HUT;
             hutCache[wy * mapSize + wx] = [0, 0];
         }
-        else 
-        // satellite
-        if (i === waypoints.length - 1) {
-            tiles[wy][wx] = T_SATELLITE;
-        }
-        else 
-        // ruins, 0 1 2 3 4 5
-        if (type < 6) {
+        // ruins
+        else if (i === 2) {
             tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
         }
-        else 
+        // satellite
+        else if (i === waypoints.length - 1) {
+            tiles[wy][wx] = T_SATELLITE;
+        }
+        // ruins, 0 1 2 3 4 5
+        else if (type < 6) {
+            tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
+        }
         // hut 6 7 8 
-        if (type < 9) {
+        else if (type < 9) {
             tiles[wy][wx] = T_HUT;
             hutCache[wy * mapSize + wx] = [0, 0];
         }
-        else 
         // portal 9
-        {
+        else {
             tiles[wy][wx] = T_PORTAL;
         }
     }
@@ -658,7 +662,7 @@ const gameData = [
         ],
         [
             ['DIAGNOSTICS', DATA_C_DIAGNOSTICS],
-            ['SYNTHESIZE', DATA_C_SYNTH]
+            ['SYNTHESIZE', DATA_SYNTH]
         ],
         0,
         'a'
@@ -695,11 +699,14 @@ const gameData = [
             'SYNTHDB:',
             ' OFFLINE',
             '',
+            'POWER:',
+            ' FULL',
+            '',
             'EMERGENCY OPS:',
             ''
         ],
         [
-            ['BASIC RATIONS', -1] // need to implement
+            ['BASIC RATIONS', DATA_CREATE_FOOD]
         ],
         0,
         'a'
@@ -871,9 +878,39 @@ const gameData = [
         0,
         'a'
     ],
+    // DATA_C_SYNTH_CHARGING
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'SYNTHESIZER MENU',
+            '',
+            'SYNTHDB:',
+            ' OFFLINE',
+            '',
+            'POWER:',
+            ' CHARGING',
+            '',
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_CREATE_FOOD
+    [
+        DTYPE_ACTION,
+        ACTION_CREATE_FOOD
+    ],
+    // DATA_SYNTH
+    [
+        DTYPE_ACTION,
+        ACTION_SHOW_SYNTH
+    ]
 ];
 
 const Game = () => {
+    // state
     let hutCache;
     let playerFacing;
     let playerFood;
@@ -887,8 +924,10 @@ const Game = () => {
     let color;
     let displayStack;
     let monsters;
+    // internal state
     let seenRangerMessage;
     let currentHut;
+    let madeFoodToday;
     const reset = () => {
         hutCache = [];
         playerFacing = 0;
@@ -909,6 +948,7 @@ const Game = () => {
         color = '';
         monsters = [];
         seenRangerMessage = 0;
+        madeFoodToday = 0;
         createMonsters();
     };
     const currentColor = () => {
@@ -1005,7 +1045,7 @@ const Game = () => {
             }
         }
     };
-    const incTime = () => {
+    const incTime = (sleeping = 0) => {
         if (playerHealth < 1) {
             displayStack = [gameData[DATA_DEAD]];
             return;
@@ -1014,25 +1054,35 @@ const Game = () => {
         if (minutes === 60) {
             minutes = 0;
             hours++;
-            if (hours === sunrise) {
-                color = '';
-                displayStack.push(gameData[DATA_SUNRISE]);
-            }
-            if (hours === sunset) {
-                color = 'i';
-                displayStack.push(gameData[DATA_SUNSET]);
-            }
-            if (playerFood > 0) {
-                playerFood--;
+            if (sleeping) {
                 if (playerHealth < playerMaxHealth)
                     playerHealth++;
+                if (hours === sunrise) {
+                    color = '';
+                }
             }
             else {
-                playerHealth--;
-                displayStack.push(gameData[DATA_HUNGRY]);
+                if (hours === sunrise) {
+                    color = '';
+                    displayStack.push(gameData[DATA_SUNRISE]);
+                }
+                if (hours === sunset) {
+                    color = 'i';
+                    displayStack.push(gameData[DATA_SUNSET]);
+                }
+                if (playerFood > 0) {
+                    playerFood--;
+                    if (playerHealth < playerMaxHealth)
+                        playerHealth++;
+                }
+                else {
+                    playerHealth--;
+                    displayStack.push(gameData[DATA_HUNGRY]);
+                }
             }
         }
         if (hours === 24) {
+            madeFoodToday = 0;
             hours = 0;
             const mapItem = gameData[DATA_ISLAND];
             for (let y = 0; y < mapSize; y++) {
@@ -1162,18 +1212,8 @@ const Game = () => {
     const actions = [
         // ACTION_SLEEP
         () => {
-            while (!(hours === (sunrise - 1) && minutes === 59)) {
-                minutes++;
-                if (minutes === 60) {
-                    minutes = 0;
-                    hours++;
-                    if (playerHealth < playerMaxHealth)
-                        playerHealth++;
-                }
-                if (hours === 24) {
-                    hours = 0;
-                }
-                updateMonsters();
+            while (hours !== sunrise) {
+                incTime(1);
             }
         },
         // ACTION_UNLOCK
@@ -1241,7 +1281,23 @@ const Game = () => {
             displayStack.push([DTYPE_MESSAGE, ['Replaced 6 caps']]);
             playerCaps -= 6;
             currentHut[HUT_COMPUTER_FIXED] = 1;
-        }
+        },
+        // ACTION_CREATE_FOOD
+        () => {
+            const food = randInt(3) + 6;
+            madeFoodToday = 1;
+            playerFood += food;
+            displayStack.push([DTYPE_MESSAGE, [`Synthesized ${food} food`]]);
+        },
+        // ACTION_SHOW_SYNTH
+        () => {
+            if (madeFoodToday) {
+                displayStack.push(gameData[DATA_C_SYNTH_CHARGING]);
+            }
+            else {
+                displayStack.push(gameData[DATA_C_SYNTH]);
+            }
+        },
     ];
     reset();
     const api = [

@@ -90,6 +90,9 @@ export const DATA_USE_COMPUTER = 21
 export const DATA_FIXABLE_COMPUTER = 22
 export const DATA_FIX_COMPUTER = 23
 export const DATA_C_FIXED = 24
+export const DATA_C_SYNTH_CHARGING = 25
+export const DATA_CREATE_FOOD = 26
+export const DATA_SYNTH = 27
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -141,6 +144,8 @@ export const ACTION_UNLOCK = 1
 export const ACTION_SEARCH = 2
 export const ACTION_USE_COMPUTER = 3
 export const ACTION_FIX_COMPUTER = 4
+export const ACTION_CREATE_FOOD = 5
+export const ACTION_SHOW_SYNTH = 6
 
 // hut state
 export const HUT_UNLOCKED = 0
