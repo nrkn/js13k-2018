@@ -3,3 +3,6 @@ dist/browser
 dist/node
 debug/island.png
 zip/offline.zip
+zip/*.gif
+zip/*.html
+zip/*.png
