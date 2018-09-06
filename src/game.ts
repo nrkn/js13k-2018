@@ -7,38 +7,48 @@ import {
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
   OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD
+  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER
 } from './indices'
 
 import {
   DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster,
-  DisplayScreen, DisplayAction
+  DisplayScreen, DisplayAction, HutState, Point
 } from './types'
 
-import { inBounds, hasPoint, towards } from './geometry'
+import { inBounds, hasPoint, towards, allNeighbours } from './geometry'
 import { initialMonsterCount, mapSize, sunrise, sunset } from './settings'
 import { randInt } from './utils'
 import { gameData } from './data';
 
 export const Game = () => {
+  let hutCache: HutState[]
   let playerFacing: 0 | 1
   let playerFood: number
   let playerHealth: number
   let playerMaxHealth: number
+  let playerKeys: number
+  let playerCaps: number
+  let playerDisks: number
   let hours: number
   let minutes: number
   let color: GameColor
   let displayStack: DisplayItem[]
   let monsters: Monster[]
+  let seenRangerMessage: number
+  let currentHut: HutState
 
   const reset = () => {
+    hutCache = []
     playerFacing = 0
-    playerFood = 10
-    playerHealth = 10
-    playerMaxHealth = 10
+    playerFood = 20
+    playerHealth = 20
+    playerMaxHealth = 20
+    playerKeys = 0
+    playerCaps = 5
+    playerDisks = 0
     hours = 17
     minutes = 55
-    gameData[ DATA_ISLAND ] = createIsland()
+    gameData[ DATA_ISLAND ] = createIsland( hutCache )
     displayStack = [
       gameData[ DATA_ISLAND ],
       gameData[ DATA_INTRO ],
@@ -46,6 +56,7 @@ export const Game = () => {
     ]
     color = ''
     monsters = []
+    seenRangerMessage = 0
 
     createMonsters()
   }
@@ -63,7 +74,8 @@ export const Game = () => {
     playerFacing, playerFood, playerHealth, playerMaxHealth, hours, minutes,
     currentColor(),
     displayStack[ displayStack.length - 1 ],
-    monsters
+    monsters,
+    playerKeys, playerCaps, playerDisks
   ]
 
   const close = () => {
@@ -73,26 +85,40 @@ export const Game = () => {
     if( !displayStack.length ) reset()
   }
 
+  const createMonster = ( [ x, y ]: Point ) => {
+    const facing = randInt( 2 )
+    const health = randInt( 2 ) + 1
+
+    const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+    const mapTile = mapItem[ MAP_TILES ][ y ][ x ]
+    const playerX = mapItem[ MAP_PLAYERX ]
+    const playerY = mapItem[ MAP_PLAYERY ]
+
+    if (
+      !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) &&
+      !( playerX === x && playerY === y )
+    ) monsters.push( [ x, y, facing, health ] ) 
+  }
+
   const createMonsters = () => {
     while ( monsters.length < initialMonsterCount ) {
       const x = randInt( mapSize )
       const y = randInt( mapSize )
-      const facing = randInt( 2 )
-      const health = randInt( 2 ) + 1
-
-      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
-      const mapTile = mapItem[ MAP_TILES ][ y ][ x ]
-      const playerX = mapItem[ MAP_PLAYERX ]
-      const playerY = mapItem[ MAP_PLAYERY ]
-
-      if (
-        !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) &&
-        !( playerX === x && playerY === y )
-      ) monsters.push( [ x, y, facing, health ] )
+      createMonster([ x, y ])
     }
-  }
+  }  
 
   const updateMonsters = () => {
+    const monsterHere = ( [ x, y ]: Point ) => {
+      for( let i = 0; i < monsters.length; i++ ){
+        const monster = monsters[ i ]
+        const mx = monster[ MON_X ]
+        const my = monster[ MON_Y ] 
+
+        if( monster[ MON_HEALTH ] > 0 && x === mx && y === my ) return 1
+      }
+    }
+
     for ( let i = 0; i < monsters.length; i++ ) {
       const monster = monsters[ i ]
       const x = monster[ MON_X ]
@@ -103,7 +129,7 @@ export const Game = () => {
       const playerY = mapItem[ MAP_PLAYERY ]
       const next = [ x, y ]
 
-      if ( Math.random() < 0.66 ) {
+      if ( ( hours >= sunset || hours < sunrise ) && Math.random() < 0.66 ) {
         const toPlayer = towards( [ x, y ], [ playerX, playerY ] )
         next[ X ] = toPlayer[ X ]
         next[ Y ] = toPlayer[ Y ]
@@ -119,7 +145,7 @@ export const Game = () => {
 
       if (
         !blocks( mapTile ) &&
-        !hasPoint( <any>monsters, [ next[ X ], next[ Y ] ] ) &&
+        !monsterHere( [ next[ X ], next[ Y ] ] ) &&
         !( playerX === next[ X ] && playerY === next[ Y ] )
       ) {
         monster[ MON_X ] = next[ X ]
@@ -170,8 +196,20 @@ export const Game = () => {
         displayStack.push( gameData[ DATA_HUNGRY ] )
       }
     }
-    if ( hours === 24 ) {
+    if ( hours === 24 ) {      
       hours = 0
+      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+      for( let y = 0; y < mapSize; y++ ){
+        for( let x = 0; x < mapSize; x++ ){
+          const mapTile = mapItem[ MAP_TILES ][ y ][ x ]
+          if( mapTile === T_PORTAL ){
+            const neighbours = allNeighbours([ x, y ])
+            for( let i = 0; i < neighbours.length; i++ ){
+              createMonster( neighbours[ i ] )
+            }
+          }
+        }
+      }
     }
     updateMonsters()
   }
@@ -230,7 +268,16 @@ export const Game = () => {
     // bumps
     if( map[ MAP_TYPE ] === MT_ISLAND ){
       if ( map[ MAP_TILES ][ y ][ x ] === T_HUT ) {
-        displayStack.push( createHut() )
+        currentHut = hutCache[ y * mapSize + x ]
+        if( currentHut[ HUT_UNLOCKED ] ){
+          displayStack.push( createHut() )
+        } else {
+          if( playerKeys ){
+            displayStack.push( gameData[ DATA_LOCKED_UNLOCK ] )
+          } else {
+            displayStack.push( gameData[ DATA_LOCKED_NOKEYS ] )
+          }
+        }        
       }
 
       if( y === map[ MAP_STARTY ] ){
@@ -242,6 +289,16 @@ export const Game = () => {
       if ( monsterHere && randInt( 2 ) ){
         monsterHere[ MON_HEALTH ]--
       }
+
+      if( map[ MAP_TILES ][ y ][ x ] === T_RANGER && !seenRangerMessage ){
+        seenRangerMessage = 1
+        displayStack.push( gameData[ DATA_RANGER ] )
+        playerKeys++
+      }
+
+      if( map[ MAP_TILES ][ y ][ x ] >= T_RUINS && map[ MAP_TILES ][ y ][ x ] < T_RUINS + T_RUINS_L ){
+        displayStack.push( gameData[ DATA_RUINS ] )
+      }
     }
 
     if ( map[ MAP_TYPE ] === MT_HUT ) {
@@ -250,7 +307,11 @@ export const Game = () => {
       }
 
       if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
-        displayStack.push( gameData[ DATA_C_MAIN ] )
+        if( !currentHut[ HUT_COMPUTER_FIXED ] && playerCaps >= 6 ){
+          displayStack.push( gameData[ DATA_FIXABLE_COMPUTER ] )     
+        } else {
+          displayStack.push( gameData[ DATA_COMPUTER ] )     
+        }       
       }
 
       if( map[ MAP_TILES ][ y ][ x ] === T_BED ){
@@ -288,8 +349,8 @@ export const Game = () => {
       if( dataIndex === -1 ){
         close()
       } else if( gameData[ dataIndex ][ DISPLAY_TYPE ] === DTYPE_ACTION ){
-        actions[ ( <DisplayAction>gameData[ dataIndex ] )[ ACTION_INDEX ] ]()
         displayStack.pop()
+        actions[ ( <DisplayAction>gameData[ dataIndex ] )[ ACTION_INDEX ] ]()
       } else {
         displayStack.push( gameData[ dataIndex ] )
       }
@@ -311,6 +372,72 @@ export const Game = () => {
         }
         updateMonsters()
       }
+    },
+    // ACTION_UNLOCK
+    () => {      
+      currentHut[ HUT_UNLOCKED ] = 1
+      playerKeys--
+    },
+    // ACTION_SEARCH
+    () => {
+      for( let i = 0; i < 60; i++ ){
+        incTime()
+      }
+      if( playerHealth > 0 ){
+        const found = randInt( 16 )
+
+        // food 0 1
+        if( found < 2 ){
+          const food = randInt( 3 ) + 1
+          displayStack.push( [ DTYPE_MESSAGE, [ `Found ${ food } food` ] ] )
+          playerFood += food
+        } 
+        // keycard 2 3
+        else if ( found < 4 ){
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
+          playerKeys++
+        } 
+        // cap 4 5
+        else if( found < 6 ){
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found caps' ] ] )
+          playerCaps++
+        }
+        // disk 6 7
+        else if( found < 8 ){
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found backup' ] ] )
+          playerDisks++
+        }        
+        // got hurt 8
+        else if( found < 9 ){
+          displayStack.push( [ 
+            DTYPE_MESSAGE, 
+            [ 
+              'Rocks fell!', 
+              '', 
+              'Lost health' 
+            ] 
+          ] )
+          playerHealth--
+        }
+        // nothing 
+        else {
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found nothing' ] ] )
+        }
+      }
+    },
+    // ACTION_USE_COMPUTER
+    () => {      
+      if( currentHut[ HUT_COMPUTER_FIXED ] ){
+        displayStack.push( gameData[ DATA_C_FIXED ] )
+      } else {
+        displayStack.push( gameData[ DATA_C_MAIN ] )
+      }     
+    },
+    // ACTION_FIX_COMPUTER
+    () => {
+      displayStack.push( [ DTYPE_MESSAGE, [ 'Replaced 6 caps' ] ] )
+      playerCaps -= 6
+      currentHut[ HUT_COMPUTER_FIXED ] = 1
     }
   ]
 

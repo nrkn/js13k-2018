@@ -55,6 +55,9 @@ export const nearest = ( p1: Point, points: Point[] ) => {
   return p
 }
 
+export const sortByDistance = ( p: Point, points: Point[] ) => 
+  points.slice().sort( ( p1, p2 ) => dist( p, p1 ) - dist( p, p2 ) )
+
 export const unique = ( points: Point[] ) => {
   const result: Point[] = []
   const cache: number[] = []

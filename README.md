@@ -183,8 +183,22 @@ Player is safe in hut, can sleep to pass the night away
   - ~create quest art: satellite~
   - ~create quest art: portal~
   - Size: 8057, Remaining: 5255
-- scripted intro events
-- inventory / use item
+- ~get key from dead ranger and message~
+  - Size: 8270, Remaining: 5042
+- ~implement keys and locks on huts~
+  - Size: 8362, Remaining: 4950
+- ~search ruins~
+  - Size: 8487, Remaining: 4825
+- - ~portals spawn extra monsters, fix bugs~
+  - ~Monsters can't move to a spot where a monster died~
+  - ~Player can sometimes start blocked in~
+  - ~Monsters don't move towards player properly~
+  - Size: 8756, Remaining: 4556
+- ~if enough caps, can fix computer~
+  - Size: 8838, Remaining: 4474
+- synthesize food once per day
+- restore backups to get notes from RANGER
+- satellite, offline message
 - quests etc - spend some time figuring out
 - win screen
 - fog of war and/or minimap

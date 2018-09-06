@@ -22,6 +22,12 @@ export const T_RUINS = 28
 export const T_RUINS_L = 3
 export const T_MOUNTAINS = 31
 export const T_MOUNTAINS_L = 3
+export const T_SATELLITE = 34
+export const T_PORTAL = 36
+export const T_RANGER  = 38
+export const T_KEY = 39
+export const T_DISK = 40
+export const T_CAP = 41
 export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
@@ -37,6 +43,9 @@ export const ST_MINUTES = 5
 export const ST_COLOR = 6
 export const ST_DISPLAY_ITEM = 7
 export const ST_MONSTERS = 8
+export const ST_PLAYER_KEYS = 9
+export const ST_PLAYER_CAPS = 10
+export const ST_PLAYER_DISKS = 11
 
 // api indices
 export const API_STATE = 0
@@ -70,6 +79,17 @@ export const DATA_NOT_TIRED = 10
 export const DATA_SLEEP = 11
 export const DATA_HUNGRY = 12
 export const DATA_DEAD = 13
+export const DATA_RANGER = 14
+export const DATA_LOCKED_NOKEYS = 15
+export const DATA_LOCKED_UNLOCK = 16
+export const DATA_UNLOCK = 17
+export const DATA_RUINS = 18
+export const DATA_SEARCH_RUINS = 19
+export const DATA_COMPUTER = 20
+export const DATA_USE_COMPUTER = 21
+export const DATA_FIXABLE_COMPUTER = 22
+export const DATA_FIX_COMPUTER = 23
+export const DATA_C_FIXED = 24
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -117,3 +137,11 @@ export const MON_HEALTH = 3
 
 // actions
 export const ACTION_SLEEP = 0
+export const ACTION_UNLOCK = 1
+export const ACTION_SEARCH = 2
+export const ACTION_USE_COMPUTER = 3
+export const ACTION_FIX_COMPUTER = 4
+
+// hut state
+export const HUT_UNLOCKED = 0
+export const HUT_COMPUTER_FIXED = 1

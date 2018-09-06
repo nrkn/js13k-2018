@@ -13,7 +13,13 @@ import {
   MAP_STARTX, MAP_STARTY, MT_ISLAND, S_SKELETON, S_BOAT_LEFT, S_BOAT_RIGHT,
   ST_MONSTERS, ST_HOURS, MON_X, MON_Y, MON_FACING, S_MONSTER, MON_HEALTH,
   SCREEN_MESSAGE, SCREEN_OPTIONS, OPTION_MESSAGE, SCREEN_SELECTION, API_SELECT,
-  API_CONFIRM_SELECT
+  API_CONFIRM_SELECT,
+  T_KEY,
+  ST_PLAYER_KEYS,
+  T_CAP,
+  T_DISK,
+  ST_PLAYER_CAPS,
+  ST_PLAYER_DISKS
 } from './indices'
 
 import { Game } from './game'
@@ -198,28 +204,61 @@ const drawMap = ( time: number ) => {
 const drawUi = () => {
   const playerFood = api[ API_STATE ]()[ ST_PLAYER_FOOD ]
   const playerHealth = api[ API_STATE ]()[ ST_PLAYER_HEALTH ]
+  const playerKeys = api[ API_STATE ]()[ ST_PLAYER_KEYS ]
+  const playerCaps = api[ API_STATE ]()[ ST_PLAYER_CAPS ]
+  const playerDisks = api[ API_STATE ]()[ ST_PLAYER_DISKS ]
 
-  drawText( `RANGER DOWN   ${ api[ API_TIMESTR ]() }`, 0.5, 0.5 )
+  drawText( `RANGER DOWN ${ api[ API_TIMESTR ]() }`, 2.5, 0.5 )
 
   ctx.drawImage(
     tiles,
     T_HEALTH * tileSize, 0,
     tileSize, tileSize,
-    0, tileSize,
+    0, 0,
     tileSize, tileSize
   )
 
-  drawText( `${ playerHealth }`, playerHealth < 10 ? 0.5 : 0, 4 )
+  drawText( `${ playerHealth }`, playerHealth < 10 ? 0.5 : 0, 2 )
 
   ctx.drawImage(
     tiles,
     T_FOOD * tileSize, 0,
     tileSize, tileSize,
-    0, tileSize * 3,
+    0, tileSize * 2,
     tileSize, tileSize
   )
 
-  drawText( `${ playerFood }`, playerFood < 10 ? 0.5 : 0, 8 )
+  drawText( `${ playerFood }`, playerFood < 10 ? 0.5 : 0, 6 )
+
+  ctx.drawImage(
+    tiles,
+    T_KEY * tileSize, 0,
+    tileSize, tileSize,
+    0, tileSize * 4,
+    tileSize, tileSize
+  )
+
+  drawText( `${ playerKeys }`, playerKeys < 10 ? 0.5 : 0, 10 )
+
+  ctx.drawImage(
+    tiles,
+    T_CAP * tileSize, 0,
+    tileSize, tileSize,
+    0, tileSize * 6,
+    tileSize, tileSize
+  )
+
+  drawText( `${ playerCaps }`, playerCaps < 10 ? 0.5 : 0, 14 )
+
+  ctx.drawImage(
+    tiles,
+    T_DISK * tileSize, 0,
+    tileSize, tileSize,
+    0, tileSize * 8,
+    tileSize, tileSize
+  )
+
+  drawText( `${ playerDisks }`, playerDisks < 10 ? 0.5 : 0, 18 )
 }
 
 const keyHandlerMap = e => {

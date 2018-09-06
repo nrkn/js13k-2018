@@ -18,7 +18,10 @@ export type GameState = [
   number,
   GameColor,
   DisplayItem,
-  Monster[]
+  Monster[],
+  number,
+  number,
+  number
 ]
 
 export type GameAPI = [
@@ -47,3 +50,7 @@ export type Edge = 0 | 1 | 2 | 3
 export type MapType = 0 | 1
 
 export type Monster = [ number, number, number, number ]
+
+export type BoolAsNumber = 0 | 1
+
+export type HutState = [ BoolAsNumber, BoolAsNumber ]

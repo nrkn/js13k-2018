@@ -1,15 +1,15 @@
 import {
   T_TREE, DTYPE_MAP, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_SAND_L,
   T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED,
-  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L
+  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L, T_PORTAL, T_SATELLITE, T_RANGER
 } from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
-import { MapTiles, MapRow, DisplayMap, Point, FloodPoint } from './types'
+import { MapTiles, MapRow, DisplayMap, Point, FloodPoint, HutState } from './types'
 import { randInt, pick, shuffle } from './utils'
 import {
   drunkenWalk, randomPointInLandBorder, inWaterBorder, expandLand,
   findTilePoints, randomLandEdge, floodFill, leftMost, findPath,
-  getImmediateNeighbours, hasPoint, withinDist, nearest, unique, immediateNeighbours, allNeighbours, expanded
+  getImmediateNeighbours, hasPoint, withinDist, nearest, unique, immediateNeighbours, allNeighbours, expanded, sortByDistance
 } from './geometry'
 
 export const createMap = () => {
@@ -133,7 +133,7 @@ export const createHut = (): DisplayMap => {
   return [ DTYPE_MAP, landBorder, landBorder, tiles, MT_HUT, landBorder, landBorder ]
 }
 
-export const createIsland = (): DisplayMap => {
+export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
   const tiles = createMap()
 
   // choose clearways (waypoints)
@@ -181,11 +181,17 @@ export const createIsland = (): DisplayMap => {
   const expandedLand = expanded( land )
 
   const [ playerX, playerY ] = leftMost( expandedLand )   
+
   drawTilesToMap( tiles, expandedLand, () => T_LAND )
 
   const sea = floodFill( [ 0, 0 ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )
 
   drawTilesToMap( tiles, sea, () => T_SEA )
+
+  const waypoints = sortByDistance( [ playerX, playerY ], clearways )
+
+  const playerSteps = drunkenWalk( [ playerX, playerY ], waypoints[ 0 ], inWaterBorder, 0.33 )
+  paths.push( ...playerSteps )  
 
   addBiomes( tiles )
   decorate( tiles )
@@ -203,7 +209,39 @@ export const createIsland = (): DisplayMap => {
     return randInt( T_GRASS_L + 1 ) + T_LAND
   })   
   // insert various quest elements here instead of just hut  
-  drawTilesToMap( tiles, clearways, () => T_HUT )
+  
+  for( let i = 0; i < waypoints.length; i++ ){
+    const [ wx, wy ] = waypoints[ i ]
+
+    const type = randInt( 10 )
+
+    // dead ranger
+    if( i === 0 ){
+      tiles[ wy ][ wx ] = T_RANGER
+    } else
+    // hut
+    if( i === 1 ){
+      tiles[ wy ][ wx ] = T_HUT
+      hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
+    } else
+    // satellite
+    if( i === waypoints.length - 1 ){
+      tiles[ wy ][ wx ] = T_SATELLITE
+    } else
+    // ruins, 0 1 2 3 4 5
+    if( type < 6 ){
+      tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
+    } else  
+    // hut 6 7 8 
+    if( type < 9 ){
+      tiles[ wy ][ wx ] = T_HUT
+      hutCache[ wy * mapSize + wx ] = [ 0, 0 ]      
+    } else
+    // portal 9
+    {
+      tiles[ wy ][ wx ] = T_PORTAL
+    } 
+  }
  
   return [ DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY ]
 }

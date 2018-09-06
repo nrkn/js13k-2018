@@ -4,11 +4,11 @@ import { mapSize } from './settings'
 import { createIsland } from './map'
 import {
   MAP_TILES, T_GRASS, T_GRASS_L, T_TREE, T_TREE_L, MAP_PLAYERX, MAP_PLAYERY, 
-  T_SAND, T_SAND_L, T_HUT, T_MOUNTAINS, T_MOUNTAINS_L, T_RUINS, T_RUINS_L, T_LAND
+  T_SAND, T_SAND_L, T_HUT, T_MOUNTAINS, T_MOUNTAINS_L, T_RUINS, T_RUINS_L, T_LAND, T_RANGER, T_SATELLITE, T_PORTAL
 } from './indices'
 
 const start = process.hrtime()
-const mapData = createIsland()
+const mapData = createIsland([])
 const end = process.hrtime( start )
 
 console.log( `time: ${ end[ 0 ] }s ${ end[ 1] / 1000000 }ms` )
@@ -64,6 +64,18 @@ new Jimp( mapSize, mapSize, ( err, image ) => {
 
       if ( map[ y ][ x ] === T_HUT ) {
         color = Jimp.rgbaToInt( 255, 255, 255, 255 )
+      }
+
+      if ( map[ y ][ x ] === T_RANGER ) {
+        color = Jimp.rgbaToInt( 255, 128, 0, 255 )
+      }
+
+      if ( map[ y ][ x ] === T_SATELLITE ) {
+        color = Jimp.rgbaToInt( 0, 255, 255, 255 )
+      }
+
+      if ( map[ y ][ x ] === T_PORTAL ) {
+        color = Jimp.rgbaToInt( 128, 0, 255, 255 )
       }
 
       if ( x === playerX && y === playerY ) {
