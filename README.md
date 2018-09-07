@@ -225,6 +225,9 @@ Player is safe in hut, can sleep to pass the night away
 - fix satellite to:
   - enable comms to call back to base and win
   - if you don't deal with ghosts first, you lose (see above)
+- tell you why you died - it's confusing sometimes if say you're searching ruins
+  at night, and you don't see the ghosts because a message screen is up, then
+  you die - or some other way of making it less confusing for player?
 - portal animations at night, clear at day
 - satellite, offline message when bump until working
 - satellite animation when working
