@@ -93,6 +93,11 @@ export const DATA_C_FIXED = 24
 export const DATA_C_SYNTH_CHARGING = 25
 export const DATA_CREATE_FOOD = 26
 export const DATA_SYNTH = 27
+export const DATA_DB = 28
+export const DATA_COMMS = 29
+export const DATA_SECURITY = 30
+export const DATA_MAP = 31
+export const DATA_C_DIAGNOSTICS_FIXED = 32
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -146,6 +151,10 @@ export const ACTION_USE_COMPUTER = 3
 export const ACTION_FIX_COMPUTER = 4
 export const ACTION_CREATE_FOOD = 5
 export const ACTION_SHOW_SYNTH = 6
+export const ACTION_SHOW_DB = 7
+export const ACTION_SHOW_COMMS = 8
+export const ACTION_SHOW_SECURITY = 9
+export const ACTION_SHOW_MAP = 10
 
 // hut state
 export const HUT_UNLOCKED = 0

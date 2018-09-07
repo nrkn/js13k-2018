@@ -101,7 +101,7 @@ export const Game = () => {
     if (
       !blocks( mapTile ) && !hasPoint( <any>monsters, [ x, y ] ) &&
       !( playerX === x && playerY === y )
-    ) monsters.push( [ x, y, facing, health ] ) 
+    ) monsters.push( [ x, y, facing, health ] )
   }
 
   const createMonsters = () => {
@@ -110,14 +110,14 @@ export const Game = () => {
       const y = randInt( mapSize )
       createMonster([ x, y ])
     }
-  }  
+  }
 
   const updateMonsters = () => {
     const monsterHere = ( [ x, y ]: Point ) => {
       for( let i = 0; i < monsters.length; i++ ){
         const monster = monsters[ i ]
         const mx = monster[ MON_X ]
-        const my = monster[ MON_Y ] 
+        const my = monster[ MON_Y ]
 
         if( monster[ MON_HEALTH ] > 0 && x === mx && y === my ) return 1
       }
@@ -204,10 +204,10 @@ export const Game = () => {
         } else {
           playerHealth--
           displayStack.push( gameData[ DATA_HUNGRY ] )
-        } 
+        }
       }
     }
-    if ( hours === 24 ) {      
+    if ( hours === 24 ) {
       madeFoodToday = 0
       hours = 0
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
@@ -289,7 +289,7 @@ export const Game = () => {
           } else {
             displayStack.push( gameData[ DATA_LOCKED_NOKEYS ] )
           }
-        }        
+        }
       }
 
       if( y === map[ MAP_STARTY ] ){
@@ -320,10 +320,10 @@ export const Game = () => {
 
       if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
         if( !currentHut[ HUT_COMPUTER_FIXED ] && playerCaps >= 6 ){
-          displayStack.push( gameData[ DATA_FIXABLE_COMPUTER ] )     
+          displayStack.push( gameData[ DATA_FIXABLE_COMPUTER ] )
         } else {
-          displayStack.push( gameData[ DATA_COMPUTER ] )     
-        }       
+          displayStack.push( gameData[ DATA_COMPUTER ] )
+        }
       }
 
       if( map[ MAP_TILES ][ y ][ x ] === T_BED ){
@@ -377,7 +377,7 @@ export const Game = () => {
       }
     },
     // ACTION_UNLOCK
-    () => {      
+    () => {
       currentHut[ HUT_UNLOCKED ] = 1
       playerKeys--
     },
@@ -394,12 +394,12 @@ export const Game = () => {
           const food = randInt( 3 ) + 1
           displayStack.push( [ DTYPE_MESSAGE, [ `Found ${ food } food` ] ] )
           playerFood += food
-        } 
+        }
         // keycard 2 3
         else if ( found < 4 ){
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
           playerKeys++
-        } 
+        }
         // cap 4 5
         else if( found < 6 ){
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found caps' ] ] )
@@ -409,32 +409,32 @@ export const Game = () => {
         else if( found < 8 ){
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found backup' ] ] )
           playerDisks++
-        }        
+        }
         // got hurt 8
         else if( found < 9 ){
-          displayStack.push( [ 
-            DTYPE_MESSAGE, 
-            [ 
-              'Rocks fell!', 
-              '', 
-              'Lost health' 
-            ] 
+          displayStack.push( [
+            DTYPE_MESSAGE,
+            [
+              'Rocks fell!',
+              '',
+              'Lost health'
+            ]
           ] )
           playerHealth--
         }
-        // nothing 
+        // nothing
         else {
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found nothing' ] ] )
         }
       }
     },
     // ACTION_USE_COMPUTER
-    () => {      
+    () => {
       if( currentHut[ HUT_COMPUTER_FIXED ] ){
         displayStack.push( gameData[ DATA_C_FIXED ] )
       } else {
         displayStack.push( gameData[ DATA_C_MAIN ] )
-      }     
+      }
     },
     // ACTION_FIX_COMPUTER
     () => {
@@ -457,6 +457,22 @@ export const Game = () => {
         displayStack.push( gameData[ DATA_C_SYNTH ] )
       }
     },
+    // ACTION_SHOW_DB
+    () => {
+
+    },
+    // ACTION_SHOW_COMMS
+    () => {
+
+    },
+    // ACTION_SHOW_SECURITY
+    () => {
+
+    },
+    // ACTION_SHOW_MAP
+    () => {
+
+    }
   ]
 
   reset()

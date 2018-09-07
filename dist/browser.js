@@ -117,6 +117,11 @@ const DATA_C_FIXED = 24;
 const DATA_C_SYNTH_CHARGING = 25;
 const DATA_CREATE_FOOD = 26;
 const DATA_SYNTH = 27;
+const DATA_DB = 28;
+const DATA_COMMS = 29;
+const DATA_SECURITY = 30;
+const DATA_MAP = 31;
+const DATA_C_DIAGNOSTICS_FIXED = 32;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -161,6 +166,10 @@ const ACTION_USE_COMPUTER = 3;
 const ACTION_FIX_COMPUTER = 4;
 const ACTION_CREATE_FOOD = 5;
 const ACTION_SHOW_SYNTH = 6;
+const ACTION_SHOW_DB = 7;
+const ACTION_SHOW_COMMS = 8;
+const ACTION_SHOW_SECURITY = 9;
+const ACTION_SHOW_MAP = 10;
 // hut state
 const HUT_UNLOCKED = 0;
 const HUT_COMPUTER_FIXED = 1;
@@ -620,7 +629,6 @@ const blocks = i => i < 2 || (i >= T_TREE && i < T_TREE + T_TREE_L) || i === T_H
 
 
 
-
 const gameData = [
     // DATA_SPLASH
     [DTYPE_IMAGE, 's.png'],
@@ -711,8 +719,8 @@ const gameData = [
         0,
         'a'
     ],
-    // DATA_ISLAND
-    createIsland([]),
+    // DATA_ISLAND - placeholder
+    [DTYPE_MAP, 0, 0, [[]], MT_ISLAND, 0, 0],
     // DATA_INVESTIGATE
     [
         DTYPE_MESSAGE,
@@ -872,8 +880,12 @@ const gameData = [
             ''
         ],
         [
-            ['DIAGNOSTICS', DATA_C_DIAGNOSTICS],
-            ['SYNTHESIZE', DATA_C_SYNTH]
+            ['DIAGNOSTICS', DATA_C_DIAGNOSTICS_FIXED],
+            ['SYNTHESIZE', DATA_C_SYNTH],
+            ['DATABASE', DATA_DB],
+            ['COMMS', DATA_COMMS],
+            ['SECURITY', DATA_SECURITY],
+            ['MAP', DATA_MAP]
         ],
         0,
         'a'
@@ -906,7 +918,27 @@ const gameData = [
     [
         DTYPE_ACTION,
         ACTION_SHOW_SYNTH
-    ]
+    ],
+    // DATA_DB
+    [
+        DTYPE_ACTION,
+        ACTION_SHOW_DB
+    ],
+    // DATA_COMMS
+    [
+        DTYPE_ACTION,
+        ACTION_SHOW_COMMS
+    ],
+    // DATA_SECURITY
+    [
+        DTYPE_ACTION,
+        ACTION_SHOW_SECURITY
+    ],
+    // DATA_MAP
+    [
+        DTYPE_ACTION,
+        ACTION_SHOW_MAP
+    ],
 ];
 
 const Game = () => {
@@ -1261,7 +1293,7 @@ const Game = () => {
                     ]);
                     playerHealth--;
                 }
-                // nothing 
+                // nothing
                 else {
                     displayStack.push([DTYPE_MESSAGE, ['Found nothing']]);
                 }
@@ -1298,6 +1330,18 @@ const Game = () => {
                 displayStack.push(gameData[DATA_C_SYNTH]);
             }
         },
+        // ACTION_SHOW_DB
+        () => {
+        },
+        // ACTION_SHOW_COMMS
+        () => {
+        },
+        // ACTION_SHOW_SECURITY
+        () => {
+        },
+        // ACTION_SHOW_MAP
+        () => {
+        }
     ];
     reset();
     const api = [

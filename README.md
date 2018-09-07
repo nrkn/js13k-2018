@@ -199,9 +199,40 @@ Player is safe in hut, can sleep to pass the night away
 - ~synthesize food once per day~
   - Size: 8917, Remaining: 4395
 - BUG - can sometimes synth food multiple times
-- restore backups to get notes from RANGER
-- satellite, offline message
-- quests etc - spend some time figuring out
+- rename caps to chips, new graphic too
+- backups have a type:
+  - database (notes from RANGER)
+  - synthdb (more things you can synth)
+  - security functions
+  - map areas
+- database restore:
+  - intro to story from RANGER - "was sent to investigate ruins - found strange
+    technology"
+  - ghost/portal origin
+  - how to shut down portals
+  - how to wipe out the ghosts
+  - how to get satellite working - note to not call base until ghosts cleared
+    else the rescue team will get wiped out and you lose
+  - any other story color
+- synthdb restore:
+  - more food so you don't have to do so often
+  - weapon / armor so ghosts more managable
+  - ???
+- security restore:
+  - ghost repeller around hut
+  - ???
+- restore backups to:
+  - get notes from RANGER
+  - get additional synthdb items
+  - get security
+- fix satellite to:
+  - enable comms to call back to base and win
+  - if you don't deal with ghosts first, you lose (see above)
+- portal animations at night, clear at day
+- satellite, offline message when bump until working
+- satellite animation when working
+- have safe ruins and dangerous ruins, let player know they look dodgy.
+  dangerous ruins have higher reward. consider making limit to search per day
 - win screen
 - fog of war and/or minimap
 - if room left, consider adding transitional tiles to make slightly less blocky
