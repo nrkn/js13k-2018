@@ -7,12 +7,12 @@ import {
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
   OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP
+  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP, DATA_C_DB_INTRO, DATA_RESTORE_BACKUPS
 } from './indices'
 
 import {
   DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster,
-  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap
+  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap, DisplaySelection
 } from './types'
 
 import { inBounds, hasPoint, towards, allNeighbours } from './geometry'
@@ -39,6 +39,8 @@ export const Game = () => {
   let seenRangerMessage: number
   let currentHut: HutState
   let madeFoodToday: number
+  let notesDb: number[]
+  let mapDb: number[]
 
   const reset = () => {
     hutCache = []
@@ -61,6 +63,8 @@ export const Game = () => {
     monsters = []
     seenRangerMessage = 0
     madeFoodToday = 0
+    notesDb = []
+    mapDb = []
 
     createMonsters()
   }
@@ -320,11 +324,17 @@ export const Game = () => {
       }
 
       if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
-        if( !currentHut[ HUT_COMPUTER_FIXED ] && playerChips >= 6 ){
-          displayStack.push( gameData[ DATA_FIXABLE_COMPUTER ] )
-        } else {
-          displayStack.push( gameData[ DATA_COMPUTER ] )
-        }
+        const computerOptions = <DisplayScreen>gameData[ DATA_FIXABLE_COMPUTER ].slice()
+
+        computerOptions[ SCREEN_OPTIONS ] = computerOptions[ SCREEN_OPTIONS ].filter( ( _o, i ) => {
+          if( i === 1 && currentHut[ HUT_COMPUTER_FIXED ] ) return 0
+          if( i === 1 && playerChips < 6 ) return 0
+          if( i === 2 && !currentHut[ HUT_COMPUTER_FIXED ] ) return 0
+          if( i === 2 && playerDisks < 1 ) return 0
+          return 1
+        })
+
+        displayStack.push( computerOptions )
       }
 
       if( map[ MAP_TILES ][ y ][ x ] === T_BED ){
@@ -460,7 +470,21 @@ export const Game = () => {
     },
     // ACTION_SHOW_DB
     () => {
-
+      const dbOptions: DisplaySelection[] = notesDb.map( i => {
+        return <DisplaySelection>[ `ENTRY ${ i }`, i ]
+      })
+      const dbScreen: DisplayScreen = [
+        DTYPE_SCREEN,
+        [
+          'RSOS v3.27',
+          '--------------------',
+          'DATABASE MENU',
+        ],
+        dbOptions,
+        0,
+        'a'
+      ]
+      displayStack.push( dbScreen )
     },
     // ACTION_SHOW_COMMS
     () => {
@@ -481,6 +505,23 @@ export const Game = () => {
       console.log( 'showing map', { playerX, playerY } )
 
       displayStack.push( computerMap )
+    },
+    // ACTION_RESTORE_BACKUPS
+    () => {
+      playerDisks--
+
+      const nextNoteDb = notesDb.length + DATA_C_DB_INTRO
+
+      if( nextNoteDb < DATA_RESTORE_BACKUPS ){
+        notesDb.push( nextNoteDb )
+        displayStack.push( [ DTYPE_MESSAGE, [ 
+          'Recovered 1 database'
+        ] ] )
+      } else {
+        displayStack.push( [ DTYPE_MESSAGE, [ 
+          'Disk corrupt'
+        ] ] )
+      }
     }
   ]
 

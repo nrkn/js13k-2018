@@ -136,6 +136,7 @@ const DATA_C_DB_SHUTDOWN_PORTALS = 37;
 const DATA_C_DB_SECURITY = 38;
 const DATA_C_DB_FIX_SATELLITE = 39;
 const DATA_C_DB_RESCUE_TEAM = 40;
+const DATA_RESTORE_BACKUPS = 41;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -184,6 +185,7 @@ const ACTION_SHOW_DB = 7;
 const ACTION_SHOW_COMMS = 8;
 const ACTION_SHOW_SECURITY = 9;
 const ACTION_SHOW_MAP = 10;
+const ACTION_RESTORE_BACKUPS = 11;
 // hut state
 const HUT_UNLOCKED = 0;
 const HUT_COMPUTER_FIXED = 1;
@@ -881,7 +883,8 @@ const gameData = [
         ],
         [
             ['Use', DATA_USE_COMPUTER],
-            ['Fix', DATA_FIX_COMPUTER]
+            ['Fix Chips', DATA_FIX_COMPUTER],
+            ['Restore Backups', DATA_RESTORE_BACKUPS]
         ],
         0,
         'g'
@@ -1155,6 +1158,11 @@ const gameData = [
         0,
         'a'
     ],
+    // DATA_RESTORE_BACKUPS
+    [
+        DTYPE_ACTION,
+        ACTION_RESTORE_BACKUPS
+    ]
 ];
 
 const Game = () => {
@@ -1176,6 +1184,8 @@ const Game = () => {
     let seenRangerMessage;
     let currentHut;
     let madeFoodToday;
+    let notesDb;
+    let mapDb;
     const reset = () => {
         hutCache = [];
         playerFacing = 0;
@@ -1197,6 +1207,8 @@ const Game = () => {
         monsters = [];
         seenRangerMessage = 0;
         madeFoodToday = 0;
+        notesDb = [];
+        mapDb = [];
         createMonsters();
     };
     const currentColor = () => {
@@ -1416,12 +1428,19 @@ const Game = () => {
                 displayStack.pop();
             }
             if (map[MAP_TILES][y][x] === T_COMPUTER) {
-                if (!currentHut[HUT_COMPUTER_FIXED] && playerChips >= 6) {
-                    displayStack.push(gameData[DATA_FIXABLE_COMPUTER]);
-                }
-                else {
-                    displayStack.push(gameData[DATA_COMPUTER]);
-                }
+                const computerOptions = gameData[DATA_FIXABLE_COMPUTER].slice();
+                computerOptions[SCREEN_OPTIONS] = computerOptions[SCREEN_OPTIONS].filter((_o, i) => {
+                    if (i === 1 && currentHut[HUT_COMPUTER_FIXED])
+                        return 0;
+                    if (i === 1 && playerChips < 6)
+                        return 0;
+                    if (i === 2 && !currentHut[HUT_COMPUTER_FIXED])
+                        return 0;
+                    if (i === 2 && playerDisks < 1)
+                        return 0;
+                    return 1;
+                });
+                displayStack.push(computerOptions);
             }
             if (map[MAP_TILES][y][x] === T_BED) {
                 if (hours >= sunset || hours < sunrise) {
@@ -1550,6 +1569,21 @@ const Game = () => {
         },
         // ACTION_SHOW_DB
         () => {
+            const dbOptions = notesDb.map(i => {
+                return [`ENTRY ${i}`, i];
+            });
+            const dbScreen = [
+                DTYPE_SCREEN,
+                [
+                    'RSOS v3.27',
+                    '--------------------',
+                    'DATABASE MENU',
+                ],
+                dbOptions,
+                0,
+                'a'
+            ];
+            displayStack.push(dbScreen);
         },
         // ACTION_SHOW_COMMS
         () => {
@@ -1566,6 +1600,22 @@ const Game = () => {
             const computerMap = [DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles];
             console.log('showing map', { playerX, playerY });
             displayStack.push(computerMap);
+        },
+        // ACTION_RESTORE_BACKUPS
+        () => {
+            playerDisks--;
+            const nextNoteDb = notesDb.length + DATA_C_DB_INTRO;
+            if (nextNoteDb < DATA_RESTORE_BACKUPS) {
+                notesDb.push(nextNoteDb);
+                displayStack.push([DTYPE_MESSAGE, [
+                        'Recovered 1 database'
+                    ]]);
+            }
+            else {
+                displayStack.push([DTYPE_MESSAGE, [
+                        'Disk corrupt'
+                    ]]);
+            }
         }
     ];
     reset();

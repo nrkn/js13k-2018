@@ -111,6 +111,7 @@ export const DATA_C_DB_SHUTDOWN_PORTALS = 37
 export const DATA_C_DB_SECURITY = 38
 export const DATA_C_DB_FIX_SATELLITE = 39
 export const DATA_C_DB_RESCUE_TEAM = 40
+export const DATA_RESTORE_BACKUPS = 41
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -168,6 +169,7 @@ export const ACTION_SHOW_DB = 7
 export const ACTION_SHOW_COMMS = 8
 export const ACTION_SHOW_SECURITY = 9
 export const ACTION_SHOW_MAP = 10
+export const ACTION_RESTORE_BACKUPS = 11
 
 // hut state
 export const HUT_UNLOCKED = 0

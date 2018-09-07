@@ -201,20 +201,23 @@ Player is safe in hut, can sleep to pass the night away
 - ~rename caps to chips, new graphic too~
   - Size: 8197, Remaining: 5115
 - BUG - can sometimes synth food multiple times
-- can use backups you find to restore various computer functions
+- ~can use backups you find to restore various computer functions~
+  - ~database restore:~
+    - ~intro to story from RANGER - "was sent to investigate ruins - found strange~
+      ~technology"~
+    - ~ghost/portal origin~
+    - ~how to shut down portals~
+    - ~how to wipe out the ghosts~
+    - ~how to get satellite working - note to not call base until ghosts cleared~
+      ~else the rescue team will get wiped out and you lose~
+  - ~basic map functionality~
+  - Size: 9328, Remaining: 3984
 - backups have a type:
   - database (notes from RANGER)
   - synthdb (more things you can synth)
   - security functions
   - map areas
 - database restore:
-  - intro to story from RANGER - "was sent to investigate ruins - found strange
-    technology"
-  - ghost/portal origin
-  - how to shut down portals
-  - how to wipe out the ghosts
-  - how to get satellite working - note to not call base until ghosts cleared
-    else the rescue team will get wiped out and you lose
   - any other story color
 - synthdb restore:
   - more food so you don't have to do so often
