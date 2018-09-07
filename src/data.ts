@@ -72,7 +72,7 @@ export const gameData: DisplayItem[] = [
       ' OFFLINE',
       '',
       ' PROBLEM:',
-      '  6 CAPS BLOWN',
+      '  6 BAD CHIPS',
       '',
       'SYNTHESIZE:',
       ' ONLINE'

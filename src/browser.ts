@@ -16,9 +16,9 @@ import {
   API_CONFIRM_SELECT,
   T_KEY,
   ST_PLAYER_KEYS,
-  T_CAP,
+  T_CHIP,
   T_DISK,
-  ST_PLAYER_CAPS,
+  ST_PLAYER_CHIPS,
   ST_PLAYER_DISKS
 } from './indices'
 
@@ -205,7 +205,7 @@ const drawUi = () => {
   const playerFood = api[ API_STATE ]()[ ST_PLAYER_FOOD ]
   const playerHealth = api[ API_STATE ]()[ ST_PLAYER_HEALTH ]
   const playerKeys = api[ API_STATE ]()[ ST_PLAYER_KEYS ]
-  const playerCaps = api[ API_STATE ]()[ ST_PLAYER_CAPS ]
+  const playerChips = api[ API_STATE ]()[ ST_PLAYER_CHIPS ]
   const playerDisks = api[ API_STATE ]()[ ST_PLAYER_DISKS ]
 
   drawText( `RANGER DOWN ${ api[ API_TIMESTR ]() }`, 2.5, 0.5 )
@@ -242,13 +242,13 @@ const drawUi = () => {
 
   ctx.drawImage(
     tiles,
-    T_CAP * tileSize, 0,
+    T_CHIP * tileSize, 0,
     tileSize, tileSize,
     0, tileSize * 6,
     tileSize, tileSize
   )
 
-  drawText( `${ playerCaps }`, playerCaps < 10 ? 0.5 : 0, 14 )
+  drawText( `${ playerChips }`, playerChips < 10 ? 0.5 : 0, 14 )
 
   ctx.drawImage(
     tiles,

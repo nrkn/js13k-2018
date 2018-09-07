@@ -28,7 +28,7 @@ export const Game = () => {
   let playerHealth: number
   let playerMaxHealth: number
   let playerKeys: number
-  let playerCaps: number
+  let playerChips: number
   let playerDisks: number
   let hours: number
   let minutes: number
@@ -47,7 +47,7 @@ export const Game = () => {
     playerHealth = 20
     playerMaxHealth = 20
     playerKeys = 0
-    playerCaps = 5
+    playerChips = 5
     playerDisks = 0
     hours = 17
     minutes = 55
@@ -79,7 +79,7 @@ export const Game = () => {
     currentColor(),
     displayStack[ displayStack.length - 1 ],
     monsters,
-    playerKeys, playerCaps, playerDisks
+    playerKeys, playerChips, playerDisks
   ]
 
   const close = () => {
@@ -319,7 +319,7 @@ export const Game = () => {
       }
 
       if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
-        if( !currentHut[ HUT_COMPUTER_FIXED ] && playerCaps >= 6 ){
+        if( !currentHut[ HUT_COMPUTER_FIXED ] && playerChips >= 6 ){
           displayStack.push( gameData[ DATA_FIXABLE_COMPUTER ] )
         } else {
           displayStack.push( gameData[ DATA_COMPUTER ] )
@@ -400,10 +400,10 @@ export const Game = () => {
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
           playerKeys++
         }
-        // cap 4 5
+        // chip 4 5
         else if( found < 6 ){
-          displayStack.push( [ DTYPE_MESSAGE, [ 'Found caps' ] ] )
-          playerCaps++
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found chip' ] ] )
+          playerChips++
         }
         // disk 6 7
         else if( found < 8 ){
@@ -438,8 +438,8 @@ export const Game = () => {
     },
     // ACTION_FIX_COMPUTER
     () => {
-      displayStack.push( [ DTYPE_MESSAGE, [ 'Replaced 6 caps' ] ] )
-      playerCaps -= 6
+      displayStack.push( [ DTYPE_MESSAGE, [ 'Replaced 6 chips' ] ] )
+      playerChips -= 6
       currentHut[ HUT_COMPUTER_FIXED ] = 1
     },
     // ACTION_CREATE_FOOD

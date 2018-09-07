@@ -27,7 +27,7 @@ export const T_PORTAL = 36
 export const T_RANGER  = 38
 export const T_KEY = 39
 export const T_DISK = 40
-export const T_CAP = 41
+export const T_CHIP = 41
 export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
@@ -44,7 +44,7 @@ export const ST_COLOR = 6
 export const ST_DISPLAY_ITEM = 7
 export const ST_MONSTERS = 8
 export const ST_PLAYER_KEYS = 9
-export const ST_PLAYER_CAPS = 10
+export const ST_PLAYER_CHIPS = 10
 export const ST_PLAYER_DISKS = 11
 
 // api indices

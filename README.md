@@ -198,8 +198,10 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 8838, Remaining: 4474
 - ~synthesize food once per day~
   - Size: 8917, Remaining: 4395
+- ~rename caps to chips, new graphic too~
+  - Size: 8197, Remaining: 5115
 - BUG - can sometimes synth food multiple times
-- rename caps to chips, new graphic too
+
 - can use backups you find to restore various computer functions
 - backups have a type:
   - database (notes from RANGER)

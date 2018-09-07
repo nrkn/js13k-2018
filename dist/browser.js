@@ -55,7 +55,7 @@ const T_PORTAL = 36;
 const T_RANGER = 38;
 const T_KEY = 39;
 const T_DISK = 40;
-const T_CAP = 41;
+const T_CHIP = 41;
 const S_SKELETON = 4;
 const S_BOAT_LEFT = 5;
 const S_BOAT_RIGHT = 6;
@@ -71,7 +71,7 @@ const ST_COLOR = 6;
 const ST_DISPLAY_ITEM = 7;
 const ST_MONSTERS = 8;
 const ST_PLAYER_KEYS = 9;
-const ST_PLAYER_CAPS = 10;
+const ST_PLAYER_CHIPS = 10;
 const ST_PLAYER_DISKS = 11;
 // api indices
 const API_STATE = 0;
@@ -687,7 +687,7 @@ const gameData = [
             ' OFFLINE',
             '',
             ' PROBLEM:',
-            '  6 CAPS BLOWN',
+            '  6 BAD CHIPS',
             '',
             'SYNTHESIZE:',
             ' ONLINE'
@@ -949,7 +949,7 @@ const Game = () => {
     let playerHealth;
     let playerMaxHealth;
     let playerKeys;
-    let playerCaps;
+    let playerChips;
     let playerDisks;
     let hours;
     let minutes;
@@ -967,7 +967,7 @@ const Game = () => {
         playerHealth = 20;
         playerMaxHealth = 20;
         playerKeys = 0;
-        playerCaps = 5;
+        playerChips = 5;
         playerDisks = 0;
         hours = 17;
         minutes = 55;
@@ -997,7 +997,7 @@ const Game = () => {
         currentColor(),
         displayStack[displayStack.length - 1],
         monsters,
-        playerKeys, playerCaps, playerDisks
+        playerKeys, playerChips, playerDisks
     ];
     const close = () => {
         // can use this to toggle inventory for map
@@ -1198,7 +1198,7 @@ const Game = () => {
                 displayStack.pop();
             }
             if (map[MAP_TILES][y][x] === T_COMPUTER) {
-                if (!currentHut[HUT_COMPUTER_FIXED] && playerCaps >= 6) {
+                if (!currentHut[HUT_COMPUTER_FIXED] && playerChips >= 6) {
                     displayStack.push(gameData[DATA_FIXABLE_COMPUTER]);
                 }
                 else {
@@ -1271,10 +1271,10 @@ const Game = () => {
                     displayStack.push([DTYPE_MESSAGE, ['Found keycard']]);
                     playerKeys++;
                 }
-                // cap 4 5
+                // chip 4 5
                 else if (found < 6) {
-                    displayStack.push([DTYPE_MESSAGE, ['Found caps']]);
-                    playerCaps++;
+                    displayStack.push([DTYPE_MESSAGE, ['Found chip']]);
+                    playerChips++;
                 }
                 // disk 6 7
                 else if (found < 8) {
@@ -1310,8 +1310,8 @@ const Game = () => {
         },
         // ACTION_FIX_COMPUTER
         () => {
-            displayStack.push([DTYPE_MESSAGE, ['Replaced 6 caps']]);
-            playerCaps -= 6;
+            displayStack.push([DTYPE_MESSAGE, ['Replaced 6 chips']]);
+            playerChips -= 6;
             currentHut[HUT_COMPUTER_FIXED] = 1;
         },
         // ACTION_CREATE_FOOD
@@ -1455,7 +1455,7 @@ const drawUi = () => {
     const playerFood = api[API_STATE]()[ST_PLAYER_FOOD];
     const playerHealth = api[API_STATE]()[ST_PLAYER_HEALTH];
     const playerKeys = api[API_STATE]()[ST_PLAYER_KEYS];
-    const playerCaps = api[API_STATE]()[ST_PLAYER_CAPS];
+    const playerChips = api[API_STATE]()[ST_PLAYER_CHIPS];
     const playerDisks = api[API_STATE]()[ST_PLAYER_DISKS];
     drawText(`RANGER DOWN ${api[API_TIMESTR]()}`, 2.5, 0.5);
     ctx.drawImage(tiles, T_HEALTH * tileSize, 0, tileSize, tileSize, 0, 0, tileSize, tileSize);
@@ -1464,8 +1464,8 @@ const drawUi = () => {
     drawText(`${playerFood}`, playerFood < 10 ? 0.5 : 0, 6);
     ctx.drawImage(tiles, T_KEY * tileSize, 0, tileSize, tileSize, 0, tileSize * 4, tileSize, tileSize);
     drawText(`${playerKeys}`, playerKeys < 10 ? 0.5 : 0, 10);
-    ctx.drawImage(tiles, T_CAP * tileSize, 0, tileSize, tileSize, 0, tileSize * 6, tileSize, tileSize);
-    drawText(`${playerCaps}`, playerCaps < 10 ? 0.5 : 0, 14);
+    ctx.drawImage(tiles, T_CHIP * tileSize, 0, tileSize, tileSize, 0, tileSize * 6, tileSize, tileSize);
+    drawText(`${playerChips}`, playerChips < 10 ? 0.5 : 0, 14);
     ctx.drawImage(tiles, T_DISK * tileSize, 0, tileSize, tileSize, 0, tileSize * 8, tileSize, tileSize);
     drawText(`${playerDisks}`, playerDisks < 10 ? 0.5 : 0, 18);
 };
