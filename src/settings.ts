@@ -1,5 +1,6 @@
 export const tileSize = 16
 export const fontSize = 8
+export const computerIconSize = 7
 export const viewTiles = 9
 export const canvasTiles = viewTiles + 1
 export const fontTiles = canvasTiles * 2

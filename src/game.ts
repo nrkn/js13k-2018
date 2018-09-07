@@ -7,12 +7,12 @@ import {
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
   OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH
+  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP
 } from './indices'
 
 import {
   DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster,
-  DisplayScreen, DisplayAction, HutState, Point
+  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap
 } from './types'
 
 import { inBounds, hasPoint, towards, allNeighbours } from './geometry'
@@ -68,6 +68,7 @@ export const Game = () => {
   const currentColor = (): GameColor => {
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_IMAGE ) return 'g'
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_MESSAGE ) return 'g'
+    if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_COMPUTER_MAP ) return 'a'
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN )
       return (<DisplayScreen>displayStack[ displayStack.length - 1 ])[ SCREEN_COLOR ]
 
@@ -471,7 +472,15 @@ export const Game = () => {
     },
     // ACTION_SHOW_MAP
     () => {
+      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+      const playerX = mapItem[ MAP_PLAYERX ]
+      const playerY = mapItem[ MAP_PLAYERY ]
+      const mapTiles = mapItem[ MAP_TILES ]
+      const computerMap: DisplayComputerMap = [ DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles ]
 
+      console.log( 'showing map', { playerX, playerY } )
+
+      displayStack.push( computerMap )
     }
   ]
 

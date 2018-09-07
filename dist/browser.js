@@ -1,5 +1,6 @@
 const s = () => {const tileSize = 16;
 const fontSize = 8;
+const computerIconSize = 7;
 const viewTiles = 9;
 const canvasTiles = viewTiles + 1;
 const fontTiles = canvasTiles * 2;
@@ -60,6 +61,10 @@ const S_SKELETON = 4;
 const S_BOAT_LEFT = 5;
 const S_BOAT_RIGHT = 6;
 const S_MONSTER = 7;
+const C_HUT = 0;
+const C_RUINS = 1;
+const C_SATELLITE = 2;
+const C_PLAYER = 3;
 // state indices
 const ST_PLAYER_FACING = 0;
 const ST_PLAYER_FOOD = 1;
@@ -88,6 +93,7 @@ const DTYPE_MESSAGE = 1;
 const DTYPE_SCREEN = 2;
 const DTYPE_MAP = 3;
 const DTYPE_ACTION = 4;
+const DTYPE_COMPUTER_MAP = 5;
 // game data indices
 const DATA_SPLASH = 0;
 const DATA_INTRO = 1;
@@ -122,6 +128,14 @@ const DATA_COMMS = 29;
 const DATA_SECURITY = 30;
 const DATA_MAP = 31;
 const DATA_C_DIAGNOSTICS_FIXED = 32;
+const DATA_C_DB_INTRO = 33;
+const DATA_C_DB_PORTALS = 34;
+const DATA_C_DB_GHOSTS = 35;
+const DATA_C_DB_ERRORS = 36;
+const DATA_C_DB_SHUTDOWN_PORTALS = 37;
+const DATA_C_DB_SECURITY = 38;
+const DATA_C_DB_FIX_SATELLITE = 39;
+const DATA_C_DB_RESCUE_TEAM = 40;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -535,7 +549,11 @@ const createIsland = (hutCache) => {
         randomLandEdge(LEFT)
     ];
     while (clearways.length < clearwayCount) {
-        clearways.push(randomPointInLandBorder());
+        const clearway = randomPointInLandBorder();
+        const near = nearest(clearway, clearways);
+        if (dist(clearway, near) > 10) {
+            clearways.push(clearway);
+        }
     }
     // make paths between them
     const paths = [];
@@ -581,7 +599,7 @@ const createIsland = (hutCache) => {
         }
         return randInt(T_GRASS_L + 1) + T_LAND;
     });
-    // insert various quest elements here instead of just hut  
+    // insert various quest elements here instead of just hut
     for (let i = 0; i < waypoints.length; i++) {
         const [wx, wy] = waypoints[i];
         const type = randInt(10);
@@ -606,7 +624,7 @@ const createIsland = (hutCache) => {
         else if (type < 6) {
             tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
         }
-        // hut 6 7 8 
+        // hut 6 7 8
         else if (type < 9) {
             tiles[wy][wx] = T_HUT;
             hutCache[wy * mapSize + wx] = [0, 0];
@@ -663,7 +681,7 @@ const gameData = [
             'MAIN MENU',
             '',
             'ERROR:',
-            ' SYSTEM OFFLINE',
+            ' MAIN SYSTEM OFFLINE',
             '',
             'EMERGENCY OPS:',
             ''
@@ -685,12 +703,19 @@ const gameData = [
             '',
             'MAIN SYSTEM:',
             ' OFFLINE',
-            '',
-            ' PROBLEM:',
             '  6 BAD CHIPS',
-            '',
             'SYNTHESIZE:',
-            ' ONLINE'
+            ' ONLINE',
+            '  DB ERRORS',
+            'COMMS:',
+            ' OFFLINE',
+            '  UNKNOWN ERROR',
+            'SECURITY:',
+            ' OFFLINE',
+            '  DB ERRORS',
+            'MAP:',
+            ' OFFLINE',
+            '  DB ERRORS'
         ],
         [],
         0,
@@ -706,7 +731,7 @@ const gameData = [
             '',
             'SYNTHDB:',
             ' OFFLINE',
-            '',
+            '  USE RESTORE DISK',
             'POWER:',
             ' FULL',
             '',
@@ -874,8 +899,6 @@ const gameData = [
             '--------------------',
             'MAIN MENU',
             '',
-            'SYSTEM ONLINE',
-            '',
             'OPS:',
             ''
         ],
@@ -900,7 +923,7 @@ const gameData = [
             '',
             'SYNTHDB:',
             ' OFFLINE',
-            '',
+            '  USE RESTORE DISK',
             'POWER:',
             ' CHARGING',
             '',
@@ -938,6 +961,199 @@ const gameData = [
     [
         DTYPE_ACTION,
         ACTION_SHOW_MAP
+    ],
+    // DATA_C_DIAGNOSTICS_FIXED
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DIAGNOSTICS MENU',
+            '',
+            'MAIN SYSTEM:',
+            ' ONLINE',
+            'SYNTHESIZE:',
+            ' ONLINE',
+            '  DB ERRORS',
+            'COMMS:',
+            ' OFFLINE',
+            '  UNKNOWN ERROR',
+            'SECURITY:',
+            ' OFFLINE',
+            '  DB ERRORS',
+            'MAP:',
+            ' OFFLINE',
+            '  DB ERRORS'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_INTRO
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 1',
+            '',
+            'USER: RANGER',
+            '',
+            'Sent to investigate',
+            'ruins. Found strange',
+            'technology'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_PORTALS
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 2',
+            '',
+            'USER: RANGER',
+            '',
+            'Was testing strange',
+            'technology. Portals',
+            'appeared!'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_GHOSTS
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 3',
+            '',
+            'USER: RANGER',
+            '',
+            'Monsters coming out',
+            'of portals! Made it',
+            'back to hut. They',
+            'only come out at',
+            'night'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_ERRORS
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 4',
+            '',
+            'USER: RANGER',
+            '',
+            'Monsters affecting',
+            'computers. Have been',
+            'stashing items in',
+            'ruins for emergency.',
+            'Tried comms but the',
+            'satellite is offline'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_SHUTDOWN_PORTALS
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 5',
+            '',
+            'USER: RANGER',
+            '',
+            'Found way to use',
+            'synth to alter chip',
+            'to shut down portal',
+            'but computer went',
+            'offline! There are',
+            'more of them every',
+            'night'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_SECURITY
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 6',
+            '',
+            'USER: RANGER',
+            '',
+            'Got computer online.',
+            'Still has errors.',
+            'Security system',
+            'should be able to',
+            'deal with monsters',
+            'if can get it online'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_FIX_SATELLITE
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 7',
+            '',
+            'USER: RANGER',
+            '',
+            'Comms damaged beyond',
+            'repair but can send',
+            'a distress signal if',
+            'repair the satellite',
+            'transmitter with',
+            'some chips. Not sure',
+            'where the dish is',
+            'on island and maps',
+            'are offline'
+        ],
+        [],
+        0,
+        'a'
+    ],
+    // DATA_C_DB_RESCUE_TEAM
+    [
+        DTYPE_SCREEN,
+        [
+            'RSOS v3.27',
+            '--------------------',
+            'DATABASE ENTRY 8',
+            '',
+            'USER: RANGER',
+            '',
+            'No way to warn',
+            'rescue team of',
+            'monsters with comms',
+            `offline. Can't send`,
+            'distress signal',
+            'until deal with',
+            'monsters!'
+        ],
+        [],
+        0,
+        'a'
     ],
 ];
 
@@ -988,6 +1204,8 @@ const Game = () => {
             return 'g';
         if (displayStack[displayStack.length - 1][DISPLAY_TYPE] === DTYPE_MESSAGE)
             return 'g';
+        if (displayStack[displayStack.length - 1][DISPLAY_TYPE] === DTYPE_COMPUTER_MAP)
+            return 'a';
         if (displayStack[displayStack.length - 1][DISPLAY_TYPE] === DTYPE_SCREEN)
             return displayStack[displayStack.length - 1][SCREEN_COLOR];
         return color;
@@ -1341,6 +1559,13 @@ const Game = () => {
         },
         // ACTION_SHOW_MAP
         () => {
+            const mapItem = gameData[DATA_ISLAND];
+            const playerX = mapItem[MAP_PLAYERX];
+            const playerY = mapItem[MAP_PLAYERY];
+            const mapTiles = mapItem[MAP_TILES];
+            const computerMap = [DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles];
+            console.log('showing map', { playerX, playerY });
+            displayStack.push(computerMap);
         }
     ];
     reset();
@@ -1369,6 +1594,9 @@ const draw = (time) => {
     }
     if (displayItem[DISPLAY_TYPE] === DTYPE_SCREEN) {
         drawScreen(displayItem);
+    }
+    if (displayItem[DISPLAY_TYPE] === DTYPE_COMPUTER_MAP) {
+        drawComputerMap();
     }
     requestAnimationFrame(draw);
 };
@@ -1469,6 +1697,40 @@ const drawUi = () => {
     ctx.drawImage(tiles, T_DISK * tileSize, 0, tileSize, tileSize, 0, tileSize * 8, tileSize, tileSize);
     drawText(`${playerDisks}`, playerDisks < 10 ? 0.5 : 0, 18);
 };
+const drawComputerMap = () => {
+    const mapItem = api[API_STATE]()[ST_DISPLAY_ITEM];
+    const playerX = mapItem[MAP_PLAYERX];
+    const playerY = mapItem[MAP_PLAYERX];
+    const map = mapItem[MAP_TILES];
+    for (let y = 0; y < mapSize; y++) {
+        for (let x = 0; x < mapSize; x++) {
+            const tile = map[y][x];
+            if (tile === T_SEA) {
+                ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
+            }
+            else {
+                ctx.drawImage(tiles, T_LAND * tileSize, 0, 1, 1, x, y, 1, 1);
+            }
+        }
+    }
+    for (let y = 0; y < mapSize; y++) {
+        for (let x = 0; x < mapSize; x++) {
+            const tile = map[y][x];
+            if (tile === T_HUT) {
+                ctx.drawImage(computerIcons, C_HUT * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+            }
+            if (tile >= T_RUINS && tile < T_RUINS + T_RUINS_L) {
+                ctx.drawImage(computerIcons, C_RUINS * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+            }
+            if (tile === T_SATELLITE) {
+                ctx.drawImage(computerIcons, C_SATELLITE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+            }
+            if (x === playerX && y === playerY) {
+                ctx.drawImage(computerIcons, C_PLAYER * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+            }
+        }
+    }
+};
 const keyHandlerMap = e => {
     // left
     if (e.keyCode === 65 || e.keyCode === 37) {
@@ -1492,13 +1754,16 @@ let font;
 let tiles;
 let player;
 let splash;
+let computerIcons;
 let api = Game();
 document.onkeyup = e => {
     const displayItem = api[API_STATE]()[ST_DISPLAY_ITEM];
     if (displayItem[DISPLAY_TYPE] === DTYPE_MAP) {
         keyHandlerMap(e);
     }
-    if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE || displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE) {
+    if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE ||
+        displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE ||
+        displayItem[DISPLAY_TYPE] === DTYPE_COMPUTER_MAP) {
         // space or esc or enter
         if (e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13) {
             api[API_CLOSE]();
@@ -1554,7 +1819,9 @@ const clickOrTouch = ([x, y]) => {
         }
         api[API_MOVE](x, y);
     }
-    if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE || displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE) {
+    if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE ||
+        displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE ||
+        displayItem[DISPLAY_TYPE] === DTYPE_COMPUTER_MAP) {
         api[API_CLOSE]();
     }
     if (displayItem[DISPLAY_TYPE] === DTYPE_SCREEN) {
@@ -1586,8 +1853,8 @@ c.onclick = e => {
     e.preventDefault();
     clickOrTouch([e.clientX, e.clientY]);
 };
-loadImages('f.gif', 't.gif', 'p.gif', 's.png').then(imgs => {
-    [font, tiles, player, splash] = imgs;
+loadImages('f.gif', 't.gif', 'p.gif', 's.png', 'c.gif').then(imgs => {
+    [font, tiles, player, splash, computerIcons] = imgs;
     requestAnimationFrame(draw);
 });
 };s()

@@ -1,5 +1,5 @@
 import {
-  animTime, tileSize, canvasTiles, viewTiles, centerTile, sunset, sunrise, fontSize, fontTiles
+  animTime, tileSize, canvasTiles, viewTiles, centerTile, sunset, sunrise, fontSize, fontTiles, mapSize, computerIconSize
 } from './settings'
 
 import { loadImages } from './utils'
@@ -19,11 +19,27 @@ import {
   T_CHIP,
   T_DISK,
   ST_PLAYER_CHIPS,
-  ST_PLAYER_DISKS
+  ST_PLAYER_DISKS,
+  T_BLACK,
+  T_LAND,
+  DTYPE_COMPUTER_MAP,
+  T_WATER,
+  T_SEA,
+  T_MOUNTAINS,
+  T_MOUNTAINS_L,
+  C_PLAYER,
+  T_HUT,
+  C_HUT,
+  T_RUINS,
+  T_RUINS_L,
+  C_RUINS,
+  T_SATELLITE,
+  C_SATELLITE
 } from './indices'
 
 import { Game } from './game'
-import { DisplayMap, DisplayScreen, Point } from './types'
+import { DisplayMap, DisplayScreen, Point, DisplayComputerMap } from './types'
+import { blocks } from './map';
 
 declare const c: HTMLCanvasElement
 
@@ -51,6 +67,10 @@ const draw = ( time: number ) => {
 
   if( displayItem[ DISPLAY_TYPE ] === DTYPE_SCREEN ){
     drawScreen( <DisplayScreen>displayItem )
+  }
+
+  if( displayItem[ DISPLAY_TYPE ] === DTYPE_COMPUTER_MAP ){
+    drawComputerMap()
   }
 
   requestAnimationFrame( draw )
@@ -261,6 +281,77 @@ const drawUi = () => {
   drawText( `${ playerDisks }`, playerDisks < 10 ? 0.5 : 0, 18 )
 }
 
+const drawComputerMap = () => {
+  const mapItem = <DisplayComputerMap>api[ API_STATE ]()[ ST_DISPLAY_ITEM ]
+  const playerX = mapItem[ MAP_PLAYERX ]
+  const playerY = mapItem[ MAP_PLAYERX ]
+  const map = mapItem[ MAP_TILES ]
+
+  for( let y = 0; y < mapSize; y++ ){
+    for( let x = 0; x < mapSize; x++ ){
+      const tile = map[ y ][ x ]
+      if ( tile === T_SEA ){
+        ctx.drawImage(
+          tiles,
+          T_BLACK * tileSize, 0,
+          1, 1,
+          x, y,
+          1, 1
+        )
+      } else {
+        ctx.drawImage(
+          tiles,
+          T_LAND * tileSize, 0,
+          1, 1,
+          x, y,
+          1, 1
+        )
+      }
+    }
+  }
+  for ( let y = 0; y < mapSize; y++ ) {
+    for ( let x = 0; x < mapSize; x++ ) {
+      const tile = map[ y ][ x ]
+      if ( tile === T_HUT ) {
+        ctx.drawImage(
+          computerIcons,
+          C_HUT * computerIconSize, 0,
+          computerIconSize, computerIconSize,
+          x - 3, y - 3,
+          computerIconSize, computerIconSize
+        )
+      }
+      if ( tile >= T_RUINS && tile < T_RUINS + T_RUINS_L ) {
+        ctx.drawImage(
+          computerIcons,
+          C_RUINS * computerIconSize, 0,
+          computerIconSize, computerIconSize,
+          x - 3, y - 3,
+          computerIconSize, computerIconSize
+        )
+      }
+      if ( tile === T_SATELLITE ) {
+        ctx.drawImage(
+          computerIcons,
+          C_SATELLITE * computerIconSize, 0,
+          computerIconSize, computerIconSize,
+          x - 3, y - 3,
+          computerIconSize, computerIconSize
+        )
+      }
+      if( x === playerX && y === playerY ){
+        ctx.drawImage(
+          computerIcons,
+          C_PLAYER * computerIconSize, 0,
+          computerIconSize, computerIconSize,
+          x - 3, y - 3,
+          computerIconSize, computerIconSize
+        )
+      }
+    }
+  }
+}
+
 const keyHandlerMap = e => {
   // left
   if ( e.keyCode === 65 || e.keyCode === 37 ) {
@@ -285,6 +376,7 @@ let font: HTMLImageElement
 let tiles: HTMLImageElement
 let player: HTMLImageElement
 let splash: HTMLImageElement
+let computerIcons: HTMLImageElement
 let api = Game()
 
 document.onkeyup = e => {
@@ -294,7 +386,11 @@ document.onkeyup = e => {
     keyHandlerMap( e )
   }
 
-  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE || displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ) {
+  if (
+    displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE ||
+    displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ||
+    displayItem[ DISPLAY_TYPE ] === DTYPE_COMPUTER_MAP
+  ) {
     // space or esc or enter
     if ( e.keyCode === 32 || e.keyCode === 27 || e.keyCode === 13 ) {
       api[ API_CLOSE ]()
@@ -360,7 +456,11 @@ const clickOrTouch = ( [ x, y ]: Point ) => {
     api[ API_MOVE ]( x, y )
   }
 
-  if ( displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE || displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ) {
+  if (
+    displayItem[ DISPLAY_TYPE ] === DTYPE_IMAGE ||
+    displayItem[ DISPLAY_TYPE ] === DTYPE_MESSAGE ||
+    displayItem[ DISPLAY_TYPE ] === DTYPE_COMPUTER_MAP
+  ) {
     api[ API_CLOSE ]()
   }
 
@@ -399,7 +499,7 @@ c.onclick = e => {
   clickOrTouch( [ e.clientX, e.clientY ] )
 }
 
-loadImages( 'f.gif', 't.gif', 'p.gif', 's.png' ).then( imgs => {
-  [ font, tiles, player, splash ] = imgs
+loadImages( 'f.gif', 't.gif', 'p.gif', 's.png', 'c.gif' ).then( imgs => {
+  [ font, tiles, player, splash, computerIcons ] = imgs
   requestAnimationFrame( draw )
 } )

@@ -47,7 +47,7 @@ export const gameData: DisplayItem[] = [
       'MAIN MENU',
       '',
       'ERROR:',
-      ' SYSTEM OFFLINE',
+      ' MAIN SYSTEM OFFLINE',
       '',
       'EMERGENCY OPS:',
       ''
@@ -70,12 +70,19 @@ export const gameData: DisplayItem[] = [
       '',
       'MAIN SYSTEM:',
       ' OFFLINE',
-      '',
-      ' PROBLEM:',
       '  6 BAD CHIPS',
-      '',
       'SYNTHESIZE:',
-      ' ONLINE'
+      ' ONLINE',
+      '  DB ERRORS',
+      'COMMS:',
+      ' OFFLINE',
+      '  UNKNOWN ERROR',
+      'SECURITY:',
+      ' OFFLINE',
+      '  DB ERRORS',
+      'MAP:',
+      ' OFFLINE',
+      '  DB ERRORS'
     ],
     [],
     0,
@@ -92,7 +99,7 @@ export const gameData: DisplayItem[] = [
       '',
       'SYNTHDB:',
       ' OFFLINE',
-      '',
+      '  USE RESTORE DISK',
       'POWER:',
       ' FULL',
       '',
@@ -278,8 +285,6 @@ export const gameData: DisplayItem[] = [
       '--------------------',
       'MAIN MENU',
       '',
-      'SYSTEM ONLINE',
-      '',
       'OPS:',
       ''
     ],
@@ -305,7 +310,7 @@ export const gameData: DisplayItem[] = [
       '',
       'SYNTHDB:',
       ' OFFLINE',
-      '',
+      '  USE RESTORE DISK',
       'POWER:',
       ' CHARGING',
       '',
@@ -350,5 +355,215 @@ export const gameData: DisplayItem[] = [
   [
     DTYPE_ACTION,
     ACTION_SHOW_MAP
+  ],
+
+  // DATA_C_DIAGNOSTICS_FIXED
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DIAGNOSTICS MENU',
+      '',
+      'MAIN SYSTEM:',
+      ' ONLINE',
+      'SYNTHESIZE:',
+      ' ONLINE',
+      '  DB ERRORS',
+      'COMMS:',
+      ' OFFLINE',
+      '  UNKNOWN ERROR',
+      'SECURITY:',
+      ' OFFLINE',
+      '  DB ERRORS',
+      'MAP:',
+      ' OFFLINE',
+      '  DB ERRORS'
+    ],
+    [],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_INTRO
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 1',
+      '',
+      'USER: RANGER',
+      '',
+      'Sent to investigate',
+      'ruins. Found strange',
+      'technology'
+    ],
+    [
+    ],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_PORTALS
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 2',
+      '',
+      'USER: RANGER',
+      '',
+      'Was testing strange',
+      'technology. Portals',
+      'appeared!'
+    ],
+    [
+    ],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_GHOSTS
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 3',
+      '',
+      'USER: RANGER',
+      '',
+      'Monsters coming out',
+      'of portals! Made it',
+      'back to hut. They',
+      'only come out at',
+      'night'
+    ],
+    [
+    ],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_ERRORS
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 4',
+      '',
+      'USER: RANGER',
+      '',
+      'Monsters affecting',
+      'computers. Have been',
+      'stashing items in',
+      'ruins for emergency.',
+      'Tried comms but the',
+      'satellite is offline'
+    ],
+    [
+    ],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_SHUTDOWN_PORTALS
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 5',
+      '',
+      'USER: RANGER',
+      '',
+      'Found way to use',
+      'synth to alter chip',
+      'to shut down portal',
+      'but computer went',
+      'offline! There are',
+      'more of them every',
+      'night'
+    ],
+    [
+    ],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_SECURITY
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 6',
+      '',
+      'USER: RANGER',
+      '',
+      'Got computer online.',
+      'Still has errors.',
+      'Security system',
+      'should be able to',
+      'deal with monsters',
+      'if can get it online'
+    ],
+    [
+    ],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_FIX_SATELLITE
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 7',
+      '',
+      'USER: RANGER',
+      '',
+      'Comms damaged beyond',
+      'repair but can send',
+      'a distress signal if',
+      'repair the satellite',
+      'transmitter with',
+      'some chips. Not sure',
+      'where the dish is',
+      'on island and maps',
+      'are offline'
+    ],
+    [
+    ],
+    0,
+    'a'
+  ],
+
+  // DATA_C_DB_RESCUE_TEAM
+  [
+    DTYPE_SCREEN,
+    [
+      'RSOS v3.27',
+      '--------------------',
+      'DATABASE ENTRY 8',
+      '',
+      'USER: RANGER',
+      '',
+      'No way to warn',
+      'rescue team of',
+      'monsters with comms',
+      `offline. Can't send`,
+      'distress signal',
+      'until deal with',
+      'monsters!'
+    ],
+    [
+    ],
+    0,
+    'a'
   ],
 ]

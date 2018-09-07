@@ -201,7 +201,6 @@ Player is safe in hut, can sleep to pass the night away
 - ~rename caps to chips, new graphic too~
   - Size: 8197, Remaining: 5115
 - BUG - can sometimes synth food multiple times
-
 - can use backups you find to restore various computer functions
 - backups have a type:
   - database (notes from RANGER)
@@ -220,10 +219,13 @@ Player is safe in hut, can sleep to pass the night away
 - synthdb restore:
   - more food so you don't have to do so often
   - weapon / armor so ghosts more managable
-  - ???
+  - alter chips to destroy portals
 - security restore:
   - ghost repeller around hut
-  - ???
+  - destroy monsters
+- map restore:
+  - show a grid square of map
+  - map can show location of huts, ruins, satellite etc
 - fix satellite to:
   - enable comms to call back to base and win
   - if you don't deal with ghosts first, you lose (see above)

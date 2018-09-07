@@ -33,7 +33,7 @@ html = parts[ 0 ] + '<script>' + code + '</script>' + parts[ 1 ]
 //html = html.replace( '<script src=browser.js></script>', '<script>' + code + '</script>' )
 html = html.replace( '<link rel=stylesheet href=main.css>', `<style>${ css }</style>` )
 
-const files = [ 'f.gif', 't.gif', 'p.gif', 's.png' ]
+const files = [ 'f.gif', 't.gif', 'p.gif', 's.png', 'c.gif' ]
 
 const zip = new yazl.ZipFile()
 

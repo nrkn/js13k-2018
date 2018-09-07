@@ -9,7 +9,7 @@ import { randInt, pick, shuffle } from './utils'
 import {
   drunkenWalk, randomPointInLandBorder, inWaterBorder, expandLand,
   findTilePoints, randomLandEdge, floodFill, leftMost, findPath,
-  getImmediateNeighbours, hasPoint, withinDist, nearest, unique, immediateNeighbours, allNeighbours, expanded, sortByDistance
+  getImmediateNeighbours, hasPoint, withinDist, nearest, unique, immediateNeighbours, allNeighbours, expanded, sortByDistance, dist
 } from './geometry'
 
 export const createMap = () => {
@@ -52,9 +52,9 @@ export const addBiomes = ( tiles: MapTiles ) => {
   const oneOfEachBiome = shuffle( [ 0, 3, 6, 9 ] )
   for( let y = 0; y < mapSize; y++ ){
     for( let x = 0; x < mapSize; x++ ){
-      if( tiles[ y ][ x ] === T_WATER ){        
-        const flood = floodFill( [ x, y ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )        
-        
+      if( tiles[ y ][ x ] === T_WATER ){
+        const flood = floodFill( [ x, y ], ( [ tx, ty ] ) => tiles[ ty ][ tx ] === T_WATER )
+
         let biome = 0
 
         if( flood.length > 5 ){
@@ -62,33 +62,33 @@ export const addBiomes = ( tiles: MapTiles ) => {
             biome = oneOfEachBiome[ i ]
           } else {
             biome = randInt( 10 )
-          }        
+          }
           i++
-        } 
-        
+        }
+
         // 0 1 2
         if( biome < 3 ){
           // meadow, no trees
-          drawTilesToMap( tiles, flood, () => 
-            randInt( T_GRASS_L + 1 ) + T_LAND 
+          drawTilesToMap( tiles, flood, () =>
+            randInt( T_GRASS_L + 1 ) + T_LAND
           )
-        } 
+        }
         // 3 4 5
         else if( biome < 6 ) {
           // 75% trees, 25% meadow
-          drawTilesToMap( tiles, flood, () => 
-            randInt( 3 ) ? 
+          drawTilesToMap( tiles, flood, () =>
+            randInt( 3 ) ?
               randInt( T_TREE_L ) + T_TREE :
-              randInt( T_GRASS_L + 1 ) + T_LAND 
+              randInt( T_GRASS_L + 1 ) + T_LAND
           )
-        } 
+        }
         // 6 7 8
         else if( biome < 9 ) {
           // 75% mountains, 25% meadow
-          drawTilesToMap( tiles, flood, () =>             
-            randInt( 4 ) ? 
+          drawTilesToMap( tiles, flood, () =>
+            randInt( 4 ) ?
               randInt( T_MOUNTAINS_L ) + T_MOUNTAINS :
-              randInt( T_GRASS_L + 1 ) + T_LAND 
+              randInt( T_GRASS_L + 1 ) + T_LAND
           )
         } else {
           drawTilesToMap( tiles, flood, () => T_SEA )
@@ -96,7 +96,7 @@ export const addBiomes = ( tiles: MapTiles ) => {
       }
     }
   }
-} 
+}
 
 export const decorate = ( tiles: MapTiles ) => {
   for( let y = 0; y < mapSize; y++ ){
@@ -146,8 +146,12 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
   ]
 
   while( clearways.length < clearwayCount ){
-    clearways.push( randomPointInLandBorder() )
-  } 
+    const clearway = randomPointInLandBorder()
+    const near = nearest( clearway, clearways )
+    if( dist( clearway, near ) > 10 ){
+      clearways.push( clearway )
+    }
+  }
 
   // make paths between them
   const paths: Point[] = []
@@ -165,11 +169,11 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
   }
 
   const steps = drunkenWalk( current, start, inWaterBorder, 0.33 )
-  paths.push( ...steps )  
+  paths.push( ...steps )
 
   for( let i = 0; i < 10; i++ ){
     const steps = drunkenWalk( pick( clearways ), pick( clearways ), inWaterBorder, 0.33 )
-    paths.push( ...steps )  
+    paths.push( ...steps )
   }
 
   const clearings: Point[] = []
@@ -180,7 +184,7 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
   const land = unique( [ ...clearways, ...clearings, ...paths ] )
   const expandedLand = expanded( land )
 
-  const [ playerX, playerY ] = leftMost( expandedLand )   
+  const [ playerX, playerY ] = leftMost( expandedLand )
 
   drawTilesToMap( tiles, expandedLand, () => T_LAND )
 
@@ -191,7 +195,7 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
   const waypoints = sortByDistance( [ playerX, playerY ], clearways )
 
   const playerSteps = drunkenWalk( [ playerX, playerY ], waypoints[ 0 ], inWaterBorder, 0.33 )
-  paths.push( ...playerSteps )  
+  paths.push( ...playerSteps )
 
   addBiomes( tiles )
   decorate( tiles )
@@ -201,15 +205,15 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
       return tiles[ wy ][ wx ]
     }
     return T_LAND
-  })  
+  })
   drawTilesToMap( tiles, clearings, ( [ wx, wy ] ) => {
     if ( tiles[ wy ][ wx ] >= T_SAND && tiles[ wy ][ wx ] < T_SAND + T_SAND_L ){
       return tiles[ wy ][ wx ]
     }
     return randInt( T_GRASS_L + 1 ) + T_LAND
-  })   
-  // insert various quest elements here instead of just hut  
-  
+  })
+  // insert various quest elements here instead of just hut
+
   for( let i = 0; i < waypoints.length; i++ ){
     const [ wx, wy ] = waypoints[ i ]
 
@@ -218,12 +222,12 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
     // dead ranger
     if( i === 0 ){
       tiles[ wy ][ wx ] = T_RANGER
-    } 
+    }
     // hut
     else if( i === 1 ){
       tiles[ wy ][ wx ] = T_HUT
       hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
-    } 
+    }
     // ruins
     else if( i === 2 ){
       tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
@@ -231,28 +235,28 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
     // satellite
     else if( i === waypoints.length - 1 ){
       tiles[ wy ][ wx ] = T_SATELLITE
-    } 
+    }
     // ruins, 0 1 2 3 4 5
     else if( type < 6 ){
       tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
-    }   
-    // hut 6 7 8 
+    }
+    // hut 6 7 8
     else if( type < 9 ){
       tiles[ wy ][ wx ] = T_HUT
-      hutCache[ wy * mapSize + wx ] = [ 0, 0 ]      
-    } 
+      hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
+    }
     // portal 9
     else {
       tiles[ wy ][ wx ] = T_PORTAL
-    } 
+    }
   }
- 
+
   return [ DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY ]
 }
 
 export const blocks = i =>
-  i < 2 || ( i >= T_TREE && i < T_TREE + T_TREE_L ) || i === T_HUT || 
-  i === T_BLACK || i === T_HUT_L || i === T_HUT_M || i === T_HUT_R || 
-  i === T_COMPUTER || i === T_SYNTH || i === T_BED || 
+  i < 2 || ( i >= T_TREE && i < T_TREE + T_TREE_L ) || i === T_HUT ||
+  i === T_BLACK || i === T_HUT_L || i === T_HUT_M || i === T_HUT_R ||
+  i === T_COMPUTER || i === T_SYNTH || i === T_BED ||
   ( i >= T_RUINS && i < T_RUINS + T_RUINS_L ) ||
   ( i >= T_MOUNTAINS && i < T_MOUNTAINS + T_MOUNTAINS_L )

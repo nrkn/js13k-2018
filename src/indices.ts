@@ -32,6 +32,10 @@ export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
 export const S_MONSTER = 7
+export const C_HUT = 0
+export const C_RUINS = 1
+export const C_SATELLITE = 2
+export const C_PLAYER = 3
 
 // state indices
 export const ST_PLAYER_FACING = 0
@@ -63,6 +67,7 @@ export const DTYPE_MESSAGE = 1
 export const DTYPE_SCREEN = 2
 export const DTYPE_MAP = 3
 export const DTYPE_ACTION = 4
+export const DTYPE_COMPUTER_MAP = 5
 
 // game data indices
 export const DATA_SPLASH = 0
@@ -98,6 +103,14 @@ export const DATA_COMMS = 29
 export const DATA_SECURITY = 30
 export const DATA_MAP = 31
 export const DATA_C_DIAGNOSTICS_FIXED = 32
+export const DATA_C_DB_INTRO = 33
+export const DATA_C_DB_PORTALS = 34
+export const DATA_C_DB_GHOSTS = 35
+export const DATA_C_DB_ERRORS = 36
+export const DATA_C_DB_SHUTDOWN_PORTALS = 37
+export const DATA_C_DB_SECURITY = 38
+export const DATA_C_DB_FIX_SATELLITE = 39
+export const DATA_C_DB_RESCUE_TEAM = 40
 
 // map data indices
 export const MAP_PLAYERX = 1

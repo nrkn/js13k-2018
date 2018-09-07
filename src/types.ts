@@ -43,7 +43,8 @@ export type DisplaySelection = [ string, number ]
 export type DisplayScreen = [ 2, string[], DisplaySelection[], number, GameColor ]
 export type DisplayMap = [ 3, number, number, MapTiles, MapType, number, number ]
 export type DisplayAction = [ 4, number ]
-export type DisplayItem = DisplayImage | DisplayMessage | DisplayScreen | DisplayMap | DisplayAction
+export type DisplayComputerMap = [ 5, number, number, MapTiles ]
+export type DisplayItem = DisplayImage | DisplayMessage | DisplayScreen | DisplayMap | DisplayAction | DisplayComputerMap
 
 export type Edge = 0 | 1 | 2 | 3
 
