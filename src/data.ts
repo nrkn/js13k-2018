@@ -7,8 +7,6 @@ import {
   ACTION_SHOW_SYNTH, DATA_SYNTH, DTYPE_MAP, MT_ISLAND, DATA_C_DIAGNOSTICS_FIXED, DATA_DB, DATA_COMMS, DATA_SECURITY, DATA_MAP, ACTION_SHOW_DB, ACTION_SHOW_COMMS, ACTION_SHOW_SECURITY, ACTION_SHOW_MAP, DATA_RESTORE_BACKUPS, ACTION_RESTORE_BACKUPS
 } from './indices'
 
-import { createIsland } from './map'
-
 export const gameData: DisplayItem[] = [
   // DATA_SPLASH
   [ DTYPE_IMAGE, 's.png' ],
@@ -292,7 +290,7 @@ export const gameData: DisplayItem[] = [
     [
       [ 'DIAGNOSTICS', DATA_C_DIAGNOSTICS_FIXED ],
       [ 'SYNTHESIZE', DATA_C_SYNTH ],
-      [ 'DATABASE', DATA_DB ],
+      [ 'NOTES', DATA_DB ],
       [ 'COMMS', DATA_COMMS ],
       [ 'SECURITY', DATA_SECURITY ],
       [ 'MAP', DATA_MAP ]
@@ -392,7 +390,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 1',
+      'NOTES ENTRY 1',
       '',
       'USER: RANGER',
       '',
@@ -412,7 +410,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 2',
+      'NOTES ENTRY 2',
       '',
       'USER: RANGER',
       '',
@@ -432,7 +430,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 3',
+      'NOTES ENTRY 3',
       '',
       'USER: RANGER',
       '',
@@ -454,7 +452,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 4',
+      'NOTES ENTRY 4',
       '',
       'USER: RANGER',
       '',
@@ -477,7 +475,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 5',
+      'NOTES ENTRY 5',
       '',
       'USER: RANGER',
       '',
@@ -501,7 +499,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 6',
+      'NOTES ENTRY 6',
       '',
       'USER: RANGER',
       '',
@@ -524,7 +522,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 7',
+      'NOTES ENTRY 7',
       '',
       'USER: RANGER',
       '',
@@ -550,7 +548,7 @@ export const gameData: DisplayItem[] = [
     [
       'RSOS v3.27',
       '--------------------',
-      'DATABASE ENTRY 8',
+      'NOTES ENTRY 8',
       '',
       'USER: RANGER',
       '',

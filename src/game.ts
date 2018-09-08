@@ -485,7 +485,7 @@ export const Game = () => {
         [
           'RSOS v3.27',
           '--------------------',
-          'DATABASE MENU',
+          'NOTES MENU',
         ],
         dbOptions,
         0,
