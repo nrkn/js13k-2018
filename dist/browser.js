@@ -9,7 +9,7 @@ const mapSize = tileSize * canvasTiles;
 const animTime = 500;
 const waterBorder = ~~(mapSize / 20);
 const landBorder = ~~(mapSize / 8);
-const gridTiles = 10;
+const gridTiles = 5;
 const gridSize = ~~(mapSize / gridTiles);
 const initialMonsterCount = ~~(mapSize / 3);
 const sunrise = 6;
@@ -144,6 +144,7 @@ const MAP_TILES = 3;
 const MAP_TYPE = 4;
 const MAP_STARTX = 5;
 const MAP_STARTY = 6;
+const COMPUTER_MAP_MAPDB = 4;
 // map type indices
 const MT_ISLAND = 0;
 const MT_HUT = 1;
@@ -1207,8 +1208,14 @@ const Game = () => {
         monsters = [];
         seenRangerMessage = 0;
         madeFoodToday = 0;
-        notesDb = [];
+        notesDb = [DATA_C_DB_INTRO];
         mapDb = [];
+        const mapItem = gameData[DATA_ISLAND];
+        const playerX = mapItem[MAP_PLAYERX];
+        const playerY = mapItem[MAP_PLAYERY];
+        const gridX = ~~(playerX / gridSize);
+        const gridY = ~~(playerY / gridSize);
+        mapDb[gridY * gridTiles + gridX] = 1;
         createMonsters();
     };
     const currentColor = () => {
@@ -1597,24 +1604,50 @@ const Game = () => {
             const playerX = mapItem[MAP_PLAYERX];
             const playerY = mapItem[MAP_PLAYERY];
             const mapTiles = mapItem[MAP_TILES];
-            const computerMap = [DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles];
+            const computerMap = [DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles, mapDb];
             console.log('showing map', { playerX, playerY });
             displayStack.push(computerMap);
         },
         // ACTION_RESTORE_BACKUPS
         () => {
             playerDisks--;
-            const nextNoteDb = notesDb.length + DATA_C_DB_INTRO;
-            if (nextNoteDb < DATA_RESTORE_BACKUPS) {
-                notesDb.push(nextNoteDb);
-                displayStack.push([DTYPE_MESSAGE, [
-                        'Recovered 1 database'
-                    ]]);
+            const randItem = randInt(2);
+            // note
+            if (randItem < 1) {
+                const nextNoteDb = notesDb.length + DATA_C_DB_INTRO;
+                if (nextNoteDb < DATA_RESTORE_BACKUPS) {
+                    notesDb.push(nextNoteDb);
+                    displayStack.push([DTYPE_MESSAGE, [
+                            'Recovered 1 note',
+                            'database entry'
+                        ]]);
+                }
+                else {
+                    displayStack.push([DTYPE_MESSAGE, [
+                            'Could not read disk,',
+                            'try again'
+                        ]]);
+                    playerDisks++;
+                }
             }
+            // map tile
             else {
-                displayStack.push([DTYPE_MESSAGE, [
-                        'Disk corrupt'
-                    ]]);
+                let gridX = randInt(gridTiles);
+                let gridY = randInt(gridTiles);
+                if (!mapDb[gridY * gridTiles + gridX]) {
+                    mapDb[gridY * gridTiles + gridX] = 1;
+                    displayStack.push([DTYPE_MESSAGE, [
+                            'Recovered 1 map',
+                            'database entry'
+                        ]]);
+                }
+                else {
+                    displayStack.push([DTYPE_MESSAGE, [
+                            'Could not read disk,',
+                            'try again'
+                        ]]);
+                    playerDisks++;
+                }
             }
         }
     ];
@@ -1752,33 +1785,53 @@ const drawComputerMap = () => {
     const playerX = mapItem[MAP_PLAYERX];
     const playerY = mapItem[MAP_PLAYERX];
     const map = mapItem[MAP_TILES];
+    const mapDb = mapItem[COMPUTER_MAP_MAPDB];
     for (let y = 0; y < mapSize; y++) {
         for (let x = 0; x < mapSize; x++) {
+            const gridX = ~~(x / gridSize);
+            const gridY = ~~(y / gridSize);
             const tile = map[y][x];
-            if (tile === T_SEA) {
-                ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
+            if (mapDb[gridY * gridTiles + gridX]) {
+                if (tile === T_SEA) {
+                    ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
+                }
+                else {
+                    ctx.drawImage(tiles, T_LAND * tileSize, 0, 1, 1, x, y, 1, 1);
+                }
             }
             else {
-                ctx.drawImage(tiles, T_LAND * tileSize, 0, 1, 1, x, y, 1, 1);
+                if (x > fontSize && y > fontSize && ((x % 2 && !(y % 2)) || (!(x % 2) && y % 2))) {
+                    ctx.drawImage(tiles, T_LAND * tileSize, 0, 1, 1, x, y, 1, 1);
+                }
             }
         }
     }
     for (let y = 0; y < mapSize; y++) {
         for (let x = 0; x < mapSize; x++) {
+            const gridX = ~~(x / gridSize);
+            const gridY = ~~(y / gridSize);
             const tile = map[y][x];
-            if (tile === T_HUT) {
-                ctx.drawImage(computerIcons, C_HUT * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
-            }
-            if (tile >= T_RUINS && tile < T_RUINS + T_RUINS_L) {
-                ctx.drawImage(computerIcons, C_RUINS * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
-            }
-            if (tile === T_SATELLITE) {
-                ctx.drawImage(computerIcons, C_SATELLITE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
-            }
-            if (x === playerX && y === playerY) {
-                ctx.drawImage(computerIcons, C_PLAYER * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+            if (mapDb[gridY * gridTiles + gridX]) {
+                if (tile === T_HUT) {
+                    ctx.drawImage(computerIcons, C_HUT * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                }
+                if (tile >= T_RUINS && tile < T_RUINS + T_RUINS_L) {
+                    ctx.drawImage(computerIcons, C_RUINS * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                }
+                if (tile === T_SATELLITE) {
+                    ctx.drawImage(computerIcons, C_SATELLITE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                }
+                if (x === playerX && y === playerY) {
+                    ctx.drawImage(computerIcons, C_PLAYER * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                }
             }
         }
+    }
+    for (let y = 0; y < gridSize; y++) {
+        ctx.drawImage(font, (16 + y) * fontSize, 0, fontSize, fontSize, 0, y * gridSize + ~~(gridSize / 2), fontSize, fontSize);
+    }
+    for (let x = 0; x < gridSize; x++) {
+        ctx.drawImage(font, (33 + x) * fontSize, 0, fontSize, fontSize, x * gridSize + ~~(gridSize / 2), 0, fontSize, fontSize);
     }
 };
 const keyHandlerMap = e => {

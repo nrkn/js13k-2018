@@ -3,6 +3,7 @@ export type MapRow = number[]
 export type MapTiles = MapRow[]
 export type Point = [ number, number ]
 export type FloodPoint = [ number, number, number ]
+export type MapDb = number[]
 
 export interface PointMap {
   [ pointKey: string ]: number
@@ -43,7 +44,7 @@ export type DisplaySelection = [ string, number ]
 export type DisplayScreen = [ 2, string[], DisplaySelection[], number, GameColor ]
 export type DisplayMap = [ 3, number, number, MapTiles, MapType, number, number ]
 export type DisplayAction = [ 4, number ]
-export type DisplayComputerMap = [ 5, number, number, MapTiles ]
+export type DisplayComputerMap = [ 5, number, number, MapTiles, MapDb ]
 export type DisplayItem = DisplayImage | DisplayMessage | DisplayScreen | DisplayMap | DisplayAction | DisplayComputerMap
 
 export type Edge = 0 | 1 | 2 | 3

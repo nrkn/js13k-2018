@@ -1,5 +1,5 @@
 import {
-  animTime, tileSize, canvasTiles, viewTiles, centerTile, sunset, sunrise, fontSize, fontTiles, mapSize, computerIconSize
+  animTime, tileSize, canvasTiles, viewTiles, centerTile, sunset, sunrise, fontSize, fontTiles, mapSize, computerIconSize, gridSize, gridTiles
 } from './settings'
 
 import { loadImages } from './utils'
@@ -34,7 +34,8 @@ import {
   T_RUINS_L,
   C_RUINS,
   T_SATELLITE,
-  C_SATELLITE
+  C_SATELLITE,
+  COMPUTER_MAP_MAPDB
 } from './indices'
 
 import { Game } from './game'
@@ -286,69 +287,106 @@ const drawComputerMap = () => {
   const playerX = mapItem[ MAP_PLAYERX ]
   const playerY = mapItem[ MAP_PLAYERX ]
   const map = mapItem[ MAP_TILES ]
+  const mapDb = mapItem[ COMPUTER_MAP_MAPDB ]
 
   for( let y = 0; y < mapSize; y++ ){
     for( let x = 0; x < mapSize; x++ ){
+      const gridX = ~~( x / gridSize )
+      const gridY = ~~( y / gridSize )
       const tile = map[ y ][ x ]
-      if ( tile === T_SEA ){
-        ctx.drawImage(
-          tiles,
-          T_BLACK * tileSize, 0,
-          1, 1,
-          x, y,
-          1, 1
-        )
+      if( mapDb[ gridY * gridTiles + gridX ] ){
+        if ( tile === T_SEA ){
+          ctx.drawImage(
+            tiles,
+            T_BLACK * tileSize, 0,
+            1, 1,
+            x, y,
+            1, 1
+          )
+        } else {
+          ctx.drawImage(
+            tiles,
+            T_LAND * tileSize, 0,
+            1, 1,
+            x, y,
+            1, 1
+          )
+        } 
       } else {
-        ctx.drawImage(
-          tiles,
-          T_LAND * tileSize, 0,
-          1, 1,
-          x, y,
-          1, 1
-        )
+        if( x > fontSize && y > fontSize && ( ( x % 2 && !( y % 2 ) ) || ( !( x % 2 ) && y % 2 ) ) ){
+          ctx.drawImage(
+            tiles,
+            T_LAND * tileSize, 0,
+            1, 1,
+            x, y,
+            1, 1
+          )
+        }
       }
     }
   }
   for ( let y = 0; y < mapSize; y++ ) {
     for ( let x = 0; x < mapSize; x++ ) {
+      const gridX = ~~( x / gridSize )
+      const gridY = ~~( y / gridSize )
       const tile = map[ y ][ x ]
-      if ( tile === T_HUT ) {
-        ctx.drawImage(
-          computerIcons,
-          C_HUT * computerIconSize, 0,
-          computerIconSize, computerIconSize,
-          x - 3, y - 3,
-          computerIconSize, computerIconSize
-        )
-      }
-      if ( tile >= T_RUINS && tile < T_RUINS + T_RUINS_L ) {
-        ctx.drawImage(
-          computerIcons,
-          C_RUINS * computerIconSize, 0,
-          computerIconSize, computerIconSize,
-          x - 3, y - 3,
-          computerIconSize, computerIconSize
-        )
-      }
-      if ( tile === T_SATELLITE ) {
-        ctx.drawImage(
-          computerIcons,
-          C_SATELLITE * computerIconSize, 0,
-          computerIconSize, computerIconSize,
-          x - 3, y - 3,
-          computerIconSize, computerIconSize
-        )
-      }
-      if( x === playerX && y === playerY ){
-        ctx.drawImage(
-          computerIcons,
-          C_PLAYER * computerIconSize, 0,
-          computerIconSize, computerIconSize,
-          x - 3, y - 3,
-          computerIconSize, computerIconSize
-        )
+      if( mapDb[ gridY * gridTiles + gridX ] ){
+        if ( tile === T_HUT ) {
+          ctx.drawImage(
+            computerIcons,
+            C_HUT * computerIconSize, 0,
+            computerIconSize, computerIconSize,
+            x - 3, y - 3,
+            computerIconSize, computerIconSize
+          )
+        }
+        if ( tile >= T_RUINS && tile < T_RUINS + T_RUINS_L ) {
+          ctx.drawImage(
+            computerIcons,
+            C_RUINS * computerIconSize, 0,
+            computerIconSize, computerIconSize,
+            x - 3, y - 3,
+            computerIconSize, computerIconSize
+          )
+        }
+        if ( tile === T_SATELLITE ) {
+          ctx.drawImage(
+            computerIcons,
+            C_SATELLITE * computerIconSize, 0,
+            computerIconSize, computerIconSize,
+            x - 3, y - 3,
+            computerIconSize, computerIconSize
+          )
+        }
+        if( x === playerX && y === playerY ){
+          ctx.drawImage(
+            computerIcons,
+            C_PLAYER * computerIconSize, 0,
+            computerIconSize, computerIconSize,
+            x - 3, y - 3,
+            computerIconSize, computerIconSize
+          )
+        }
       }
     }
+  }
+  for( let y = 0; y < gridSize; y++ ){
+    ctx.drawImage(
+      font,
+      ( 16 + y ) * fontSize, 0,
+      fontSize, fontSize,
+      0, y * gridSize + ~~( gridSize / 2 ), 
+      fontSize, fontSize
+    )
+  }
+  for( let x = 0; x < gridSize; x++ ){
+    ctx.drawImage(
+      font,
+      ( 33 + x ) * fontSize, 0,
+      fontSize, fontSize,
+      x * gridSize + ~~( gridSize / 2 ), 0,  
+      fontSize, fontSize
+    )   
   }
 }
 

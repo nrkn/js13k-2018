@@ -120,6 +120,7 @@ export const MAP_TILES = 3
 export const MAP_TYPE = 4
 export const MAP_STARTX = 5
 export const MAP_STARTY = 6
+export const COMPUTER_MAP_MAPDB = 4
 
 // map type indices
 export const MT_ISLAND = 0

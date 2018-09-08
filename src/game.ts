@@ -16,7 +16,7 @@ import {
 } from './types'
 
 import { inBounds, hasPoint, towards, allNeighbours } from './geometry'
-import { initialMonsterCount, mapSize, sunrise, sunset } from './settings'
+import { initialMonsterCount, mapSize, sunrise, sunset, gridSize, gridTiles } from './settings'
 import { randInt } from './utils'
 import { gameData } from './data';
 
@@ -63,8 +63,15 @@ export const Game = () => {
     monsters = []
     seenRangerMessage = 0
     madeFoodToday = 0
-    notesDb = []
+    notesDb = [ DATA_C_DB_INTRO ]
     mapDb = []
+
+    const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+    const playerX = mapItem[ MAP_PLAYERX ]
+    const playerY = mapItem[ MAP_PLAYERY ]        
+    const gridX = ~~( playerX / gridSize )
+    const gridY = ~~( playerY / gridSize )
+    mapDb[ gridY * gridTiles + gridX ] = 1
 
     createMonsters()
   }
@@ -500,7 +507,7 @@ export const Game = () => {
       const playerX = mapItem[ MAP_PLAYERX ]
       const playerY = mapItem[ MAP_PLAYERY ]
       const mapTiles = mapItem[ MAP_TILES ]
-      const computerMap: DisplayComputerMap = [ DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles ]
+      const computerMap: DisplayComputerMap = [ DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles, mapDb ]
 
       console.log( 'showing map', { playerX, playerY } )
 
@@ -510,17 +517,44 @@ export const Game = () => {
     () => {
       playerDisks--
 
-      const nextNoteDb = notesDb.length + DATA_C_DB_INTRO
+      const randItem = randInt( 2 )
+      
+      // note
+      if( randItem < 1 ){
+        const nextNoteDb = notesDb.length + DATA_C_DB_INTRO
 
-      if( nextNoteDb < DATA_RESTORE_BACKUPS ){
-        notesDb.push( nextNoteDb )
-        displayStack.push( [ DTYPE_MESSAGE, [ 
-          'Recovered 1 database'
-        ] ] )
-      } else {
-        displayStack.push( [ DTYPE_MESSAGE, [ 
-          'Disk corrupt'
-        ] ] )
+        if( nextNoteDb < DATA_RESTORE_BACKUPS ){
+          notesDb.push( nextNoteDb )
+          displayStack.push( [ DTYPE_MESSAGE, [ 
+            'Recovered 1 note', 
+            'database entry'
+          ] ] )
+        } else {
+          displayStack.push( [ DTYPE_MESSAGE, [ 
+            'Could not read disk,',
+            'try again'
+          ] ] )
+          playerDisks++
+        } 
+      } 
+      // map tile
+      else {
+        let gridX = randInt( gridTiles )
+        let gridY = randInt( gridTiles )
+
+        if( !mapDb[ gridY * gridTiles + gridX ] ){
+          mapDb[ gridY * gridTiles + gridX ] = 1
+          displayStack.push( [ DTYPE_MESSAGE, [ 
+            'Recovered 1 map', 
+            'database entry'
+          ] ] )
+        } else {
+          displayStack.push( [ DTYPE_MESSAGE, [ 
+            'Could not read disk,',
+            'try again'
+          ] ] )
+          playerDisks++
+        } 
       }
     }
   ]

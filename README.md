@@ -212,6 +212,13 @@ Player is safe in hut, can sleep to pass the night away
       ~else the rescue team will get wiped out and you lose~
   - ~basic map functionality~
   - Size: 9328, Remaining: 3984
+- ~map restore:~
+  - ~show a grid square of map~
+  - ~map can show location of huts, ruins, satellite etc~
+  - Size: 9511, Remaining: 3801
+- instead of ruins taking one hour and sometimes find nothing, distribute 
+  needed amount of items + some padding amongs all ruins, and you always find
+  something until ruins are empty
 - backups have a type:
   - database (notes from RANGER)
   - synthdb (more things you can synth)
@@ -226,9 +233,6 @@ Player is safe in hut, can sleep to pass the night away
 - security restore:
   - ghost repeller around hut
   - destroy monsters
-- map restore:
-  - show a grid square of map
-  - map can show location of huts, ruins, satellite etc
 - fix satellite to:
   - enable comms to call back to base and win
   - if you don't deal with ghosts first, you lose (see above)
