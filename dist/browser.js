@@ -909,7 +909,7 @@ const gameData = [
         [
             ['DIAGNOSTICS', DATA_C_DIAGNOSTICS_FIXED],
             ['SYNTHESIZE', DATA_C_SYNTH],
-            ['DATABASE', DATA_DB],
+            ['NOTES', DATA_DB],
             ['COMMS', DATA_COMMS],
             ['SECURITY', DATA_SECURITY],
             ['MAP', DATA_MAP]
@@ -999,7 +999,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 1',
+            'NOTES ENTRY 1',
             '',
             'USER: RANGER',
             '',
@@ -1017,7 +1017,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 2',
+            'NOTES ENTRY 2',
             '',
             'USER: RANGER',
             '',
@@ -1035,7 +1035,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 3',
+            'NOTES ENTRY 3',
             '',
             'USER: RANGER',
             '',
@@ -1055,7 +1055,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 4',
+            'NOTES ENTRY 4',
             '',
             'USER: RANGER',
             '',
@@ -1076,7 +1076,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 5',
+            'NOTES ENTRY 5',
             '',
             'USER: RANGER',
             '',
@@ -1098,7 +1098,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 6',
+            'NOTES ENTRY 6',
             '',
             'USER: RANGER',
             '',
@@ -1119,7 +1119,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 7',
+            'NOTES ENTRY 7',
             '',
             'USER: RANGER',
             '',
@@ -1143,7 +1143,7 @@ const gameData = [
         [
             'RSOS v3.27',
             '--------------------',
-            'DATABASE ENTRY 8',
+            'NOTES ENTRY 8',
             '',
             'USER: RANGER',
             '',
@@ -1584,7 +1584,7 @@ const Game = () => {
                 [
                     'RSOS v3.27',
                     '--------------------',
-                    'DATABASE MENU',
+                    'NOTES MENU',
                 ],
                 dbOptions,
                 0,
