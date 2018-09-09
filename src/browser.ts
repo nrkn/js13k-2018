@@ -301,7 +301,7 @@ const drawComputerMap = () => {
   const mapItem = <DisplayComputerMap>api[ API_STATE ]()[ ST_DISPLAY_ITEM ]
   const seen = api[ API_STATE ]()[ ST_SEEN ]
   const playerX = mapItem[ MAP_PLAYERX ]
-  const playerY = mapItem[ MAP_PLAYERX ]
+  const playerY = mapItem[ MAP_PLAYERY ]
   const map = mapItem[ MAP_TILES ]
   const mapDb = mapItem[ COMPUTER_MAP_MAPDB ]
 
