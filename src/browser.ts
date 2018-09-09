@@ -39,7 +39,9 @@ import {
   ST_SEEN,
   T_FOG,
   T_SAND,
-  T_SAND_L
+  T_SAND_L,
+  T_PORTAL,
+  C_PORTAL
 } from './indices'
 
 import { Game } from './game'
@@ -370,6 +372,15 @@ const drawComputerMap = () => {
           ctx.drawImage(
             computerIcons,
             C_SATELLITE * computerIconSize, 0,
+            computerIconSize, computerIconSize,
+            x - 3, y - 3,
+            computerIconSize, computerIconSize
+          )
+        }
+        if ( tile === T_PORTAL ) {
+          ctx.drawImage(
+            computerIcons,
+            C_PORTAL * computerIconSize, 0,
             computerIconSize, computerIconSize,
             x - 3, y - 3,
             computerIconSize, computerIconSize

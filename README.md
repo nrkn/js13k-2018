@@ -221,10 +221,11 @@ Player is safe in hut, can sleep to pass the night away
   - ~BUG - currentRuins is undefined~
   - ~fog of war and/or minimap~
   - Size: 10560, Remaining: 2752
-- BUG - player position on map wrong
+- ~BUG - player position on map wrong~
   - Size: 11313, Remaining: 1999
+- ~Show portals on map~
+  - Size: 11271, Remaining: 2041  
 - BUG - can sometimes synth food multiple times
-
 - BUG - diagnostics should be up to date
 - backups have a type:
   - database (notes from RANGER)

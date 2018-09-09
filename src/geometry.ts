@@ -69,8 +69,6 @@ export const unique = ( points: Point[] ) => {
       cache[ y * mapSize + x ] = 1
     }
   }
-
-  console.log( 'unique', points.length, result.length  )
   
   return result
 }

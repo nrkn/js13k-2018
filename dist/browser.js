@@ -66,6 +66,7 @@ const C_HUT = 0;
 const C_RUINS = 1;
 const C_SATELLITE = 2;
 const C_PLAYER = 3;
+const C_PORTAL = 4;
 // state indices
 const ST_PLAYER_FACING = 0;
 const ST_PLAYER_FOOD = 1;
@@ -249,7 +250,6 @@ const unique = (points) => {
             cache[y * mapSize + x] = 1;
         }
     }
-    console.log('unique', points.length, result.length);
     return result;
 };
 const floodFill = ([x, y], canFlood) => {
@@ -1655,7 +1655,6 @@ const Game = () => {
             const playerY = mapItem[MAP_PLAYERY];
             const mapTiles = mapItem[MAP_TILES];
             const computerMap = [DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles, mapDb];
-            console.log('showing map', { playerX, playerY });
             displayStack.push(computerMap);
         },
         // ACTION_RESTORE_BACKUPS
@@ -1872,6 +1871,9 @@ const drawComputerMap = () => {
                 }
                 if (tile === T_SATELLITE) {
                     ctx.drawImage(computerIcons, C_SATELLITE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                }
+                if (tile === T_PORTAL) {
+                    ctx.drawImage(computerIcons, C_PORTAL * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                 }
                 if (x === playerX && y === playerY) {
                     ctx.drawImage(computerIcons, C_PLAYER * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);

@@ -37,6 +37,7 @@ export const C_HUT = 0
 export const C_RUINS = 1
 export const C_SATELLITE = 2
 export const C_PLAYER = 3
+export const C_PORTAL = 4
 
 // state indices
 export const ST_PLAYER_FACING = 0

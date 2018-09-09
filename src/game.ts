@@ -555,8 +555,6 @@ export const Game = () => {
       const mapTiles = mapItem[ MAP_TILES ]
       const computerMap: DisplayComputerMap = [ DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles, mapDb ]
 
-      console.log( 'showing map', { playerX, playerY } )
-
       displayStack.push( computerMap )
     },
     // ACTION_RESTORE_BACKUPS
