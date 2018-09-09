@@ -200,7 +200,6 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 8917, Remaining: 4395
 - ~rename caps to chips, new graphic too~
   - Size: 8197, Remaining: 5115
-- BUG - can sometimes synth food multiple times
 - ~can use backups you find to restore various computer functions~
   - ~database restore:~
     - ~intro to story from RANGER - "was sent to investigate ruins - found strange~
@@ -216,9 +215,15 @@ Player is safe in hut, can sleep to pass the night away
   - ~show a grid square of map~
   - ~map can show location of huts, ruins, satellite etc~
   - Size: 9511, Remaining: 3801
-- instead of ruins taking one hour and sometimes find nothing, distribute 
-  needed amount of items + some padding amongs all ruins, and you always find
-  something until ruins are empty
+- ~instead of ruins taking one hour and sometimes find nothing, distribute~
+  ~needed amount of items + some padding amongs all ruins, and you always find~
+  ~something until ruins are empty~
+  - ~BUG - currentRuins is undefined~
+  - ~fog of war and/or minimap~
+  - Size: 10560, Remaining: 2752
+- BUG - can sometimes synth food multiple times
+- BUG - player position on map wrong
+- BUG - diagnostics should be up to date
 - backups have a type:
   - database (notes from RANGER)
   - synthdb (more things you can synth)
@@ -242,10 +247,7 @@ Player is safe in hut, can sleep to pass the night away
 - portal animations at night, clear at day
 - satellite, offline message when bump until working
 - satellite animation when working
-- have safe ruins and dangerous ruins, let player know they look dodgy.
-  dangerous ruins have higher reward. consider making limit to search per day
 - win screen
-- fog of war and/or minimap
 - if room left, consider adding transitional tiles to make slightly less blocky
 - consider adding padding to SCREENs, will look better (but more math)
 - gamepad support if room left

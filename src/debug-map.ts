@@ -8,7 +8,7 @@ import {
 } from './indices'
 
 const start = process.hrtime()
-const mapData = createIsland([])
+const mapData = createIsland([[]],[[]])
 const end = process.hrtime( start )
 
 console.log( `time: ${ end[ 0 ] }s ${ end[ 1] / 1000000 }ms` )

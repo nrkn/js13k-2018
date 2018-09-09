@@ -22,7 +22,8 @@ export type GameState = [
   Monster[],
   number,
   number,
-  number
+  number,
+  Seen
 ]
 
 export type GameAPI = [
@@ -56,3 +57,14 @@ export type Monster = [ number, number, number, number ]
 export type BoolAsNumber = 0 | 1
 
 export type HutState = [ BoolAsNumber, BoolAsNumber ]
+
+// 0,0 is never needed
+export type HutCache = [ Point[], ...HutState[] ]
+
+export type RuinItems = RuinItem[]
+
+export type RuinCache = [ Point[], ...RuinItems[] ]
+
+export type RuinItem = 0 | 1 | 2 | 3
+
+export type Seen = number[]

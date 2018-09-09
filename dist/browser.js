@@ -11,7 +11,7 @@ const waterBorder = ~~(mapSize / 20);
 const landBorder = ~~(mapSize / 8);
 const gridTiles = 5;
 const gridSize = ~~(mapSize / gridTiles);
-const initialMonsterCount = ~~(mapSize / 3);
+const initialMonsterCount = ~~(mapSize / 20);
 const sunrise = 6;
 const sunset = 18;
 
@@ -57,6 +57,7 @@ const T_RANGER = 38;
 const T_KEY = 39;
 const T_DISK = 40;
 const T_CHIP = 41;
+const T_FOG = 42;
 const S_SKELETON = 4;
 const S_BOAT_LEFT = 5;
 const S_BOAT_RIGHT = 6;
@@ -78,6 +79,7 @@ const ST_MONSTERS = 8;
 const ST_PLAYER_KEYS = 9;
 const ST_PLAYER_CHIPS = 10;
 const ST_PLAYER_DISKS = 11;
+const ST_SEEN = 12;
 // api indices
 const API_STATE = 0;
 const API_RESET = 1;
@@ -190,6 +192,11 @@ const ACTION_RESTORE_BACKUPS = 11;
 // hut state
 const HUT_UNLOCKED = 0;
 const HUT_COMPUTER_FIXED = 1;
+// ruin item
+const ITEM_KEY = 0;
+const ITEM_CHIP = 1;
+const ITEM_DISK = 2;
+const ITEM_FOOD = 3;
 
 const delta = (i, j) => Math.max(i, j) - Math.min(i, j);
 const immediateNeighbours = ([x, y]) => [
@@ -541,7 +548,7 @@ const createHut = () => {
     tiles[landBorder + 1][landBorder] = T_HUT_R;
     return [DTYPE_MAP, landBorder, landBorder, tiles, MT_HUT, landBorder, landBorder];
 };
-const createIsland = (hutCache) => {
+const createIsland = (hutCache, ruinCache) => {
     const tiles = createMap();
     // choose clearways (waypoints)
     const clearwayCount = randInt(10, 40);
@@ -614,10 +621,13 @@ const createIsland = (hutCache) => {
         else if (i === 1) {
             tiles[wy][wx] = T_HUT;
             hutCache[wy * mapSize + wx] = [0, 0];
+            hutCache[0].push([wx, wy]);
         }
         // ruins
         else if (i === 2) {
             tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
+            ruinCache[wy * mapSize + wx] = [];
+            ruinCache[0].push([wx, wy]);
         }
         // satellite
         else if (i === waypoints.length - 1) {
@@ -626,11 +636,14 @@ const createIsland = (hutCache) => {
         // ruins, 0 1 2 3 4 5
         else if (type < 6) {
             tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
+            ruinCache[wy * mapSize + wx] = [];
+            ruinCache[0].push([wx, wy]);
         }
         // hut 6 7 8
         else if (type < 9) {
             tiles[wy][wx] = T_HUT;
             hutCache[wy * mapSize + wx] = [0, 0];
+            hutCache[0].push([wx, wy]);
         }
         // portal 9
         else {
@@ -1169,6 +1182,7 @@ const gameData = [
 const Game = () => {
     // state
     let hutCache;
+    let ruinCache;
     let playerFacing;
     let playerFood;
     let playerHealth;
@@ -1181,24 +1195,27 @@ const Game = () => {
     let color;
     let displayStack;
     let monsters;
+    let seen;
     // internal state
     let seenRangerMessage;
     let currentHut;
+    let currentRuins;
     let madeFoodToday;
     let notesDb;
     let mapDb;
     const reset = () => {
-        hutCache = [];
+        hutCache = [[]];
+        ruinCache = [[]];
         playerFacing = 0;
         playerFood = 20;
-        playerHealth = 20;
-        playerMaxHealth = 20;
+        playerHealth = 99;
+        playerMaxHealth = 99;
         playerKeys = 0;
         playerChips = 5;
         playerDisks = 0;
         hours = 17;
         minutes = 55;
-        gameData[DATA_ISLAND] = createIsland(hutCache);
+        gameData[DATA_ISLAND] = createIsland(hutCache, ruinCache);
         displayStack = [
             gameData[DATA_ISLAND],
             gameData[DATA_INTRO],
@@ -1210,6 +1227,7 @@ const Game = () => {
         madeFoodToday = 0;
         notesDb = [DATA_C_DB_INTRO];
         mapDb = [];
+        seen = [];
         const mapItem = gameData[DATA_ISLAND];
         const playerX = mapItem[MAP_PLAYERX];
         const playerY = mapItem[MAP_PLAYERY];
@@ -1217,6 +1235,8 @@ const Game = () => {
         const gridY = ~~(playerY / gridSize);
         mapDb[gridY * gridTiles + gridX] = 1;
         createMonsters();
+        distributeItems();
+        updateSeen(mapItem);
     };
     const currentColor = () => {
         if (displayStack[displayStack.length - 1][DISPLAY_TYPE] === DTYPE_IMAGE)
@@ -1234,7 +1254,8 @@ const Game = () => {
         currentColor(),
         displayStack[displayStack.length - 1],
         monsters,
-        playerKeys, playerChips, playerDisks
+        playerKeys, playerChips, playerDisks,
+        seen
     ];
     const close = () => {
         // can use this to toggle inventory for map
@@ -1314,6 +1335,33 @@ const Game = () => {
             }
         }
     };
+    const distributeItems = () => {
+        const numHuts = hutCache[0].length;
+        const numKeyCards = ~~(numHuts * 2);
+        const numChips = ~~(numHuts * 9);
+        const numBackups = 50; // guess
+        const numFood = ~~(numHuts * 2); // also guess
+        let items = [];
+        for (let i = 0; i < numKeyCards; i++) {
+            items.push(ITEM_KEY);
+        }
+        for (let i = 0; i < numChips; i++) {
+            items.push(ITEM_CHIP);
+        }
+        for (let i = 0; i < numBackups; i++) {
+            items.push(ITEM_DISK);
+        }
+        for (let i = 0; i < numFood; i++) {
+            items.push(ITEM_FOOD);
+        }
+        items = shuffle(items);
+        while (items.length) {
+            const item = items.pop();
+            const [rx, ry] = pick(ruinCache[0]);
+            const ruinItems = ruinCache[ry * mapSize + rx];
+            ruinItems.push(item);
+        }
+    };
     const incTime = (sleeping = 0) => {
         if (playerHealth < 1) {
             displayStack = [gameData[DATA_DEAD]];
@@ -1360,7 +1408,9 @@ const Game = () => {
                     if (mapTile === T_PORTAL) {
                         const neighbours = allNeighbours([x, y]);
                         for (let i = 0; i < neighbours.length; i++) {
-                            createMonster(neighbours[i]);
+                            if (!randInt(3)) {
+                                createMonster(neighbours[i]);
+                            }
                         }
                     }
                 }
@@ -1369,6 +1419,21 @@ const Game = () => {
         updateMonsters();
     };
     const timeStr = () => `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+    const updateSeen = (map) => {
+        if (map[MAP_TYPE] === MT_ISLAND) {
+            const px = map[MAP_PLAYERX];
+            const py = map[MAP_PLAYERY];
+            for (let y = -centerTile; y < centerTile; y++) {
+                for (let x = -centerTile; x < centerTile; x++) {
+                    const cx = px + x;
+                    const cy = py + y;
+                    if (dist([px, py], [cx, cy]) < centerTile) {
+                        seen[cy * mapSize + cx] = 1;
+                    }
+                }
+            }
+        }
+    };
     const move = (x, y) => {
         const map = displayStack[displayStack.length - 1];
         if (map[0] !== DTYPE_MAP)
@@ -1397,6 +1462,7 @@ const Game = () => {
             map[MAP_PLAYERX] = x;
             map[MAP_PLAYERY] = y;
         }
+        updateSeen(map);
         // bumps
         if (map[MAP_TYPE] === MT_ISLAND) {
             if (map[MAP_TILES][y][x] === T_HUT) {
@@ -1427,6 +1493,7 @@ const Game = () => {
                 playerKeys++;
             }
             if (map[MAP_TILES][y][x] >= T_RUINS && map[MAP_TILES][y][x] < T_RUINS + T_RUINS_L) {
+                currentRuins = ruinCache[y * mapSize + x];
                 displayStack.push(gameData[DATA_RUINS]);
             }
         }
@@ -1499,48 +1566,31 @@ const Game = () => {
         },
         // ACTION_SEARCH
         () => {
-            for (let i = 0; i < 60; i++) {
-                incTime();
-            }
-            if (playerHealth > 0) {
-                const found = randInt(16);
-                // food 0 1
-                if (found < 2) {
+            if (currentRuins.length) {
+                for (let i = 0; i < 60; i++) {
+                    incTime();
+                }
+                const item = currentRuins.pop();
+                if (item === ITEM_FOOD) {
                     const food = randInt(3) + 1;
                     displayStack.push([DTYPE_MESSAGE, [`Found ${food} food`]]);
                     playerFood += food;
                 }
-                // keycard 2 3
-                else if (found < 4) {
+                else if (item === ITEM_KEY) {
                     displayStack.push([DTYPE_MESSAGE, ['Found keycard']]);
                     playerKeys++;
                 }
-                // chip 4 5
-                else if (found < 6) {
+                else if (item === ITEM_CHIP) {
                     displayStack.push([DTYPE_MESSAGE, ['Found chip']]);
                     playerChips++;
                 }
-                // disk 6 7
-                else if (found < 8) {
+                else if (item === ITEM_DISK) {
                     displayStack.push([DTYPE_MESSAGE, ['Found backup']]);
                     playerDisks++;
                 }
-                // got hurt 8
-                else if (found < 9) {
-                    displayStack.push([
-                        DTYPE_MESSAGE,
-                        [
-                            'Rocks fell!',
-                            '',
-                            'Lost health'
-                        ]
-                    ]);
-                    playerHealth--;
-                }
-                // nothing
-                else {
-                    displayStack.push([DTYPE_MESSAGE, ['Found nothing']]);
-                }
+            }
+            else {
+                displayStack.push([DTYPE_MESSAGE, ['Found nothing']]);
             }
         },
         // ACTION_USE_COMPUTER
@@ -1611,30 +1661,28 @@ const Game = () => {
         // ACTION_RESTORE_BACKUPS
         () => {
             playerDisks--;
-            const randItem = randInt(2);
+            const nextNoteDb = notesDb.length + DATA_C_DB_INTRO;
+            const randItem = randInt(8);
             // note
-            if (randItem < 1) {
-                const nextNoteDb = notesDb.length + DATA_C_DB_INTRO;
-                if (nextNoteDb < DATA_RESTORE_BACKUPS) {
-                    notesDb.push(nextNoteDb);
-                    displayStack.push([DTYPE_MESSAGE, [
-                            'Recovered 1 note',
-                            'database entry'
-                        ]]);
-                }
-                else {
-                    displayStack.push([DTYPE_MESSAGE, [
-                            'Could not read disk,',
-                            'try again'
-                        ]]);
-                    playerDisks++;
-                }
+            if (randItem < 2 && nextNoteDb < DATA_RESTORE_BACKUPS) {
+                notesDb.push(nextNoteDb);
+                displayStack.push([DTYPE_MESSAGE, [
+                        'Recovered 1 note',
+                        'database entry'
+                    ]]);
             }
             // map tile
             else {
-                let gridX = randInt(gridTiles);
-                let gridY = randInt(gridTiles);
-                if (!mapDb[gridY * gridTiles + gridX]) {
+                let availableMaps = [];
+                for (let y = 0; y < gridTiles; y++) {
+                    for (let x = 0; x < gridTiles; x++) {
+                        if (!mapDb[y * gridTiles + x]) {
+                            availableMaps.push([x, y]);
+                        }
+                    }
+                }
+                if (availableMaps.length) {
+                    const [gridX, gridY] = pick(availableMaps);
                     mapDb[gridY * gridTiles + gridX] = 1;
                     displayStack.push([DTYPE_MESSAGE, [
                             'Recovered 1 map',
@@ -1643,10 +1691,8 @@ const Game = () => {
                 }
                 else {
                     displayStack.push([DTYPE_MESSAGE, [
-                            'Could not read disk,',
-                            'try again'
+                            'Disk corrupt'
                         ]]);
-                    playerDisks++;
                 }
             }
         }
@@ -1717,6 +1763,7 @@ const drawMap = (time) => {
     const startY = mapItem[MAP_STARTY];
     const playerHealth = api[API_STATE]()[ST_PLAYER_HEALTH];
     const playerFacing = api[API_STATE]()[ST_PLAYER_FACING];
+    const seen = api[API_STATE]()[ST_SEEN];
     const isNight = api[API_STATE]()[ST_HOURS] >= sunset || api[API_STATE]()[ST_HOURS] < sunrise;
     for (let y = 0; y < viewTiles; y++) {
         for (let x = 0; x < viewTiles; x++) {
@@ -1759,6 +1806,9 @@ const drawMap = (time) => {
             if (mapType === MT_ISLAND && mapX === startX - 1 && mapY === startY) {
                 ctx.drawImage(player, S_BOAT_RIGHT * tileSize, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
             }
+            if (mapType === MT_ISLAND && !seen[mapY * mapSize + mapX]) {
+                ctx.drawImage(tiles, T_FOG * tileSize, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
+            }
         }
     }
 };
@@ -1782,6 +1832,7 @@ const drawUi = () => {
 };
 const drawComputerMap = () => {
     const mapItem = api[API_STATE]()[ST_DISPLAY_ITEM];
+    const seen = api[API_STATE]()[ST_SEEN];
     const playerX = mapItem[MAP_PLAYERX];
     const playerY = mapItem[MAP_PLAYERX];
     const map = mapItem[MAP_TILES];
@@ -1791,8 +1842,9 @@ const drawComputerMap = () => {
             const gridX = ~~(x / gridSize);
             const gridY = ~~(y / gridSize);
             const tile = map[y][x];
+            const isSand = tile >= T_SAND && tile < T_SAND + T_SAND_L;
             if (mapDb[gridY * gridTiles + gridX]) {
-                if (tile === T_SEA) {
+                if (tile === T_SEA || (!seen[y * mapSize + x] && !isSand)) {
                     ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
                 }
                 else {

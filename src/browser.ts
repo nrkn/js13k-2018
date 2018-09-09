@@ -35,7 +35,11 @@ import {
   C_RUINS,
   T_SATELLITE,
   C_SATELLITE,
-  COMPUTER_MAP_MAPDB
+  COMPUTER_MAP_MAPDB,
+  ST_SEEN,
+  T_FOG,
+  T_SAND,
+  T_SAND_L
 } from './indices'
 
 import { Game } from './game'
@@ -136,6 +140,7 @@ const drawMap = ( time: number ) => {
   const startY = mapItem[ MAP_STARTY ]
   const playerHealth = api[ API_STATE ]()[ ST_PLAYER_HEALTH ]
   const playerFacing = api[ API_STATE ]()[ ST_PLAYER_FACING ]
+  const seen = api[ API_STATE ]()[ ST_SEEN ]
   const isNight = api[ API_STATE ]()[ ST_HOURS ] >= sunset || api[ API_STATE ]()[ ST_HOURS ] < sunrise
 
   for ( let y = 0; y < viewTiles; y++ ) {
@@ -218,6 +223,16 @@ const drawMap = ( time: number ) => {
           tileSize, tileSize
         )
       }
+
+      if( mapType === MT_ISLAND && !seen[ mapY * mapSize + mapX ]){
+        ctx.drawImage(
+          tiles,
+          T_FOG * tileSize, 0,
+          tileSize, tileSize,
+          ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
+          tileSize, tileSize
+        )        
+      }
     }
   }
 }
@@ -284,6 +299,7 @@ const drawUi = () => {
 
 const drawComputerMap = () => {
   const mapItem = <DisplayComputerMap>api[ API_STATE ]()[ ST_DISPLAY_ITEM ]
+  const seen = api[ API_STATE ]()[ ST_SEEN ]
   const playerX = mapItem[ MAP_PLAYERX ]
   const playerY = mapItem[ MAP_PLAYERX ]
   const map = mapItem[ MAP_TILES ]
@@ -294,8 +310,9 @@ const drawComputerMap = () => {
       const gridX = ~~( x / gridSize )
       const gridY = ~~( y / gridSize )
       const tile = map[ y ][ x ]
-      if( mapDb[ gridY * gridTiles + gridX ] ){
-        if ( tile === T_SEA ){
+      const isSand = tile >= T_SAND && tile < T_SAND + T_SAND_L
+      if( mapDb[ gridY * gridTiles + gridX ] ){       
+        if ( tile === T_SEA || ( !seen[ y * mapSize + x ] && !isSand ) ){
           ctx.drawImage(
             tiles,
             T_BLACK * tileSize, 0,

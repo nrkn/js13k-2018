@@ -7,22 +7,23 @@ import {
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
   OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP, DATA_C_DB_INTRO, DATA_RESTORE_BACKUPS
+  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP, DATA_C_DB_INTRO, DATA_RESTORE_BACKUPS, ITEM_KEY, ITEM_CHIP, ITEM_DISK, ITEM_FOOD
 } from './indices'
 
 import {
   DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster,
-  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap, DisplaySelection
+  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap, DisplaySelection, RuinItems, HutCache, RuinCache, RuinItem, Seen
 } from './types'
 
-import { inBounds, hasPoint, towards, allNeighbours } from './geometry'
-import { initialMonsterCount, mapSize, sunrise, sunset, gridSize, gridTiles } from './settings'
-import { randInt } from './utils'
+import { inBounds, hasPoint, towards, allNeighbours, dist } from './geometry'
+import { initialMonsterCount, mapSize, sunrise, sunset, gridSize, gridTiles, centerTile } from './settings'
+import { randInt, shuffle, pick } from './utils'
 import { gameData } from './data';
 
 export const Game = () => {
   // state
-  let hutCache: HutState[]
+  let hutCache: HutCache
+  let ruinCache: RuinCache
   let playerFacing: 0 | 1
   let playerFood: number
   let playerHealth: number
@@ -35,25 +36,28 @@ export const Game = () => {
   let color: GameColor
   let displayStack: DisplayItem[]
   let monsters: Monster[]
+  let seen: Seen
   // internal state
   let seenRangerMessage: number
   let currentHut: HutState
+  let currentRuins: RuinItems
   let madeFoodToday: number
   let notesDb: number[]
   let mapDb: number[]
 
   const reset = () => {
-    hutCache = []
+    hutCache = [[]]
+    ruinCache = [[]]
     playerFacing = 0
     playerFood = 20
-    playerHealth = 20
-    playerMaxHealth = 20
+    playerHealth = 99
+    playerMaxHealth = 99
     playerKeys = 0
     playerChips = 5
     playerDisks = 0
     hours = 17
     minutes = 55
-    gameData[ DATA_ISLAND ] = createIsland( hutCache )
+    gameData[ DATA_ISLAND ] = createIsland( hutCache, ruinCache )
     displayStack = [
       gameData[ DATA_ISLAND ],
       gameData[ DATA_INTRO ],
@@ -65,6 +69,7 @@ export const Game = () => {
     madeFoodToday = 0
     notesDb = [ DATA_C_DB_INTRO ]
     mapDb = []
+    seen = []
 
     const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
     const playerX = mapItem[ MAP_PLAYERX ]
@@ -74,6 +79,8 @@ export const Game = () => {
     mapDb[ gridY * gridTiles + gridX ] = 1
 
     createMonsters()
+    distributeItems()
+    updateSeen( mapItem )
   }
 
   const currentColor = (): GameColor => {
@@ -91,7 +98,8 @@ export const Game = () => {
     currentColor(),
     displayStack[ displayStack.length - 1 ],
     monsters,
-    playerKeys, playerChips, playerDisks
+    playerKeys, playerChips, playerDisks,
+    seen
   ]
 
   const close = () => {
@@ -186,6 +194,38 @@ export const Game = () => {
     }
   }
 
+  const distributeItems = () => {
+    const numHuts = hutCache[ 0 ].length
+    const numKeyCards = ~~( numHuts * 2 )
+    const numChips = ~~( numHuts * 9 )
+    const numBackups = 50 // guess
+    const numFood = ~~( numHuts * 2 ) // also guess
+
+    let items: RuinItem[] = []
+
+    for( let i = 0; i < numKeyCards; i++ ){
+      items.push( ITEM_KEY )
+    }
+    for( let i = 0; i < numChips; i++ ){
+      items.push( ITEM_CHIP )
+    }
+    for( let i = 0; i < numBackups; i++ ){
+      items.push( ITEM_DISK )
+    }
+    for( let i = 0; i < numFood; i++ ){
+      items.push( ITEM_FOOD )
+    }
+
+    items = shuffle( items )
+
+    while( items.length ){
+      const item = items.pop()!   
+      const [ rx, ry ] = pick( ruinCache[ 0 ] )
+      const ruinItems = <RuinItems>ruinCache[ ry * mapSize + rx ]
+      ruinItems.push( item )
+    }
+  }
+
   const incTime = ( sleeping = 0 ) => {
     if( playerHealth < 1 ){
       displayStack = [ gameData[ DATA_DEAD ] ]
@@ -229,14 +269,16 @@ export const Game = () => {
           if( mapTile === T_PORTAL ){
             const neighbours = allNeighbours([ x, y ])
             for( let i = 0; i < neighbours.length; i++ ){
-              createMonster( neighbours[ i ] )
+              if( !randInt( 3 ) ){
+                createMonster( neighbours[ i ] )
+              }              
             }
           }
         }
       }
     }
     updateMonsters()
-  }
+  } 
 
   const timeStr = () => `${
     hours < 10 ? '0' : ''
@@ -247,6 +289,23 @@ export const Game = () => {
   }${
     minutes
   }`
+
+  const updateSeen = ( map: DisplayMap ) => {
+    if( map[ MAP_TYPE ] === MT_ISLAND ){
+      const px = map[ MAP_PLAYERX ]
+      const py = map[ MAP_PLAYERY ]
+  
+      for( let y = -centerTile; y < centerTile; y++ ){
+        for( let x = -centerTile; x < centerTile; x++ ){
+          const cx = px + x
+          const cy = py + y
+          if( dist( [ px, py ], [ cx, cy ] ) < centerTile ){
+            seen[ cy * mapSize + cx ] = 1
+          }
+        } 
+      } 
+    }
+  }
 
   const move = ( x: number, y: number ) => {
     const map = <DisplayMap>displayStack[ displayStack.length - 1 ]
@@ -289,10 +348,12 @@ export const Game = () => {
       map[ MAP_PLAYERY ] = y
     }
 
+    updateSeen( map )
+
     // bumps
     if( map[ MAP_TYPE ] === MT_ISLAND ){
       if ( map[ MAP_TILES ][ y ][ x ] === T_HUT ) {
-        currentHut = hutCache[ y * mapSize + x ]
+        currentHut = <HutState>hutCache[ y * mapSize + x ]
         if( currentHut[ HUT_UNLOCKED ] ){
           displayStack.push( createHut() )
         } else {
@@ -321,6 +382,7 @@ export const Game = () => {
       }
 
       if( map[ MAP_TILES ][ y ][ x ] >= T_RUINS && map[ MAP_TILES ][ y ][ x ] < T_RUINS + T_RUINS_L ){
+        currentRuins = <RuinItems>ruinCache[ y * mapSize + x ]
         displayStack.push( gameData[ DATA_RUINS ] )
       }
     }
@@ -401,50 +463,34 @@ export const Game = () => {
     },
     // ACTION_SEARCH
     () => {
-      for( let i = 0; i < 60; i++ ){
-        incTime()
-      }
-      if( playerHealth > 0 ){
-        const found = randInt( 16 )
+      
+      if( currentRuins.length ){
+        for( let i = 0; i < 60; i++ ){
+          incTime()
+        }
 
-        // food 0 1
-        if( found < 2 ){
+        const item = currentRuins.pop()
+
+        if( item === ITEM_FOOD ){
           const food = randInt( 3 ) + 1
           displayStack.push( [ DTYPE_MESSAGE, [ `Found ${ food } food` ] ] )
           playerFood += food
-        }
-        // keycard 2 3
-        else if ( found < 4 ){
+        } 
+        else if( item === ITEM_KEY ){
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
           playerKeys++
         }
-        // chip 4 5
-        else if( found < 6 ){
+        else if( item === ITEM_CHIP ){
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found chip' ] ] )
           playerChips++
         }
-        // disk 6 7
-        else if( found < 8 ){
+        else if( item === ITEM_DISK ){
           displayStack.push( [ DTYPE_MESSAGE, [ 'Found backup' ] ] )
           playerDisks++
         }
-        // got hurt 8
-        else if( found < 9 ){
-          displayStack.push( [
-            DTYPE_MESSAGE,
-            [
-              'Rocks fell!',
-              '',
-              'Lost health'
-            ]
-          ] )
-          playerHealth--
-        }
-        // nothing
-        else {
-          displayStack.push( [ DTYPE_MESSAGE, [ 'Found nothing' ] ] )
-        }
-      }
+      } else {
+        displayStack.push( [ DTYPE_MESSAGE, [ 'Found nothing' ] ] )
+      }     
     },
     // ACTION_USE_COMPUTER
     () => {
@@ -517,32 +563,29 @@ export const Game = () => {
     () => {
       playerDisks--
 
-      const randItem = randInt( 2 )
+      const nextNoteDb = notesDb.length + DATA_C_DB_INTRO
+      const randItem = randInt( 8 )
       
       // note
-      if( randItem < 1 ){
-        const nextNoteDb = notesDb.length + DATA_C_DB_INTRO
-
-        if( nextNoteDb < DATA_RESTORE_BACKUPS ){
-          notesDb.push( nextNoteDb )
-          displayStack.push( [ DTYPE_MESSAGE, [ 
-            'Recovered 1 note', 
-            'database entry'
-          ] ] )
-        } else {
-          displayStack.push( [ DTYPE_MESSAGE, [ 
-            'Could not read disk,',
-            'try again'
-          ] ] )
-          playerDisks++
-        } 
+      if( randItem < 2 && nextNoteDb < DATA_RESTORE_BACKUPS ){
+        notesDb.push( nextNoteDb )
+        displayStack.push( [ DTYPE_MESSAGE, [ 
+          'Recovered 1 note', 
+          'database entry'
+        ] ] )
       } 
       // map tile
       else {
-        let gridX = randInt( gridTiles )
-        let gridY = randInt( gridTiles )
-
-        if( !mapDb[ gridY * gridTiles + gridX ] ){
+        let availableMaps: Point[] = []
+        for( let y = 0; y < gridTiles; y++ ){
+          for( let x = 0; x < gridTiles; x++ ){
+            if( !mapDb[ y * gridTiles + x ] ){
+              availableMaps.push( [ x, y ] )
+            }
+          }
+        }
+        if( availableMaps.length ){
+          const [ gridX, gridY ] = pick( availableMaps )
           mapDb[ gridY * gridTiles + gridX ] = 1
           displayStack.push( [ DTYPE_MESSAGE, [ 
             'Recovered 1 map', 
@@ -550,11 +593,9 @@ export const Game = () => {
           ] ] )
         } else {
           displayStack.push( [ DTYPE_MESSAGE, [ 
-            'Could not read disk,',
-            'try again'
+            'Disk corrupt'
           ] ] )
-          playerDisks++
-        } 
+        }
       }
     }
   ]

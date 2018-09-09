@@ -28,6 +28,7 @@ export const T_RANGER  = 38
 export const T_KEY = 39
 export const T_DISK = 40
 export const T_CHIP = 41
+export const T_FOG = 42
 export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
@@ -50,6 +51,7 @@ export const ST_MONSTERS = 8
 export const ST_PLAYER_KEYS = 9
 export const ST_PLAYER_CHIPS = 10
 export const ST_PLAYER_DISKS = 11
+export const ST_SEEN = 12
 
 // api indices
 export const API_STATE = 0
@@ -175,3 +177,9 @@ export const ACTION_RESTORE_BACKUPS = 11
 // hut state
 export const HUT_UNLOCKED = 0
 export const HUT_COMPUTER_FIXED = 1
+
+// ruin item
+export const ITEM_KEY = 0
+export const ITEM_CHIP = 1
+export const ITEM_DISK = 2
+export const ITEM_FOOD = 3

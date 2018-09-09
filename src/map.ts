@@ -4,7 +4,7 @@ import {
   MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L, T_PORTAL, T_SATELLITE, T_RANGER
 } from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
-import { MapTiles, MapRow, DisplayMap, Point, FloodPoint, HutState } from './types'
+import { MapTiles, MapRow, DisplayMap, Point, FloodPoint, HutState, RuinItems, HutCache, RuinCache } from './types'
 import { randInt, pick, shuffle } from './utils'
 import {
   drunkenWalk, randomPointInLandBorder, inWaterBorder, expandLand,
@@ -133,7 +133,7 @@ export const createHut = (): DisplayMap => {
   return [ DTYPE_MAP, landBorder, landBorder, tiles, MT_HUT, landBorder, landBorder ]
 }
 
-export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
+export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache ): DisplayMap => {
   const tiles = createMap()
 
   // choose clearways (waypoints)
@@ -227,10 +227,13 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
     else if( i === 1 ){
       tiles[ wy ][ wx ] = T_HUT
       hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
+      hutCache[ 0 ].push([ wx, wy ])
     }
     // ruins
     else if( i === 2 ){
       tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
+      ruinCache[ wy * mapSize + wx ] = []
+      ruinCache[ 0 ].push([ wx, wy ])
     }
     // satellite
     else if( i === waypoints.length - 1 ){
@@ -239,11 +242,14 @@ export const createIsland = ( hutCache: HutState[] ): DisplayMap => {
     // ruins, 0 1 2 3 4 5
     else if( type < 6 ){
       tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
+      ruinCache[ wy * mapSize + wx ] = []
+      ruinCache[ 0 ].push([ wx, wy ])      
     }
     // hut 6 7 8
     else if( type < 9 ){
       tiles[ wy ][ wx ] = T_HUT
       hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
+      hutCache[ 0 ].push([ wx, wy ])
     }
     // portal 9
     else {
