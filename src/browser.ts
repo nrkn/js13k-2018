@@ -386,18 +386,16 @@ const drawComputerMap = () => {
             computerIconSize, computerIconSize
           )
         }
-        if( x === playerX && y === playerY ){
-          ctx.drawImage(
-            computerIcons,
-            C_PLAYER * computerIconSize, 0,
-            computerIconSize, computerIconSize,
-            x - 3, y - 3,
-            computerIconSize, computerIconSize
-          )
-        }
       }
     }
   }
+  ctx.drawImage(
+    computerIcons,
+    C_PLAYER * computerIconSize, 0,
+    computerIconSize, computerIconSize,
+    playerX - 3, playerY - 3,
+    computerIconSize, computerIconSize
+  )
   for( let y = 0; y < gridSize; y++ ){
     ctx.drawImage(
       font,

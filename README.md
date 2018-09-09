@@ -227,6 +227,8 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 11271, Remaining: 2041  
 - ~Push correct things to display so you see new notes and new map immediately~
   - Size: 11282, Remaining: 2030
+- ~Always show current location on map~
+  - Size: 11279, Remaining: 2033
 - BUG - can sometimes synth food multiple times
 - BUG - diagnostics should be up to date
 - database restore:
