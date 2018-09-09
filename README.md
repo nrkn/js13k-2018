@@ -225,13 +225,10 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 11313, Remaining: 1999
 - ~Show portals on map~
   - Size: 11271, Remaining: 2041  
+- ~Push correct things to display so you see new notes and new map immediately~
+  - Size: 11282, Remaining: 2030
 - BUG - can sometimes synth food multiple times
 - BUG - diagnostics should be up to date
-- backups have a type:
-  - database (notes from RANGER)
-  - synthdb (more things you can synth)
-  - security functions
-  - map areas
 - database restore:
   - any other story color
 - synthdb restore:

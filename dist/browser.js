@@ -1665,6 +1665,7 @@ const Game = () => {
             // note
             if (randItem < 2 && nextNoteDb < DATA_RESTORE_BACKUPS) {
                 notesDb.push(nextNoteDb);
+                displayStack.push(gameData[notesDb.length + DATA_C_DB_INTRO - 1]);
                 displayStack.push([DTYPE_MESSAGE, [
                         'Recovered 1 note',
                         'database entry'
@@ -1683,6 +1684,7 @@ const Game = () => {
                 if (availableMaps.length) {
                     const [gridX, gridY] = pick(availableMaps);
                     mapDb[gridY * gridTiles + gridX] = 1;
+                    actions[ACTION_SHOW_MAP]();
                     displayStack.push([DTYPE_MESSAGE, [
                             'Recovered 1 map',
                             'database entry'
