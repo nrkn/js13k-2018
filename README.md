@@ -229,16 +229,16 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 11282, Remaining: 2030
 - ~Always show current location on map~
   - Size: 11279, Remaining: 2033
-- BUG - can sometimes synth food multiple times
-- BUG - diagnostics should be up to date
+- ~Nearing the end~
+  - ~BUG - can sometimes synth food multiple times~
+  - ~BUG - diagnostics should be up to date~
+  - ~alter chips to destroy portals~
+  - ~portal animations at night, clear at day~
+  - ~show status of huts, ruins, portals etc on map~
+  - Size: 11744, Remaining: 1568
 - database restore:
   - any other story color
-- synthdb restore:
-  - more food so you don't have to do so often
-  - weapon / armor so ghosts more managable
-  - alter chips to destroy portals
 - security restore:
-  - ghost repeller around hut
   - destroy monsters
 - fix satellite to:
   - enable comms to call back to base and win
@@ -246,7 +246,6 @@ Player is safe in hut, can sleep to pass the night away
 - tell you why you died - it's confusing sometimes if say you're searching ruins
   at night, and you don't see the ghosts because a message screen is up, then
   you die - or some other way of making it less confusing for player?
-- portal animations at night, clear at day
 - satellite, offline message when bump until working
 - satellite animation when working
 - win screen

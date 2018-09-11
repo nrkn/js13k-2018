@@ -29,23 +29,32 @@ import {
   T_MOUNTAINS_L,
   C_PLAYER,
   T_HUT,
-  C_HUT,
+  C_HUT_LOCKED,
   T_RUINS,
   T_RUINS_L,
-  C_RUINS,
+  C_RUINS_ACTIVE,
   T_SATELLITE,
-  C_SATELLITE,
+  C_SATELLITE_OFFLINE,
   COMPUTER_MAP_MAPDB,
   ST_SEEN,
   T_FOG,
   T_SAND,
   T_SAND_L,
   T_PORTAL,
-  C_PORTAL
+  C_PORTAL_ACTIVE,
+  T_PORTAL_DAY,
+  ST_HUTCACHE,
+  ST_RUINCACHE,
+  ST_PORTALCACHE,
+  HUT_UNLOCKED,
+  C_HUT_UNLOCKED,
+  C_RUINS_EMPTY,
+  C_PORTAL_OFFLINE,
+  T_PORTAL_OFFLINE
 } from './indices'
 
 import { Game } from './game'
-import { DisplayMap, DisplayScreen, Point, DisplayComputerMap } from './types'
+import { DisplayMap, DisplayScreen, Point, DisplayComputerMap, HutState, RuinItem, RuinItems } from './types'
 import { blocks } from './map';
 
 declare const c: HTMLCanvasElement
@@ -168,6 +177,26 @@ const drawMap = ( time: number ) => {
         ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
         tileSize, tileSize
       )
+
+      if( map[ mapY ][ mapX ] === T_PORTAL ){
+        if( isNight ){
+          ctx.drawImage(
+            tiles,
+            ( T_PORTAL + currentFrame ) * tileSize, 0,
+            tileSize, tileSize,
+            ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
+            tileSize, tileSize
+          )  
+        } else {
+          ctx.drawImage(
+            tiles,
+            T_PORTAL_DAY * tileSize, 0,
+            tileSize, tileSize,
+            ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
+            tileSize, tileSize
+          )    
+        }
+      }
 
       if ( mapType === MT_ISLAND && isNight ){
         for ( let i = 0; i < monsters.length; i++ ) {
@@ -302,6 +331,9 @@ const drawUi = () => {
 const drawComputerMap = () => {
   const mapItem = <DisplayComputerMap>api[ API_STATE ]()[ ST_DISPLAY_ITEM ]
   const seen = api[ API_STATE ]()[ ST_SEEN ]
+  const hutCache = api[ API_STATE ]()[ ST_HUTCACHE ]
+  const ruinCache = api[ API_STATE ]()[ ST_RUINCACHE ]
+  const portalCache = api[ API_STATE ]()[ ST_PORTALCACHE ]
   const playerX = mapItem[ MAP_PLAYERX ]
   const playerY = mapItem[ MAP_PLAYERY ]
   const map = mapItem[ MAP_TILES ]
@@ -351,27 +383,49 @@ const drawComputerMap = () => {
       const tile = map[ y ][ x ]
       if( mapDb[ gridY * gridTiles + gridX ] ){
         if ( tile === T_HUT ) {
-          ctx.drawImage(
-            computerIcons,
-            C_HUT * computerIconSize, 0,
-            computerIconSize, computerIconSize,
-            x - 3, y - 3,
-            computerIconSize, computerIconSize
-          )
+          const currentHut = <HutState>hutCache[ y * mapSize + x ]
+          if( currentHut[ HUT_UNLOCKED ] ){
+            ctx.drawImage(
+              computerIcons,
+              C_HUT_UNLOCKED * computerIconSize, 0,
+              computerIconSize, computerIconSize,
+              x - 3, y - 3,
+              computerIconSize, computerIconSize
+            ) 
+          } else {
+            ctx.drawImage(
+              computerIcons,
+              C_HUT_LOCKED * computerIconSize, 0,
+              computerIconSize, computerIconSize,
+              x - 3, y - 3,
+              computerIconSize, computerIconSize
+            ) 
+          }
         }
         if ( tile >= T_RUINS && tile < T_RUINS + T_RUINS_L ) {
-          ctx.drawImage(
-            computerIcons,
-            C_RUINS * computerIconSize, 0,
-            computerIconSize, computerIconSize,
-            x - 3, y - 3,
-            computerIconSize, computerIconSize
-          )
+          const currentRuins = <RuinItems>ruinCache[ y * mapSize + x ]
+          if( currentRuins.length ){
+            ctx.drawImage(
+              computerIcons,
+              C_RUINS_ACTIVE * computerIconSize, 0,
+              computerIconSize, computerIconSize,
+              x - 3, y - 3,
+              computerIconSize, computerIconSize
+            ) 
+          } else {
+            ctx.drawImage(
+              computerIcons,
+              C_RUINS_EMPTY * computerIconSize, 0,
+              computerIconSize, computerIconSize,
+              x - 3, y - 3,
+              computerIconSize, computerIconSize
+            ) 
+          }
         }
         if ( tile === T_SATELLITE ) {
           ctx.drawImage(
             computerIcons,
-            C_SATELLITE * computerIconSize, 0,
+            C_SATELLITE_OFFLINE * computerIconSize, 0,
             computerIconSize, computerIconSize,
             x - 3, y - 3,
             computerIconSize, computerIconSize
@@ -380,11 +434,20 @@ const drawComputerMap = () => {
         if ( tile === T_PORTAL ) {
           ctx.drawImage(
             computerIcons,
-            C_PORTAL * computerIconSize, 0,
+            C_PORTAL_ACTIVE * computerIconSize, 0,
             computerIconSize, computerIconSize,
             x - 3, y - 3,
             computerIconSize, computerIconSize
-          )
+          )  
+        }
+        if( tile === T_PORTAL_OFFLINE ){
+          ctx.drawImage(
+            computerIcons,
+            C_PORTAL_OFFLINE * computerIconSize, 0,
+            computerIconSize, computerIconSize,
+            x - 3, y - 3,
+            computerIconSize, computerIconSize
+          )  
         }
       }
     }

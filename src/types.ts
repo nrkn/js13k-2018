@@ -23,7 +23,10 @@ export type GameState = [
   number,
   number,
   number,
-  Seen
+  Seen,
+  HutCache,
+  RuinCache,
+  PortalCache
 ]
 
 export type GameAPI = [
@@ -64,6 +67,8 @@ export type HutCache = [ Point[], ...HutState[] ]
 export type RuinItems = RuinItem[]
 
 export type RuinCache = [ Point[], ...RuinItems[] ]
+
+export type PortalCache = [ Point[], ...BoolAsNumber[] ]
 
 export type RuinItem = 0 | 1 | 2 | 3
 

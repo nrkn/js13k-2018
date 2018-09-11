@@ -29,15 +29,21 @@ export const T_KEY = 39
 export const T_DISK = 40
 export const T_CHIP = 41
 export const T_FOG = 42
+export const T_PORTAL_OFFLINE = 43
+export const T_PORTAL_DAY = 44
 export const S_SKELETON = 4
 export const S_BOAT_LEFT = 5
 export const S_BOAT_RIGHT = 6
 export const S_MONSTER = 7
-export const C_HUT = 0
-export const C_RUINS = 1
-export const C_SATELLITE = 2
+export const C_HUT_LOCKED = 0
+export const C_RUINS_ACTIVE = 1
+export const C_SATELLITE_OFFLINE = 2
 export const C_PLAYER = 3
-export const C_PORTAL = 4
+export const C_PORTAL_ACTIVE = 4
+export const C_HUT_UNLOCKED = 5
+export const C_RUINS_EMPTY = 6
+export const C_SATELLITE_ACTIVE = 7
+export const C_PORTAL_OFFLINE = 8
 
 // state indices
 export const ST_PLAYER_FACING = 0
@@ -53,6 +59,9 @@ export const ST_PLAYER_KEYS = 9
 export const ST_PLAYER_CHIPS = 10
 export const ST_PLAYER_DISKS = 11
 export const ST_SEEN = 12
+export const ST_HUTCACHE = 13
+export const ST_RUINCACHE = 14
+export const ST_PORTALCACHE = 15
 
 // api indices
 export const API_STATE = 0
@@ -115,6 +124,8 @@ export const DATA_C_DB_SECURITY = 38
 export const DATA_C_DB_FIX_SATELLITE = 39
 export const DATA_C_DB_RESCUE_TEAM = 40
 export const DATA_RESTORE_BACKUPS = 41
+export const DATA_DIAGNOSTICS = 42
+export const DATA_MODCHIPS = 43
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -174,6 +185,8 @@ export const ACTION_SHOW_COMMS = 8
 export const ACTION_SHOW_SECURITY = 9
 export const ACTION_SHOW_MAP = 10
 export const ACTION_RESTORE_BACKUPS = 11
+export const ACTION_DIAGNOSTICS = 12
+export const ACTION_CREATE_MODCHIP = 13
 
 // hut state
 export const HUT_UNLOCKED = 0

@@ -7,12 +7,12 @@ import {
   MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
   Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
   OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP, DATA_C_DB_INTRO, DATA_RESTORE_BACKUPS, ITEM_KEY, ITEM_CHIP, ITEM_DISK, ITEM_FOOD, DATA_DB, DATA_MAP, ACTION_SHOW_COMMS, ACTION_SHOW_DB, ACTION_SHOW_MAP
+  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP, DATA_C_DB_INTRO, DATA_RESTORE_BACKUPS, ITEM_KEY, ITEM_CHIP, ITEM_DISK, ITEM_FOOD, DATA_DB, DATA_MAP, ACTION_SHOW_COMMS, ACTION_SHOW_DB, ACTION_SHOW_MAP, DATA_C_DIAGNOSTICS, DATA_SYNTH, DATA_C_DIAGNOSTICS_FIXED, DATA_COMMS, DATA_SECURITY, DATA_USE_COMPUTER, DATA_FIX_COMPUTER, DATA_DIAGNOSTICS, ACTION_SHOW_SYNTH, DISPLAY_MESSAGE, DATA_CREATE_FOOD, DATA_MODCHIPS, T_PORTAL_OFFLINE
 } from './indices'
 
 import {
   DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster,
-  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap, DisplaySelection, RuinItems, HutCache, RuinCache, RuinItem, Seen
+  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap, DisplaySelection, RuinItems, HutCache, RuinCache, RuinItem, Seen, PortalCache
 } from './types'
 
 import { inBounds, hasPoint, towards, allNeighbours, dist } from './geometry'
@@ -41,23 +41,27 @@ export const Game = () => {
   let seenRangerMessage: number
   let currentHut: HutState
   let currentRuins: RuinItems
-  let madeFoodToday: number
+  let synthCharging: number
   let notesDb: number[]
   let mapDb: number[]
+  let modChips: number
+  let satelliteChips: number
+  let portalCache: PortalCache
 
   const reset = () => {
     hutCache = [[]]
     ruinCache = [[]]
+    portalCache = [[]]
     playerFacing = 0
-    playerFood = 20
+    playerFood = 99
     playerHealth = 99
     playerMaxHealth = 99
-    playerKeys = 0
-    playerChips = 5
-    playerDisks = 0
+    playerKeys = 5
+    playerChips = 50
+    playerDisks = 50
     hours = 17
     minutes = 55
-    gameData[ DATA_ISLAND ] = createIsland( hutCache, ruinCache )
+    gameData[ DATA_ISLAND ] = createIsland( hutCache, ruinCache, portalCache )
     displayStack = [
       gameData[ DATA_ISLAND ],
       gameData[ DATA_INTRO ],
@@ -66,7 +70,9 @@ export const Game = () => {
     color = ''
     monsters = []
     seenRangerMessage = 0
-    madeFoodToday = 0
+    synthCharging = 0
+    modChips = -1
+    satelliteChips = -1
     notesDb = [ DATA_C_DB_INTRO ]
     mapDb = []
     seen = []
@@ -99,7 +105,8 @@ export const Game = () => {
     displayStack[ displayStack.length - 1 ],
     monsters,
     playerKeys, playerChips, playerDisks,
-    seen
+    seen,
+    hutCache, ruinCache, portalCache
   ]
 
   const close = () => {
@@ -260,7 +267,7 @@ export const Game = () => {
       }
     }
     if ( hours === 24 ) {
-      madeFoodToday = 0
+      synthCharging = 0
       hours = 0
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
       for( let y = 0; y < mapSize; y++ ){
@@ -383,7 +390,25 @@ export const Game = () => {
 
       if( map[ MAP_TILES ][ y ][ x ] >= T_RUINS && map[ MAP_TILES ][ y ][ x ] < T_RUINS + T_RUINS_L ){
         currentRuins = <RuinItems>ruinCache[ y * mapSize + x ]
-        displayStack.push( gameData[ DATA_RUINS ] )
+        if( currentRuins.length ){
+          displayStack.push( gameData[ DATA_RUINS ] )
+        } else {
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Nothing here' ] ] )
+        }       
+      }
+
+      if( map[ MAP_TILES ][ y ][ x ] === T_PORTAL ){
+        if( modChips > 0 ){
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Portal disabled!' ] ] )
+          map[ MAP_TILES ][ y ][ x ] = T_PORTAL_OFFLINE
+          portalCache[ y * mapSize + x ] = 1
+          modChips--
+          playerChips--
+        } else if ( modChips > -1 ) {
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Need mod chips' ] ] )
+        } else {
+          displayStack.push( [ DTYPE_MESSAGE, [ 'A strange portal' ] ] )
+        }
       }
     }
 
@@ -393,21 +418,36 @@ export const Game = () => {
       }
 
       if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
-        const computerOptions = <DisplayScreen>gameData[ DATA_FIXABLE_COMPUTER ].slice()
+        const options: DisplaySelection[] = [
+          [ 'Use', DATA_USE_COMPUTER ]
+        ]
+        const computer: DisplayScreen = [
+          DTYPE_SCREEN,
+          [
+            `A computer`,
+            '',
+          ],
+          options,
+          0,
+          'g'        
+        ]
 
-        computerOptions[ SCREEN_OPTIONS ] = computerOptions[ SCREEN_OPTIONS ].filter( ( _o, i ) => {
-          if( i === 1 && currentHut[ HUT_COMPUTER_FIXED ] ) return 0
-          if( i === 1 && playerChips < 6 ) return 0
-          if( i === 2 && !currentHut[ HUT_COMPUTER_FIXED ] ) return 0
-          if( i === 2 && playerDisks < 1 ) return 0
-          return 1
-        })
-
-        displayStack.push( computerOptions )
+        if( !currentHut[ HUT_COMPUTER_FIXED ] && playerChips > 5 ){
+          options.push( [ 'Fix Chips', DATA_FIX_COMPUTER ] )
+        }
+        if( currentHut[ HUT_COMPUTER_FIXED ] && playerDisks > 0 ){
+          options.push( [ 'Restore Backups', DATA_RESTORE_BACKUPS ] )
+        }
+        
+        if( options.length > 1 ){
+          displayStack.push( computer )
+        } else {
+          actions[ ACTION_USE_COMPUTER ]()
+        }
       }
 
       if( map[ MAP_TILES ][ y ][ x ] === T_BED ){
-        if( hours >= sunset || hours < sunrise ){
+        if( hours >= ( sunset - 1 ) || hours < sunrise ) {
           displayStack.push( gameData[ DATA_BED ] )
         } else {
           displayStack.push( gameData[ DATA_NOT_TIRED ] )
@@ -460,66 +500,111 @@ export const Game = () => {
     () => {
       currentHut[ HUT_UNLOCKED ] = 1
       playerKeys--
+      //displayStack.push( [ DTYPE_MESSAGE, [ 'Unlocked' ] ] )
     },
     // ACTION_SEARCH
     () => {
-      
-      if( currentRuins.length ){
-        for( let i = 0; i < 60; i++ ){
-          incTime()
-        }
+      for( let i = 0; i < 60; i++ ){
+        incTime()
+      }
 
-        const item = currentRuins.pop()
+      const item = currentRuins.pop()
 
-        if( item === ITEM_FOOD ){
-          const food = randInt( 3 ) + 1
-          displayStack.push( [ DTYPE_MESSAGE, [ `Found ${ food } food` ] ] )
-          playerFood += food
-        } 
-        else if( item === ITEM_KEY ){
-          displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
-          playerKeys++
-        }
-        else if( item === ITEM_CHIP ){
-          displayStack.push( [ DTYPE_MESSAGE, [ 'Found chip' ] ] )
-          playerChips++
-        }
-        else if( item === ITEM_DISK ){
-          displayStack.push( [ DTYPE_MESSAGE, [ 'Found backup' ] ] )
-          playerDisks++
-        }
-      } else {
-        displayStack.push( [ DTYPE_MESSAGE, [ 'Found nothing' ] ] )
-      }     
+      if( item === ITEM_FOOD ){
+        const food = randInt( 3 ) + 1
+        displayStack.push( [ DTYPE_MESSAGE, [ `Found ${ food } food` ] ] )
+        playerFood += food
+      } 
+      else if( item === ITEM_KEY ){
+        displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
+        playerKeys++
+      }
+      else if( item === ITEM_CHIP ){
+        displayStack.push( [ DTYPE_MESSAGE, [ 'Found chip' ] ] )
+        playerChips++
+      }
+      else if( item === ITEM_DISK ){
+        displayStack.push( [ DTYPE_MESSAGE, [ 'Found backup' ] ] )
+        playerDisks++
+      }
     },
     // ACTION_USE_COMPUTER
     () => {
       if( currentHut[ HUT_COMPUTER_FIXED ] ){
-        displayStack.push( gameData[ DATA_C_FIXED ] )
+        displayStack.push([
+          DTYPE_SCREEN,
+          [
+            'RSOS v3.27',
+            '--------------------',
+            ''
+          ],
+          [
+            [ 'SYNTHESIZE', DATA_SYNTH ],
+            [ 'DIAGNOSTICS', DATA_DIAGNOSTICS ],
+            [ 'NOTES', DATA_DB ],
+            [ 'COMMS', DATA_COMMS ],
+            [ 'SECURITY', DATA_SECURITY ],
+            [ 'MAP', DATA_MAP ]
+          ],
+          0,
+          'a'
+        ])
       } else {
-        displayStack.push( gameData[ DATA_C_MAIN ] )
+        displayStack.push([
+          DTYPE_SCREEN,
+          [
+            'RSOS v3.27',
+            '--------------------',
+            'NETWORK OFFLINE',
+            '',
+            'EMERGENCY MODE',
+            ''
+          ],
+          [
+            [ 'SYNTHESIZE', DATA_SYNTH ],
+            [ 'DIAGNOSTICS', DATA_DIAGNOSTICS ],
+          ],
+          0,
+          'a'
+        ])
       }
     },
     // ACTION_FIX_COMPUTER
     () => {
-      displayStack.push( [ DTYPE_MESSAGE, [ 'Replaced 6 chips' ] ] )
+      displayStack.push( [ DTYPE_MESSAGE, [ 'Fixed 6 chips' ] ] )
       playerChips -= 6
       currentHut[ HUT_COMPUTER_FIXED ] = 1
     },
     // ACTION_CREATE_FOOD
     () => {
       const food = randInt( 3 ) + 6
-      madeFoodToday = 1
+      synthCharging = 1
       playerFood += food
       displayStack.push( [ DTYPE_MESSAGE, [ `Synthesized ${ food } food` ] ] )
     },
     // ACTION_SHOW_SYNTH
     () => {
-      if( madeFoodToday ){
-        displayStack.push( gameData[ DATA_C_SYNTH_CHARGING ] )
+      const options: DisplaySelection[] = []
+      const screen: DisplayScreen = [
+        DTYPE_SCREEN,
+        [
+          'RSOS v3.27',
+          '--------------------',
+          'SYNTHESIZER',
+        ],
+        options,
+        0,
+        'a'
+      ]
+      if( synthCharging ){
+        screen[ DISPLAY_MESSAGE ].push( '  CHARGING...' )
       } else {
-        displayStack.push( gameData[ DATA_C_SYNTH ] )
+        options.push( [ 'RATIONS', DATA_CREATE_FOOD ] )
+        if( modChips > -1 ){
+          options.push( [ 'MOD CHIPS', DATA_MODCHIPS ] )
+        }
       }
+      displayStack.push( screen )
     },
     // ACTION_SHOW_DB
     () => {
@@ -564,15 +649,23 @@ export const Game = () => {
       const nextNoteDb = notesDb.length + DATA_C_DB_INTRO
       const randItem = randInt( 8 )
       
+      // mod chip
+      if( notesDb.length > 4 && modChips === -1 ){
+        displayStack.push( [ DTYPE_MESSAGE, [ 
+          'Recovered 1 synth', 
+          'database entry'
+        ] ] )
+        modChips = 0
+      } 
       // note
-      if( randItem < 2 && nextNoteDb < DATA_RESTORE_BACKUPS ){
+      else if( randItem < 3 && nextNoteDb < DATA_RESTORE_BACKUPS ){
         notesDb.push( nextNoteDb )
         displayStack.push( gameData[ notesDb.length + DATA_C_DB_INTRO - 1 ] )
         displayStack.push( [ DTYPE_MESSAGE, [ 
           'Recovered 1 note', 
           'database entry'
         ] ] )
-      } 
+      }
       // map tile
       else {
         let availableMaps: Point[] = []
@@ -593,11 +686,98 @@ export const Game = () => {
             'database entry'
           ] ] )
         } else {
-          displayStack.push( [ DTYPE_MESSAGE, [ 
-            'Disk corrupt'
-          ] ] )
+          if( nextNoteDb < DATA_RESTORE_BACKUPS ){
+            notesDb.push( nextNoteDb )
+            displayStack.push( gameData[ notesDb.length + DATA_C_DB_INTRO - 1 ] )
+            displayStack.push( [ DTYPE_MESSAGE, [ 
+              'Recovered 1 note', 
+              'database entry'
+            ] ] )
+          } else {
+            displayStack.push( [ DTYPE_MESSAGE, [ 
+              'Disk corrupt'
+            ] ] )  
+          }
         }
       }
+    },
+    // ACTION_DIAGNOSTICS
+    () => {
+      if( currentHut[ HUT_COMPUTER_FIXED ] ){
+        let availableMaps: Point[] = []
+        for( let y = 0; y < gridTiles; y++ ){
+          for( let x = 0; x < gridTiles; x++ ){
+            if( !mapDb[ y * gridTiles + x ] ){
+              availableMaps.push( [ x, y ] )
+            }
+          }
+        }        
+        const screen: string[] = [
+          'RSOS v3.27',
+          '--------------------',
+          'DIAGNOSTICS',
+          '',
+          'NETWORK ONLINE',
+          'SYNTHESIZE ONLINE',
+          '  RESTORE BACKUPS',
+          'NOTES ONLINE',
+        ]
+        if( notesDb.length < 8 ){
+          screen.push( '  RESTORE BACKUPS' )
+        }
+        screen.push(
+          ...[
+            'COMMS OFFLINE',
+            'SECURITY OFFLINE',
+            'MAP ONLINE'
+          ]
+        )
+        if( availableMaps.length ){
+          screen.push( '  RESTORE BACKUPS' )
+        }
+        displayStack.push( [
+          DTYPE_SCREEN,
+          screen,
+          [],
+          0,
+          'a'
+        ])
+      } else {
+        displayStack.push([
+          DTYPE_SCREEN,
+          [
+            'RSOS v3.27',
+            '--------------------',
+            'DIAGNOSTICS',
+            '',
+            'NETWORK OFFLINE',
+            '  FIX 6 CHIPS',
+            'SYNTHESIZE ONLINE',
+            '  EMERGENCY MODE',
+            'NOTES OFFLINE',
+            'COMMS OFFLINE',
+            'SECURITY OFFLINE',
+            'MAP OFFLINE'
+          ],
+          [],
+          0,
+          'a'
+        ])
+      }
+    },
+    // ACTION_CREATE_MODCHIPS
+    () => {
+      const chips = randInt( 3 ) + 1
+      synthCharging = 1
+      modChips += chips
+      playerChips += chips
+      displayStack.push( [ 
+        DTYPE_MESSAGE, 
+        [ 
+          `Synthesized ${ chips }`, 
+          `mod chips` 
+        ] 
+      ] )
     }
   ]
 

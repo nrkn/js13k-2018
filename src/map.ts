@@ -1,10 +1,10 @@
 import {
   T_TREE, DTYPE_MAP, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_SAND_L,
   T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED,
-  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L, T_PORTAL, T_SATELLITE, T_RANGER
+  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L, T_PORTAL, T_SATELLITE, T_RANGER, T_PORTAL_DAY, T_PORTAL_OFFLINE
 } from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
-import { MapTiles, MapRow, DisplayMap, Point, FloodPoint, HutState, RuinItems, HutCache, RuinCache } from './types'
+import { MapTiles, MapRow, DisplayMap, Point, FloodPoint, HutState, RuinItems, HutCache, RuinCache, PortalCache } from './types'
 import { randInt, pick, shuffle } from './utils'
 import {
   drunkenWalk, randomPointInLandBorder, inWaterBorder, expandLand,
@@ -133,7 +133,7 @@ export const createHut = (): DisplayMap => {
   return [ DTYPE_MAP, landBorder, landBorder, tiles, MT_HUT, landBorder, landBorder ]
 }
 
-export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache ): DisplayMap => {
+export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache, portalCache: PortalCache ): DisplayMap => {
   const tiles = createMap()
 
   // choose clearways (waypoints)
@@ -217,7 +217,7 @@ export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache ): Displa
   for( let i = 0; i < waypoints.length; i++ ){
     const [ wx, wy ] = waypoints[ i ]
 
-    const type = randInt( 10 )
+    const type = randInt( 13 )
 
     // dead ranger
     if( i === 0 ){
@@ -235,25 +235,31 @@ export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache ): Displa
       ruinCache[ wy * mapSize + wx ] = []
       ruinCache[ 0 ].push([ wx, wy ])
     }
+    // portal
+    else if( i === 3 ){
+      tiles[ wy ][ wx ] = T_PORTAL
+      portalCache[ 0 ].push([ wx, wy ])
+    }
     // satellite
     else if( i === waypoints.length - 1 ){
       tiles[ wy ][ wx ] = T_SATELLITE
     }
-    // ruins, 0 1 2 3 4 5
-    else if( type < 6 ){
+    // ruins, 0 1 2 3 4 5 6
+    else if( type < 7 ){
       tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
       ruinCache[ wy * mapSize + wx ] = []
       ruinCache[ 0 ].push([ wx, wy ])      
     }
-    // hut 6 7 8
-    else if( type < 9 ){
+    // hut 7 8 9 10
+    else if( type < 11 ){
       tiles[ wy ][ wx ] = T_HUT
       hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
       hutCache[ 0 ].push([ wx, wy ])
     }
-    // portal 9
+    // portal 11 12
     else {
       tiles[ wy ][ wx ] = T_PORTAL
+      portalCache[ 0 ].push([ wx, wy ])
     }
   }
 
@@ -265,4 +271,6 @@ export const blocks = i =>
   i === T_BLACK || i === T_HUT_L || i === T_HUT_M || i === T_HUT_R ||
   i === T_COMPUTER || i === T_SYNTH || i === T_BED ||
   ( i >= T_RUINS && i < T_RUINS + T_RUINS_L ) ||
-  ( i >= T_MOUNTAINS && i < T_MOUNTAINS + T_MOUNTAINS_L )
+  ( i >= T_MOUNTAINS && i < T_MOUNTAINS + T_MOUNTAINS_L ) ||
+  i === T_PORTAL || i === T_PORTAL_DAY || i === T_PORTAL_OFFLINE || 
+  i === T_SATELLITE
