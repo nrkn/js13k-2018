@@ -1863,6 +1863,9 @@ const draw = (time) => {
     if (displayItem[DISPLAY_TYPE] === DTYPE_IMAGE) {
         if (displayItem[DISPLAY_NAME] === 's.png') {
             ctx.drawImage(splash, 0, 0);
+            ctx.drawImage(player, S_SKELETON * tileSize, 0, tileSize, tileSize, mapSize / 2 - fontSize, mapSize / 2 - fontSize, tileSize, tileSize);
+            drawText('Js13kGames OFFLINE', 1, 16);
+            drawText('C2018 Nik Coughlin', 1, 18);
         }
     }
     if (displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE) {

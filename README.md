@@ -246,9 +246,6 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 12140, Remaining: 1172
 - ~Stop searching if monster nearby~
   - Size: 12200, Remaining: 1112
-- tell you why you died - it's confusing sometimes if say you're searching ruins
-  at night, and you don't see the ghosts because a message screen is up, then
-  you die - or some other way of making it less confusing for player?
 - if room left, consider adding transitional tiles to make slightly less blocky
 - consider adding padding to SCREENs, will look better (but more math)
 - gamepad support if room left
