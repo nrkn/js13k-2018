@@ -1702,7 +1702,7 @@ const Game = () => {
                 incTime();
                 for (let n = 0; n < neighbours.length; n++) {
                     const [nx, ny] = neighbours[n];
-                    if (isMonsterHere([nx, ny])) {
+                    if ((hours >= sunset || hours < sunrise) && isMonsterHere([nx, ny])) {
                         attacked = 1;
                         i = 60;
                     }
