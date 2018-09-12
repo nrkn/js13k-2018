@@ -50,7 +50,11 @@ import {
   C_HUT_UNLOCKED,
   C_RUINS_EMPTY,
   C_PORTAL_OFFLINE,
-  T_PORTAL_OFFLINE
+  T_PORTAL_OFFLINE,
+  ST_SATELLITE_FIXED,
+  C_SATELLITE_ACTIVE,
+  ST_MOD_CHIPS,
+  ST_SATELLITE_CHIPS
 } from './indices'
 
 import { Game } from './game'
@@ -151,6 +155,7 @@ const drawMap = ( time: number ) => {
   const startY = mapItem[ MAP_STARTY ]
   const playerHealth = api[ API_STATE ]()[ ST_PLAYER_HEALTH ]
   const playerFacing = api[ API_STATE ]()[ ST_PLAYER_FACING ]
+  const satelliteFixed = api[ API_STATE ]()[ ST_SATELLITE_FIXED ]
   const seen = api[ API_STATE ]()[ ST_SEEN ]
   const isNight = api[ API_STATE ]()[ ST_HOURS ] >= sunset || api[ API_STATE ]()[ ST_HOURS ] < sunrise
 
@@ -186,7 +191,7 @@ const drawMap = ( time: number ) => {
             tileSize, tileSize,
             ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
             tileSize, tileSize
-          )  
+          )
         } else {
           ctx.drawImage(
             tiles,
@@ -194,8 +199,18 @@ const drawMap = ( time: number ) => {
             tileSize, tileSize,
             ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
             tileSize, tileSize
-          )    
+          )
         }
+      }
+
+      if ( map[ mapY ][ mapX ] === T_SATELLITE && satelliteFixed ){
+        ctx.drawImage(
+          tiles,
+          ( T_SATELLITE + currentFrame ) * tileSize, 0,
+          tileSize, tileSize,
+          ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
+          tileSize, tileSize
+        )
       }
 
       if ( mapType === MT_ISLAND && isNight ){
@@ -262,7 +277,7 @@ const drawMap = ( time: number ) => {
           tileSize, tileSize,
           ( x + 1 ) * tileSize, ( y + 1 ) * tileSize,
           tileSize, tileSize
-        )        
+        )
       }
     }
   }
@@ -274,6 +289,8 @@ const drawUi = () => {
   const playerKeys = api[ API_STATE ]()[ ST_PLAYER_KEYS ]
   const playerChips = api[ API_STATE ]()[ ST_PLAYER_CHIPS ]
   const playerDisks = api[ API_STATE ]()[ ST_PLAYER_DISKS ]
+  const modChips = api[ API_STATE ]()[ ST_MOD_CHIPS ]
+  const satelliteChips = api[ API_STATE ]()[ ST_SATELLITE_CHIPS ]
 
   drawText( `RANGER DOWN ${ api[ API_TIMESTR ]() }`, 2.5, 0.5 )
 
@@ -291,21 +308,31 @@ const drawUi = () => {
     tiles,
     T_FOOD * tileSize, 0,
     tileSize, tileSize,
-    0, tileSize * 2,
+    0, tileSize * 1.5,
     tileSize, tileSize
   )
 
-  drawText( `${ playerFood }`, playerFood < 10 ? 0.5 : 0, 6 )
+  drawText( `${ playerFood }`, playerFood < 10 ? 0.5 : 0, 5 )
 
   ctx.drawImage(
     tiles,
     T_KEY * tileSize, 0,
     tileSize, tileSize,
-    0, tileSize * 4,
+    0, tileSize * 3,
     tileSize, tileSize
   )
 
-  drawText( `${ playerKeys }`, playerKeys < 10 ? 0.5 : 0, 10 )
+  drawText( `${ playerKeys }`, playerKeys < 10 ? 0.5 : 0, 8 )
+
+  ctx.drawImage(
+    tiles,
+    T_DISK * tileSize, 0,
+    tileSize, tileSize,
+    0, tileSize * 4.5,
+    tileSize, tileSize
+  )
+
+  drawText( `${ playerDisks }`, playerDisks < 10 ? 0.5 : 0, 11 )
 
   ctx.drawImage(
     tiles,
@@ -317,15 +344,12 @@ const drawUi = () => {
 
   drawText( `${ playerChips }`, playerChips < 10 ? 0.5 : 0, 14 )
 
-  ctx.drawImage(
-    tiles,
-    T_DISK * tileSize, 0,
-    tileSize, tileSize,
-    0, tileSize * 8,
-    tileSize, tileSize
-  )
-
-  drawText( `${ playerDisks }`, playerDisks < 10 ? 0.5 : 0, 18 )
+  if ( modChips > -1 ) {
+    drawText( `${ modChips }`, modChips < 10 ? 0.5 : 0, 15 )
+  }
+  if ( satelliteChips > -1 ) {
+    drawText( `${ satelliteChips }`, satelliteChips < 10 ? 0.5 : 0, 16 )
+  }
 }
 
 const drawComputerMap = () => {
@@ -334,6 +358,7 @@ const drawComputerMap = () => {
   const hutCache = api[ API_STATE ]()[ ST_HUTCACHE ]
   const ruinCache = api[ API_STATE ]()[ ST_RUINCACHE ]
   const portalCache = api[ API_STATE ]()[ ST_PORTALCACHE ]
+  const satelliteFixed = api[ API_STATE ]()[ ST_SATELLITE_FIXED ]
   const playerX = mapItem[ MAP_PLAYERX ]
   const playerY = mapItem[ MAP_PLAYERY ]
   const map = mapItem[ MAP_TILES ]
@@ -345,7 +370,7 @@ const drawComputerMap = () => {
       const gridY = ~~( y / gridSize )
       const tile = map[ y ][ x ]
       const isSand = tile >= T_SAND && tile < T_SAND + T_SAND_L
-      if( mapDb[ gridY * gridTiles + gridX ] ){       
+      if( mapDb[ gridY * gridTiles + gridX ] ){
         if ( tile === T_SEA || ( !seen[ y * mapSize + x ] && !isSand ) ){
           ctx.drawImage(
             tiles,
@@ -362,7 +387,7 @@ const drawComputerMap = () => {
             x, y,
             1, 1
           )
-        } 
+        }
       } else {
         if( x > fontSize && y > fontSize && ( ( x % 2 && !( y % 2 ) ) || ( !( x % 2 ) && y % 2 ) ) ){
           ctx.drawImage(
@@ -391,7 +416,7 @@ const drawComputerMap = () => {
               computerIconSize, computerIconSize,
               x - 3, y - 3,
               computerIconSize, computerIconSize
-            ) 
+            )
           } else {
             ctx.drawImage(
               computerIcons,
@@ -399,7 +424,7 @@ const drawComputerMap = () => {
               computerIconSize, computerIconSize,
               x - 3, y - 3,
               computerIconSize, computerIconSize
-            ) 
+            )
           }
         }
         if ( tile >= T_RUINS && tile < T_RUINS + T_RUINS_L ) {
@@ -411,7 +436,7 @@ const drawComputerMap = () => {
               computerIconSize, computerIconSize,
               x - 3, y - 3,
               computerIconSize, computerIconSize
-            ) 
+            )
           } else {
             ctx.drawImage(
               computerIcons,
@@ -419,17 +444,27 @@ const drawComputerMap = () => {
               computerIconSize, computerIconSize,
               x - 3, y - 3,
               computerIconSize, computerIconSize
-            ) 
+            )
           }
         }
         if ( tile === T_SATELLITE ) {
-          ctx.drawImage(
-            computerIcons,
-            C_SATELLITE_OFFLINE * computerIconSize, 0,
-            computerIconSize, computerIconSize,
-            x - 3, y - 3,
-            computerIconSize, computerIconSize
-          )
+          if( satelliteFixed ){
+            ctx.drawImage(
+              computerIcons,
+              C_SATELLITE_ACTIVE * computerIconSize, 0,
+              computerIconSize, computerIconSize,
+              x - 3, y - 3,
+              computerIconSize, computerIconSize
+            )
+          } else {
+            ctx.drawImage(
+              computerIcons,
+              C_SATELLITE_OFFLINE * computerIconSize, 0,
+              computerIconSize, computerIconSize,
+              x - 3, y - 3,
+              computerIconSize, computerIconSize
+            )
+          }
         }
         if ( tile === T_PORTAL ) {
           ctx.drawImage(
@@ -438,7 +473,7 @@ const drawComputerMap = () => {
             computerIconSize, computerIconSize,
             x - 3, y - 3,
             computerIconSize, computerIconSize
-          )  
+          )
         }
         if( tile === T_PORTAL_OFFLINE ){
           ctx.drawImage(
@@ -447,7 +482,7 @@ const drawComputerMap = () => {
             computerIconSize, computerIconSize,
             x - 3, y - 3,
             computerIconSize, computerIconSize
-          )  
+          )
         }
       }
     }
@@ -464,7 +499,7 @@ const drawComputerMap = () => {
       font,
       ( 16 + y ) * fontSize, 0,
       fontSize, fontSize,
-      0, y * gridSize + ~~( gridSize / 2 ), 
+      0, y * gridSize + ~~( gridSize / 2 ),
       fontSize, fontSize
     )
   }
@@ -473,9 +508,9 @@ const drawComputerMap = () => {
       font,
       ( 33 + x ) * fontSize, 0,
       fontSize, fontSize,
-      x * gridSize + ~~( gridSize / 2 ), 0,  
+      x * gridSize + ~~( gridSize / 2 ), 0,
       fontSize, fontSize
-    )   
+    )
   }
 }
 

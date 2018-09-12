@@ -1,7 +1,7 @@
 import {
   T_TREE, DTYPE_MAP, T_LAND, T_WATER, TOP, RIGHT, BOTTOM, LEFT, T_SEA, T_SAND_L,
   T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED,
-  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L, T_PORTAL, T_SATELLITE, T_RANGER, T_PORTAL_DAY, T_PORTAL_OFFLINE
+  MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS, T_GRASS_L, T_PORTAL, T_SATELLITE, T_RANGER, T_PORTAL_DAY, T_PORTAL_OFFLINE, QUEST_HUT, QUEST_PORTAL, QUEST_RUINS, QUEST_RANGER, QUEST_SATELLITE
 } from './indices'
 import { mapSize, gridSize, gridTiles, landBorder } from './settings'
 import { MapTiles, MapRow, DisplayMap, Point, FloodPoint, HutState, RuinItems, HutCache, RuinCache, PortalCache } from './types'
@@ -212,54 +212,53 @@ export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache, portalCa
     }
     return randInt( T_GRASS_L + 1 ) + T_LAND
   })
-  // insert various quest elements here instead of just hut
+
+  // 50% ruins, 35% huts, 15% portals
+  const questSlots = waypoints.length - 4
+  const numHuts = ~~( questSlots * 0.35 )
+  const numPortals = ~~( questSlots * 0.15 )
+  const numRuins = questSlots - numHuts - numPortals
+  const randQuests: number[] = []
+  for ( let i = 0; i < numHuts; i++ ) {
+    randQuests.push( QUEST_HUT )
+  }
+  for ( let i = 0; i < numPortals; i++ ) {
+    randQuests.push( QUEST_PORTAL )
+  }
+  for ( let i = 0; i < numRuins; i++ ) {
+    randQuests.push( QUEST_RUINS )
+  }
+  const quests = [ QUEST_RANGER, QUEST_HUT, QUEST_RUINS, ...shuffle( randQuests ), QUEST_SATELLITE ]
 
   for( let i = 0; i < waypoints.length; i++ ){
     const [ wx, wy ] = waypoints[ i ]
 
-    const type = randInt( 13 )
+    const type = quests[ i ]
 
     // dead ranger
-    if( i === 0 ){
+    if( type === QUEST_RANGER ){
       tiles[ wy ][ wx ] = T_RANGER
     }
     // hut
-    else if( i === 1 ){
+    else if( type === QUEST_HUT ){
       tiles[ wy ][ wx ] = T_HUT
-      hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
+      hutCache[ wy * mapSize + wx ] = [ 0, 0, 0 ]
       hutCache[ 0 ].push([ wx, wy ])
     }
     // ruins
-    else if( i === 2 ){
+    else if( type === QUEST_RUINS ){
       tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
       ruinCache[ wy * mapSize + wx ] = []
       ruinCache[ 0 ].push([ wx, wy ])
     }
     // portal
-    else if( i === 3 ){
+    else if( type === QUEST_PORTAL ){
       tiles[ wy ][ wx ] = T_PORTAL
       portalCache[ 0 ].push([ wx, wy ])
     }
     // satellite
-    else if( i === waypoints.length - 1 ){
+    else if( type === QUEST_SATELLITE ){
       tiles[ wy ][ wx ] = T_SATELLITE
-    }
-    // ruins, 0 1 2 3 4 5 6
-    else if( type < 7 ){
-      tiles[ wy ][ wx ] = randInt( T_RUINS_L ) + T_RUINS
-      ruinCache[ wy * mapSize + wx ] = []
-      ruinCache[ 0 ].push([ wx, wy ])      
-    }
-    // hut 7 8 9 10
-    else if( type < 11 ){
-      tiles[ wy ][ wx ] = T_HUT
-      hutCache[ wy * mapSize + wx ] = [ 0, 0 ]
-      hutCache[ 0 ].push([ wx, wy ])
-    }
-    // portal 11 12
-    else {
-      tiles[ wy ][ wx ] = T_PORTAL
-      portalCache[ 0 ].push([ wx, wy ])
     }
   }
 
@@ -272,5 +271,5 @@ export const blocks = i =>
   i === T_COMPUTER || i === T_SYNTH || i === T_BED ||
   ( i >= T_RUINS && i < T_RUINS + T_RUINS_L ) ||
   ( i >= T_MOUNTAINS && i < T_MOUNTAINS + T_MOUNTAINS_L ) ||
-  i === T_PORTAL || i === T_PORTAL_DAY || i === T_PORTAL_OFFLINE || 
+  i === T_PORTAL || i === T_PORTAL_DAY || i === T_PORTAL_OFFLINE ||
   i === T_SATELLITE

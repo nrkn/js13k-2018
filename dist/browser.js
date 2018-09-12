@@ -90,6 +90,9 @@ const ST_SEEN = 12;
 const ST_HUTCACHE = 13;
 const ST_RUINCACHE = 14;
 const ST_PORTALCACHE = 15;
+const ST_SATELLITE_FIXED = 16;
+const ST_MOD_CHIPS = 17;
+const ST_SATELLITE_CHIPS = 18;
 // api indices
 const API_STATE = 0;
 const API_RESET = 1;
@@ -148,9 +151,12 @@ const DATA_C_DB_SHUTDOWN_PORTALS = 37;
 const DATA_C_DB_SECURITY = 38;
 const DATA_C_DB_FIX_SATELLITE = 39;
 const DATA_C_DB_RESCUE_TEAM = 40;
+const DATA_C_DB_L = 8;
 const DATA_RESTORE_BACKUPS = 41;
 const DATA_DIAGNOSTICS = 42;
 const DATA_MODCHIPS = 43;
+const DATA_SATELLITE_CHIP = 44;
+const DATA_DISTRESS_SIGNAL = 45;
 // map data indices
 const MAP_PLAYERX = 1;
 const MAP_PLAYERY = 2;
@@ -203,14 +209,23 @@ const ACTION_SHOW_MAP = 10;
 const ACTION_RESTORE_BACKUPS = 11;
 const ACTION_DIAGNOSTICS = 12;
 const ACTION_CREATE_MODCHIP = 13;
+const ACTION_CREATE_SATELLITE_CHIP = 14;
+const ACTION_DISTRESS_SIGNAL = 15;
 // hut state
 const HUT_UNLOCKED = 0;
 const HUT_COMPUTER_FIXED = 1;
+const HUT_SYNTH_CHARGING = 2;
 // ruin item
 const ITEM_KEY = 0;
 const ITEM_CHIP = 1;
 const ITEM_DISK = 2;
 const ITEM_FOOD = 3;
+// quest location
+const QUEST_RANGER = 0;
+const QUEST_HUT = 1;
+const QUEST_RUINS = 2;
+const QUEST_PORTAL = 3;
+const QUEST_SATELLITE = 4;
 
 const delta = (i, j) => Math.max(i, j) - Math.min(i, j);
 const immediateNeighbours = ([x, y]) => [
@@ -622,51 +637,49 @@ const createIsland = (hutCache, ruinCache, portalCache) => {
         }
         return randInt(T_GRASS_L + 1) + T_LAND;
     });
-    // insert various quest elements here instead of just hut
+    // 50% ruins, 35% huts, 15% portals
+    const questSlots = waypoints.length - 4;
+    const numHuts = ~~(questSlots * 0.35);
+    const numPortals = ~~(questSlots * 0.15);
+    const numRuins = questSlots - numHuts - numPortals;
+    const randQuests = [];
+    for (let i = 0; i < numHuts; i++) {
+        randQuests.push(QUEST_HUT);
+    }
+    for (let i = 0; i < numPortals; i++) {
+        randQuests.push(QUEST_PORTAL);
+    }
+    for (let i = 0; i < numRuins; i++) {
+        randQuests.push(QUEST_RUINS);
+    }
+    const quests = [QUEST_RANGER, QUEST_HUT, QUEST_RUINS, ...shuffle(randQuests), QUEST_SATELLITE];
     for (let i = 0; i < waypoints.length; i++) {
         const [wx, wy] = waypoints[i];
-        const type = randInt(13);
+        const type = quests[i];
         // dead ranger
-        if (i === 0) {
+        if (type === QUEST_RANGER) {
             tiles[wy][wx] = T_RANGER;
         }
         // hut
-        else if (i === 1) {
+        else if (type === QUEST_HUT) {
             tiles[wy][wx] = T_HUT;
-            hutCache[wy * mapSize + wx] = [0, 0];
+            hutCache[wy * mapSize + wx] = [0, 0, 0];
             hutCache[0].push([wx, wy]);
         }
         // ruins
-        else if (i === 2) {
+        else if (type === QUEST_RUINS) {
             tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
             ruinCache[wy * mapSize + wx] = [];
             ruinCache[0].push([wx, wy]);
         }
         // portal
-        else if (i === 3) {
+        else if (type === QUEST_PORTAL) {
             tiles[wy][wx] = T_PORTAL;
             portalCache[0].push([wx, wy]);
         }
         // satellite
-        else if (i === waypoints.length - 1) {
+        else if (type === QUEST_SATELLITE) {
             tiles[wy][wx] = T_SATELLITE;
-        }
-        // ruins, 0 1 2 3 4 5 6
-        else if (type < 7) {
-            tiles[wy][wx] = randInt(T_RUINS_L) + T_RUINS;
-            ruinCache[wy * mapSize + wx] = [];
-            ruinCache[0].push([wx, wy]);
-        }
-        // hut 7 8 9 10
-        else if (type < 11) {
-            tiles[wy][wx] = T_HUT;
-            hutCache[wy * mapSize + wx] = [0, 0];
-            hutCache[0].push([wx, wy]);
-        }
-        // portal 11 12
-        else {
-            tiles[wy][wx] = T_PORTAL;
-            portalCache[0].push([wx, wy]);
         }
     }
     return [DTYPE_MAP, playerX, playerY, tiles, MT_ISLAND, playerX, playerY];
@@ -748,7 +761,9 @@ gameData[DATA_HUNGRY] = [
 gameData[DATA_DEAD] = [
     DTYPE_MESSAGE,
     [
-        'You died'
+        'You died',
+        '',
+        'GAME OVER!'
     ]
 ];
 gameData[DATA_RANGER] = [
@@ -758,7 +773,10 @@ gameData[DATA_RANGER] = [
         '',
         `RANGER is DEAD!`,
         '',
-        `Found keycard`
+        `Found 1 keycard`,
+        `Found 5 food`,
+        `Found 3 chips`,
+        `Found 2 backups`
     ]
 ];
 gameData[DATA_LOCKED_NOKEYS] = [
@@ -936,10 +954,8 @@ gameData[DATA_C_DB_SECURITY] = [
         'RANGER:',
         'Got computer online.',
         'Still has errors.',
-        'Security system',
-        'should be able to',
-        'deal with monsters',
-        'if can get it online'
+        'Comms are badly',
+        'damaged'
     ],
     [],
     0,
@@ -953,15 +969,11 @@ gameData[DATA_C_DB_FIX_SATELLITE] = [
         'NOTES ENTRY 7',
         '',
         'RANGER:',
-        'Comms damaged beyond',
-        'repair but can send',
-        'a distress signal if',
-        'repair the satellite',
-        'transmitter with',
-        'some chips. Not sure',
-        'where the dish is',
-        'on island and maps',
-        'are offline'
+        'Rigged comms to send',
+        'distress signal but',
+        'satellite offline.',
+        'Synth can make chip',
+        'to fix it'
     ],
     [],
     0,
@@ -975,13 +987,12 @@ gameData[DATA_C_DB_RESCUE_TEAM] = [
         'NOTES ENTRY 8',
         '',
         'RANGER:',
-        'No way to warn',
-        'rescue team of',
-        'monsters with comms',
-        `offline. Can't send`,
-        'distress signal',
-        'until deal with',
-        'monsters!'
+        'Must disable portals',
+        'before send distress',
+        'signal, no way to',
+        `warn rescue team`,
+        'about monsters',
+        'with comms offline'
     ],
     [],
     0,
@@ -998,6 +1009,14 @@ gameData[DATA_DIAGNOSTICS] = [
 gameData[DATA_MODCHIPS] = [
     DTYPE_ACTION,
     ACTION_CREATE_MODCHIP
+];
+gameData[DATA_SATELLITE_CHIP] = [
+    DTYPE_ACTION,
+    ACTION_CREATE_SATELLITE_CHIP
+];
+gameData[DATA_DISTRESS_SIGNAL] = [
+    DTYPE_ACTION,
+    ACTION_DISTRESS_SIGNAL
 ];
 
 const Game = () => {
@@ -1017,11 +1036,11 @@ const Game = () => {
     let displayStack;
     let monsters;
     let seen;
+    let satelliteFixed;
     // internal state
     let seenRangerMessage;
     let currentHut;
     let currentRuins;
-    let synthCharging;
     let notesDb;
     let mapDb;
     let modChips;
@@ -1032,12 +1051,12 @@ const Game = () => {
         ruinCache = [[]];
         portalCache = [[]];
         playerFacing = 0;
-        playerFood = 99;
-        playerHealth = 99;
-        playerMaxHealth = 99;
-        playerKeys = 5;
-        playerChips = 50;
-        playerDisks = 50;
+        playerFood = 5;
+        playerHealth = 20;
+        playerMaxHealth = 20;
+        playerKeys = 0;
+        playerChips = 0;
+        playerDisks = 0;
         hours = 17;
         minutes = 55;
         gameData[DATA_ISLAND] = createIsland(hutCache, ruinCache, portalCache);
@@ -1049,12 +1068,12 @@ const Game = () => {
         color = '';
         monsters = [];
         seenRangerMessage = 0;
-        synthCharging = 0;
         modChips = -1;
         satelliteChips = -1;
         notesDb = [DATA_C_DB_INTRO];
         mapDb = [];
         seen = [];
+        satelliteFixed = 0;
         const mapItem = gameData[DATA_ISLAND];
         const playerX = mapItem[MAP_PLAYERX];
         const playerY = mapItem[MAP_PLAYERY];
@@ -1083,7 +1102,7 @@ const Game = () => {
         monsters,
         playerKeys, playerChips, playerDisks,
         seen,
-        hutCache, ruinCache, portalCache
+        hutCache, ruinCache, portalCache, satelliteFixed, modChips, satelliteChips
     ];
     const close = () => {
         // can use this to toggle inventory for map
@@ -1227,7 +1246,11 @@ const Game = () => {
             }
         }
         if (hours === 24) {
-            synthCharging = 0;
+            const huts = hutCache[0];
+            for (let i = 0; i < huts.length; i++) {
+                const [hx, hy] = huts[i];
+                hutCache[hy * mapSize + hx][HUT_SYNTH_CHARGING] = 0;
+            }
             hours = 0;
             const mapItem = gameData[DATA_ISLAND];
             for (let y = 0; y < mapSize; y++) {
@@ -1319,6 +1342,9 @@ const Game = () => {
                 seenRangerMessage = 1;
                 displayStack.push(gameData[DATA_RANGER]);
                 playerKeys++;
+                playerFood += 5;
+                playerChips += 3;
+                playerDisks += 2;
             }
             if (map[MAP_TILES][y][x] >= T_RUINS && map[MAP_TILES][y][x] < T_RUINS + T_RUINS_L) {
                 currentRuins = ruinCache[y * mapSize + x];
@@ -1335,13 +1361,25 @@ const Game = () => {
                     map[MAP_TILES][y][x] = T_PORTAL_OFFLINE;
                     portalCache[y * mapSize + x] = 1;
                     modChips--;
-                    playerChips--;
                 }
                 else if (modChips > -1) {
                     displayStack.push([DTYPE_MESSAGE, ['Need mod chips']]);
                 }
                 else {
                     displayStack.push([DTYPE_MESSAGE, ['A strange portal']]);
+                }
+            }
+            if (map[MAP_TILES][y][x] === T_SATELLITE) {
+                if (satelliteChips > 0 && !satelliteFixed) {
+                    displayStack.push([DTYPE_MESSAGE, ['Fixed satellite!']]);
+                    satelliteFixed = 1;
+                    satelliteChips--;
+                }
+                else if (satelliteChips > -1 && !satelliteFixed) {
+                    displayStack.push([DTYPE_MESSAGE, ['Need satellite chip']]);
+                }
+                else if (!satelliteFixed) {
+                    displayStack.push([DTYPE_MESSAGE, ['Satellite is offline']]);
                 }
             }
         }
@@ -1464,7 +1502,6 @@ const Game = () => {
                         ['DIAGNOSTICS', DATA_DIAGNOSTICS],
                         ['NOTES', DATA_DB],
                         ['COMMS', DATA_COMMS],
-                        ['SECURITY', DATA_SECURITY],
                         ['MAP', DATA_MAP]
                     ],
                     0,
@@ -1500,7 +1537,7 @@ const Game = () => {
         // ACTION_CREATE_FOOD
         () => {
             const food = randInt(3) + 6;
-            synthCharging = 1;
+            currentHut[HUT_SYNTH_CHARGING] = 1;
             playerFood += food;
             displayStack.push([DTYPE_MESSAGE, [`Synthesized ${food} food`]]);
         },
@@ -1518,13 +1555,16 @@ const Game = () => {
                 0,
                 'a'
             ];
-            if (synthCharging) {
+            if (currentHut[HUT_SYNTH_CHARGING]) {
                 screen[DISPLAY_MESSAGE].push('  CHARGING...');
             }
             else {
                 options.push(['RATIONS', DATA_CREATE_FOOD]);
                 if (modChips > -1) {
                     options.push(['MOD CHIPS', DATA_MODCHIPS]);
+                }
+                if (satelliteChips > -1) {
+                    options.push(['SATELLITE CHIP', DATA_SATELLITE_CHIP]);
                 }
             }
             displayStack.push(screen);
@@ -1539,7 +1579,7 @@ const Game = () => {
                 [
                     'RSOS v3.27',
                     '--------------------',
-                    'NOTES MENU',
+                    'NOTES',
                 ],
                 dbOptions,
                 0,
@@ -1549,6 +1589,25 @@ const Game = () => {
         },
         // ACTION_SHOW_COMMS
         () => {
+            const options = [];
+            const screen = [
+                DTYPE_SCREEN,
+                [
+                    'RSOS v3.27',
+                    '--------------------',
+                    'COMMS',
+                ],
+                options,
+                0,
+                'a'
+            ];
+            if (satelliteFixed) {
+                options.push(['DISTRESS SIGNAL', DATA_DISTRESS_SIGNAL]);
+            }
+            else {
+                screen[DISPLAY_MESSAGE].push('  SATELLITE OFFLINE');
+            }
+            displayStack.push(screen);
         },
         // ACTION_SHOW_SECURITY
         () => {
@@ -1568,15 +1627,23 @@ const Game = () => {
             const nextNoteDb = notesDb.length + DATA_C_DB_INTRO;
             const randItem = randInt(8);
             // mod chip
-            if (notesDb.length > 4 && modChips === -1) {
+            if ((notesDb.length + DATA_C_DB_INTRO) > DATA_C_DB_SHUTDOWN_PORTALS && modChips === -1) {
                 displayStack.push([DTYPE_MESSAGE, [
                         'Recovered 1 synth',
                         'database entry'
                     ]]);
                 modChips = 0;
             }
+            // satellite chip
+            else if ((notesDb.length + DATA_C_DB_INTRO) > DATA_C_DB_FIX_SATELLITE && satelliteChips === -1) {
+                displayStack.push([DTYPE_MESSAGE, [
+                        'Recovered 1 synth',
+                        'database entry'
+                    ]]);
+                satelliteChips = 0;
+            }
             // note
-            else if (randItem < 3 && nextNoteDb < DATA_RESTORE_BACKUPS) {
+            else if (randItem < 3 && nextNoteDb < (DATA_C_DB_INTRO + DATA_C_DB_L)) {
                 notesDb.push(nextNoteDb);
                 displayStack.push(gameData[notesDb.length + DATA_C_DB_INTRO - 1]);
                 displayStack.push([DTYPE_MESSAGE, [
@@ -1604,7 +1671,7 @@ const Game = () => {
                         ]]);
                 }
                 else {
-                    if (nextNoteDb < DATA_RESTORE_BACKUPS) {
+                    if (nextNoteDb < (DATA_C_DB_INTRO + DATA_C_DB_L)) {
                         notesDb.push(nextNoteDb);
                         displayStack.push(gameData[notesDb.length + DATA_C_DB_INTRO - 1]);
                         displayStack.push([DTYPE_MESSAGE, [
@@ -1638,17 +1705,22 @@ const Game = () => {
                     '',
                     'NETWORK ONLINE',
                     'SYNTHESIZE ONLINE',
-                    '  RESTORE BACKUPS',
-                    'NOTES ONLINE',
                 ];
+                if (satelliteChips === -1) {
+                    screen.push('  RESTORE BACKUPS');
+                }
+                screen.push('NOTES ONLINE');
                 if (notesDb.length < 8) {
                     screen.push('  RESTORE BACKUPS');
                 }
-                screen.push(...[
-                    'COMMS OFFLINE',
-                    'SECURITY OFFLINE',
-                    'MAP ONLINE'
-                ]);
+                if (satelliteFixed) {
+                    screen.push('COMMS ONLINE');
+                    screen.push('  DISTRESS MODE ONLY');
+                }
+                else {
+                    screen.push('COMMS OFFLINE');
+                }
+                screen.push('MAP ONLINE');
                 if (availableMaps.length) {
                     screen.push('  RESTORE BACKUPS');
                 }
@@ -1674,7 +1746,6 @@ const Game = () => {
                         '  EMERGENCY MODE',
                         'NOTES OFFLINE',
                         'COMMS OFFLINE',
-                        'SECURITY OFFLINE',
                         'MAP OFFLINE'
                     ],
                     [],
@@ -1685,10 +1756,9 @@ const Game = () => {
         },
         // ACTION_CREATE_MODCHIPS
         () => {
-            const chips = randInt(3) + 1;
-            synthCharging = 1;
+            const chips = randInt(2) + 2;
+            currentHut[HUT_SYNTH_CHARGING] = 1;
             modChips += chips;
-            playerChips += chips;
             displayStack.push([
                 DTYPE_MESSAGE,
                 [
@@ -1696,6 +1766,65 @@ const Game = () => {
                     `mod chips`
                 ]
             ]);
+        },
+        // ACTION_CREATE_SATELLITE_CHIP
+        () => {
+            currentHut[HUT_SYNTH_CHARGING] = 1;
+            satelliteChips++;
+            displayStack.push([
+                DTYPE_MESSAGE,
+                [
+                    `Synthesized`,
+                    `satellite chip`
+                ]
+            ]);
+        },
+        // ACTION_DISTRESS_SIGNAL
+        () => {
+            const portals = portalCache[0];
+            const mapItem = gameData[DATA_ISLAND];
+            const mapTiles = mapItem[MAP_TILES];
+            let portalsLeft = 0;
+            for (let i = 0; i < portals.length; i++) {
+                const [px, py] = portals[i];
+                if (mapTiles[py][px] !== T_PORTAL_OFFLINE) {
+                    portalsLeft = 1;
+                }
+            }
+            if (portalsLeft) {
+                displayStack = [[
+                        DTYPE_MESSAGE,
+                        [
+                            `You send the`,
+                            `distress signal.`,
+                            '',
+                            'As the rescue team',
+                            'arrives monsters',
+                            'pour out of',
+                            'remaining portals',
+                            'and kill them all!',
+                            '',
+                            'GAME OVER!'
+                        ]
+                    ]];
+            }
+            else {
+                displayStack = [[
+                        DTYPE_MESSAGE,
+                        [
+                            `You send the`,
+                            `distress signal.`,
+                            '',
+                            'The rescue team',
+                            'arrives and you',
+                            'help them kill',
+                            'the remaining',
+                            'monsters.',
+                            '',
+                            'YOU WIN!'
+                        ]
+                    ]];
+            }
         }
     ];
     reset();
@@ -1764,6 +1893,7 @@ const drawMap = (time) => {
     const startY = mapItem[MAP_STARTY];
     const playerHealth = api[API_STATE]()[ST_PLAYER_HEALTH];
     const playerFacing = api[API_STATE]()[ST_PLAYER_FACING];
+    const satelliteFixed = api[API_STATE]()[ST_SATELLITE_FIXED];
     const seen = api[API_STATE]()[ST_SEEN];
     const isNight = api[API_STATE]()[ST_HOURS] >= sunset || api[API_STATE]()[ST_HOURS] < sunrise;
     for (let y = 0; y < viewTiles; y++) {
@@ -1787,6 +1917,9 @@ const drawMap = (time) => {
                 else {
                     ctx.drawImage(tiles, T_PORTAL_DAY * tileSize, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
                 }
+            }
+            if (map[mapY][mapX] === T_SATELLITE && satelliteFixed) {
+                ctx.drawImage(tiles, (T_SATELLITE + currentFrame) * tileSize, 0, tileSize, tileSize, (x + 1) * tileSize, (y + 1) * tileSize, tileSize, tileSize);
             }
             if (mapType === MT_ISLAND && isNight) {
                 for (let i = 0; i < monsters.length; i++) {
@@ -1827,17 +1960,25 @@ const drawUi = () => {
     const playerKeys = api[API_STATE]()[ST_PLAYER_KEYS];
     const playerChips = api[API_STATE]()[ST_PLAYER_CHIPS];
     const playerDisks = api[API_STATE]()[ST_PLAYER_DISKS];
+    const modChips = api[API_STATE]()[ST_MOD_CHIPS];
+    const satelliteChips = api[API_STATE]()[ST_SATELLITE_CHIPS];
     drawText(`RANGER DOWN ${api[API_TIMESTR]()}`, 2.5, 0.5);
     ctx.drawImage(tiles, T_HEALTH * tileSize, 0, tileSize, tileSize, 0, 0, tileSize, tileSize);
     drawText(`${playerHealth}`, playerHealth < 10 ? 0.5 : 0, 2);
-    ctx.drawImage(tiles, T_FOOD * tileSize, 0, tileSize, tileSize, 0, tileSize * 2, tileSize, tileSize);
-    drawText(`${playerFood}`, playerFood < 10 ? 0.5 : 0, 6);
-    ctx.drawImage(tiles, T_KEY * tileSize, 0, tileSize, tileSize, 0, tileSize * 4, tileSize, tileSize);
-    drawText(`${playerKeys}`, playerKeys < 10 ? 0.5 : 0, 10);
+    ctx.drawImage(tiles, T_FOOD * tileSize, 0, tileSize, tileSize, 0, tileSize * 1.5, tileSize, tileSize);
+    drawText(`${playerFood}`, playerFood < 10 ? 0.5 : 0, 5);
+    ctx.drawImage(tiles, T_KEY * tileSize, 0, tileSize, tileSize, 0, tileSize * 3, tileSize, tileSize);
+    drawText(`${playerKeys}`, playerKeys < 10 ? 0.5 : 0, 8);
+    ctx.drawImage(tiles, T_DISK * tileSize, 0, tileSize, tileSize, 0, tileSize * 4.5, tileSize, tileSize);
+    drawText(`${playerDisks}`, playerDisks < 10 ? 0.5 : 0, 11);
     ctx.drawImage(tiles, T_CHIP * tileSize, 0, tileSize, tileSize, 0, tileSize * 6, tileSize, tileSize);
     drawText(`${playerChips}`, playerChips < 10 ? 0.5 : 0, 14);
-    ctx.drawImage(tiles, T_DISK * tileSize, 0, tileSize, tileSize, 0, tileSize * 8, tileSize, tileSize);
-    drawText(`${playerDisks}`, playerDisks < 10 ? 0.5 : 0, 18);
+    if (modChips > -1) {
+        drawText(`${modChips}`, modChips < 10 ? 0.5 : 0, 15);
+    }
+    if (satelliteChips > -1) {
+        drawText(`${satelliteChips}`, satelliteChips < 10 ? 0.5 : 0, 16);
+    }
 };
 const drawComputerMap = () => {
     const mapItem = api[API_STATE]()[ST_DISPLAY_ITEM];
@@ -1845,6 +1986,7 @@ const drawComputerMap = () => {
     const hutCache = api[API_STATE]()[ST_HUTCACHE];
     const ruinCache = api[API_STATE]()[ST_RUINCACHE];
     const portalCache = api[API_STATE]()[ST_PORTALCACHE];
+    const satelliteFixed = api[API_STATE]()[ST_SATELLITE_FIXED];
     const playerX = mapItem[MAP_PLAYERX];
     const playerY = mapItem[MAP_PLAYERY];
     const map = mapItem[MAP_TILES];
@@ -1895,7 +2037,12 @@ const drawComputerMap = () => {
                     }
                 }
                 if (tile === T_SATELLITE) {
-                    ctx.drawImage(computerIcons, C_SATELLITE_OFFLINE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                    if (satelliteFixed) {
+                        ctx.drawImage(computerIcons, C_SATELLITE_ACTIVE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                    }
+                    else {
+                        ctx.drawImage(computerIcons, C_SATELLITE_OFFLINE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
+                    }
                 }
                 if (tile === T_PORTAL) {
                     ctx.drawImage(computerIcons, C_PORTAL_ACTIVE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);

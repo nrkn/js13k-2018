@@ -62,6 +62,9 @@ export const ST_SEEN = 12
 export const ST_HUTCACHE = 13
 export const ST_RUINCACHE = 14
 export const ST_PORTALCACHE = 15
+export const ST_SATELLITE_FIXED = 16
+export const ST_MOD_CHIPS = 17
+export const ST_SATELLITE_CHIPS = 18
 
 // api indices
 export const API_STATE = 0
@@ -123,9 +126,12 @@ export const DATA_C_DB_SHUTDOWN_PORTALS = 37
 export const DATA_C_DB_SECURITY = 38
 export const DATA_C_DB_FIX_SATELLITE = 39
 export const DATA_C_DB_RESCUE_TEAM = 40
+export const DATA_C_DB_L = 8
 export const DATA_RESTORE_BACKUPS = 41
 export const DATA_DIAGNOSTICS = 42
 export const DATA_MODCHIPS = 43
+export const DATA_SATELLITE_CHIP = 44
+export const DATA_DISTRESS_SIGNAL = 45
 
 // map data indices
 export const MAP_PLAYERX = 1
@@ -187,13 +193,23 @@ export const ACTION_SHOW_MAP = 10
 export const ACTION_RESTORE_BACKUPS = 11
 export const ACTION_DIAGNOSTICS = 12
 export const ACTION_CREATE_MODCHIP = 13
+export const ACTION_CREATE_SATELLITE_CHIP = 14
+export const ACTION_DISTRESS_SIGNAL = 15
 
 // hut state
 export const HUT_UNLOCKED = 0
 export const HUT_COMPUTER_FIXED = 1
+export const HUT_SYNTH_CHARGING = 2
 
 // ruin item
 export const ITEM_KEY = 0
 export const ITEM_CHIP = 1
 export const ITEM_DISK = 2
 export const ITEM_FOOD = 3
+
+// quest location
+export const QUEST_RANGER = 0
+export const QUEST_HUT = 1
+export const QUEST_RUINS = 2
+export const QUEST_PORTAL = 3
+export const QUEST_SATELLITE = 4

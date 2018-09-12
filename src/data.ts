@@ -4,31 +4,35 @@ import {
   DTYPE_ACTION, DATA_SLEEP, ACTION_SLEEP, DATA_UNLOCK, ACTION_UNLOCK,
   DATA_SEARCH_RUINS, ACTION_SEARCH, DATA_USE_COMPUTER, ACTION_USE_COMPUTER,
   DATA_FIX_COMPUTER, ACTION_FIX_COMPUTER, ACTION_CREATE_FOOD, DATA_CREATE_FOOD,
-  ACTION_SHOW_SYNTH, DATA_SYNTH, DTYPE_MAP, MT_ISLAND, DATA_C_DIAGNOSTICS_FIXED, 
-  DATA_DB, DATA_COMMS, DATA_SECURITY, DATA_MAP, ACTION_SHOW_DB, 
-  ACTION_SHOW_COMMS, ACTION_SHOW_SECURITY, ACTION_SHOW_MAP, 
-  DATA_RESTORE_BACKUPS, ACTION_RESTORE_BACKUPS, DATA_SPLASH, DATA_INTRO, 
-  DATA_SUNRISE, DATA_SUNSET, DATA_C_MAIN, DATA_ISLAND, DATA_INVESTIGATE, 
-  DATA_BED, DATA_NOT_TIRED, DATA_HUNGRY, DATA_DEAD, DATA_RANGER, 
-  DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, DATA_RUINS, DATA_COMPUTER, 
-  DATA_FIXABLE_COMPUTER, DATA_C_FIXED, DATA_C_SYNTH_CHARGING, 
-  DATA_C_DB_INTRO, DATA_C_DB_PORTALS, DATA_C_DB_GHOSTS, DATA_C_DB_ERRORS, 
-  DATA_C_DB_SHUTDOWN_PORTALS, DATA_C_DB_SECURITY, DATA_C_DB_FIX_SATELLITE, 
+  ACTION_SHOW_SYNTH, DATA_SYNTH, DTYPE_MAP, MT_ISLAND, DATA_C_DIAGNOSTICS_FIXED,
+  DATA_DB, DATA_COMMS, DATA_SECURITY, DATA_MAP, ACTION_SHOW_DB,
+  ACTION_SHOW_COMMS, ACTION_SHOW_SECURITY, ACTION_SHOW_MAP,
+  DATA_RESTORE_BACKUPS, ACTION_RESTORE_BACKUPS, DATA_SPLASH, DATA_INTRO,
+  DATA_SUNRISE, DATA_SUNSET, DATA_C_MAIN, DATA_ISLAND, DATA_INVESTIGATE,
+  DATA_BED, DATA_NOT_TIRED, DATA_HUNGRY, DATA_DEAD, DATA_RANGER,
+  DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, DATA_RUINS, DATA_COMPUTER,
+  DATA_FIXABLE_COMPUTER, DATA_C_FIXED, DATA_C_SYNTH_CHARGING,
+  DATA_C_DB_INTRO, DATA_C_DB_PORTALS, DATA_C_DB_GHOSTS, DATA_C_DB_ERRORS,
+  DATA_C_DB_SHUTDOWN_PORTALS, DATA_C_DB_SECURITY, DATA_C_DB_FIX_SATELLITE,
   DATA_C_DB_RESCUE_TEAM,
   DATA_DIAGNOSTICS,
   ACTION_DIAGNOSTICS,
   DATA_MODCHIPS,
-  ACTION_CREATE_MODCHIP
+  ACTION_CREATE_MODCHIP,
+  DATA_SATELLITE_CHIP,
+  ACTION_CREATE_SATELLITE_CHIP,
+  DATA_DISTRESS_SIGNAL,
+  ACTION_DISTRESS_SIGNAL
 } from './indices'
 
 export const gameData: DisplayItem[] = []
 
-gameData[ DATA_SPLASH ] = [ 
-  DTYPE_IMAGE, 
-  's.png' 
+gameData[ DATA_SPLASH ] = [
+  DTYPE_IMAGE,
+  's.png'
 ]
 
-gameData[ DATA_INTRO ] = [ 
+gameData[ DATA_INTRO ] = [
   DTYPE_MESSAGE,
   [
     'Lost contact with',
@@ -95,7 +99,9 @@ gameData[ DATA_HUNGRY ] = [
 gameData[ DATA_DEAD ] = [
   DTYPE_MESSAGE,
   [
-    'You died'
+    'You died',
+    '',
+    'GAME OVER!'
   ]
 ]
 
@@ -106,7 +112,10 @@ gameData[ DATA_RANGER ] = [
     '',
     `RANGER is DEAD!`,
     '',
-    `Found keycard`
+    `Found 1 keycard`,
+    `Found 5 food`,
+    `Found 3 chips`,
+    `Found 2 backups`
   ]
 ]
 
@@ -308,10 +317,8 @@ gameData[ DATA_C_DB_SECURITY ] = [
     'RANGER:',
     'Got computer online.',
     'Still has errors.',
-    'Security system',
-    'should be able to',
-    'deal with monsters',
-    'if can get it online'
+    'Comms are badly',
+    'damaged'
   ],
   [
   ],
@@ -327,15 +334,11 @@ gameData[ DATA_C_DB_FIX_SATELLITE ] = [
     'NOTES ENTRY 7',
     '',
     'RANGER:',
-    'Comms damaged beyond',
-    'repair but can send',
-    'a distress signal if',
-    'repair the satellite',
-    'transmitter with',
-    'some chips. Not sure',
-    'where the dish is',
-    'on island and maps',
-    'are offline'
+    'Rigged comms to send',
+    'distress signal but',
+    'satellite offline.',
+    'Synth can make chip',
+    'to fix it'
   ],
   [
   ],
@@ -351,13 +354,12 @@ gameData[ DATA_C_DB_RESCUE_TEAM ] = [
     'NOTES ENTRY 8',
     '',
     'RANGER:',
-    'No way to warn',
-    'rescue team of',
-    'monsters with comms',
-    `offline. Can't send`,
-    'distress signal',
-    'until deal with',
-    'monsters!'
+    'Must disable portals',
+    'before send distress',
+    'signal, no way to',
+    `warn rescue team`,
+    'about monsters',
+    'with comms offline'
   ],
   [
   ],
@@ -378,4 +380,14 @@ gameData[ DATA_DIAGNOSTICS ] = [
 gameData[ DATA_MODCHIPS ] = [
   DTYPE_ACTION,
   ACTION_CREATE_MODCHIP
+]
+
+gameData[ DATA_SATELLITE_CHIP ] = [
+  DTYPE_ACTION,
+  ACTION_CREATE_SATELLITE_CHIP
+]
+
+gameData[ DATA_DISTRESS_SIGNAL ] = [
+  DTYPE_ACTION,
+  ACTION_DISTRESS_SIGNAL
 ]

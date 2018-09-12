@@ -26,7 +26,10 @@ export type GameState = [
   Seen,
   HutCache,
   RuinCache,
-  PortalCache
+  PortalCache,
+  BoolAsNumber,
+  number,
+  number
 ]
 
 export type GameAPI = [
@@ -59,7 +62,7 @@ export type Monster = [ number, number, number, number ]
 
 export type BoolAsNumber = 0 | 1
 
-export type HutState = [ BoolAsNumber, BoolAsNumber ]
+export type HutState = [ BoolAsNumber, BoolAsNumber, BoolAsNumber ]
 
 // 0,0 is never needed
 export type HutCache = [ Point[], ...HutState[] ]
