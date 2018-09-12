@@ -224,7 +224,7 @@ Player is safe in hut, can sleep to pass the night away
 - ~BUG - player position on map wrong~
   - Size: 11313, Remaining: 1999
 - ~Show portals on map~
-  - Size: 11271, Remaining: 2041  
+  - Size: 11271, Remaining: 2041
 - ~Push correct things to display so you see new notes and new map immediately~
   - Size: 11282, Remaining: 2030
 - ~Always show current location on map~
@@ -236,19 +236,19 @@ Player is safe in hut, can sleep to pass the night away
   - ~portal animations at night, clear at day~
   - ~show status of huts, ruins, portals etc on map~
   - Size: 11744, Remaining: 1568
-- database restore:
-  - any other story color
-- security restore:
-  - destroy monsters
-- fix satellite to:
-  - enable comms to call back to base and win
-  - if you don't deal with ghosts first, you lose (see above)
+- ~WINNABLE!~
+  - ~fix satellite to:~
+    - ~enable comms to call back to base and win~
+    - ~if you don't deal with ghosts first, you lose (see above)~
+  - ~satellite, offline message when bump until working~
+  - ~satellite animation when working~
+  - ~win screen~
+  - Size: 12140, Remaining: 1172
+- ~Stop searching if monster nearby~
+  - Size: 12200, Remaining: 1112
 - tell you why you died - it's confusing sometimes if say you're searching ruins
   at night, and you don't see the ghosts because a message screen is up, then
   you die - or some other way of making it less confusing for player?
-- satellite, offline message when bump until working
-- satellite animation when working
-- win screen
 - if room left, consider adding transitional tiles to make slightly less blocky
 - consider adding padding to SCREENs, will look better (but more math)
 - gamepad support if room left

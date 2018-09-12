@@ -139,17 +139,17 @@ export const Game = () => {
     }
   }
 
-  const updateMonsters = () => {
-    const monsterHere = ( [ x, y ]: Point ) => {
-      for( let i = 0; i < monsters.length; i++ ){
-        const monster = monsters[ i ]
-        const mx = monster[ MON_X ]
-        const my = monster[ MON_Y ]
+  const isMonsterHere = ( [ x, y ]: Point ) => {
+    for ( let i = 0; i < monsters.length; i++ ) {
+      const monster = monsters[ i ]
+      const mx = monster[ MON_X ]
+      const my = monster[ MON_Y ]
 
-        if( monster[ MON_HEALTH ] > 0 && x === mx && y === my ) return 1
-      }
+      if ( monster[ MON_HEALTH ] > 0 && x === mx && y === my ) return 1
     }
+  }
 
+  const updateMonsters = () => {
     for ( let i = 0; i < monsters.length; i++ ) {
       const monster = monsters[ i ]
       const x = monster[ MON_X ]
@@ -176,7 +176,7 @@ export const Game = () => {
 
       if (
         !blocks( mapTile ) &&
-        !monsterHere( [ next[ X ], next[ Y ] ] ) &&
+        !isMonsterHere( [ next[ X ], next[ Y ] ] ) &&
         !( playerX === next[ X ] && playerY === next[ Y ] )
       ) {
         monster[ MON_X ] = next[ X ]
@@ -522,29 +522,47 @@ export const Game = () => {
     },
     // ACTION_SEARCH
     () => {
+      const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
+      const playerX = mapItem[ MAP_PLAYERX ]
+      const playerY = mapItem[ MAP_PLAYERY ]
+      const neighbours = allNeighbours([ playerX, playerY ])
+      let attacked: BoolAsNumber = 0
+
       for( let i = 0; i < 60; i++ ){
         incTime()
+        for( let n = 0; n < neighbours.length; n++ ){
+          const [ nx, ny ] = neighbours[ n ]
+          if( isMonsterHere([ nx, ny ]) ){
+            attacked = 1
+            i = 60
+          }
+        }
       }
 
-      const item = currentRuins.pop()
+      if( attacked ){
+        displayStack.push( [ DTYPE_MESSAGE, [ 'Under attack!' ] ] )
+      } else {
+        const item = currentRuins.pop()
 
-      if( item === ITEM_FOOD ){
-        const food = randInt( 3 ) + 1
-        displayStack.push( [ DTYPE_MESSAGE, [ `Found ${ food } food` ] ] )
-        playerFood += food
+        if ( item === ITEM_FOOD ) {
+          const food = randInt( 3 ) + 2
+          displayStack.push( [ DTYPE_MESSAGE, [ `Found ${ food } food` ] ] )
+          playerFood += food
+        }
+        else if ( item === ITEM_KEY ) {
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
+          playerKeys++
+        }
+        else if ( item === ITEM_CHIP ) {
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found chip' ] ] )
+          playerChips++
+        }
+        else if ( item === ITEM_DISK ) {
+          displayStack.push( [ DTYPE_MESSAGE, [ 'Found backup' ] ] )
+          playerDisks++
+        }
       }
-      else if( item === ITEM_KEY ){
-        displayStack.push( [ DTYPE_MESSAGE, [ 'Found keycard' ] ] )
-        playerKeys++
-      }
-      else if( item === ITEM_CHIP ){
-        displayStack.push( [ DTYPE_MESSAGE, [ 'Found chip' ] ] )
-        playerChips++
-      }
-      else if( item === ITEM_DISK ){
-        displayStack.push( [ DTYPE_MESSAGE, [ 'Found backup' ] ] )
-        playerDisks++
-      }
+
     },
     // ACTION_USE_COMPUTER
     () => {
