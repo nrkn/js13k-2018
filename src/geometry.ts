@@ -3,8 +3,10 @@ import { pick, randInt } from './utils'
 import { mapSize, waterBorder, landBorder } from './settings'
 import { X, Y, T_WATER, T_LAND, LEFT, RIGHT, TOP, BOTTOM } from './indices'
 
+// normalized different between two numbers
 export const delta = ( i: number, j: number ) => Math.max( i, j ) - Math.min( i, j )
 
+// returns points that are to the left, right, top and bottom of passed in point
 export const immediateNeighbours = ( [ x, y ]: Point ): Point[] => [
   [ x - 1, y ],
   [ x + 1, y ],
@@ -12,6 +14,7 @@ export const immediateNeighbours = ( [ x, y ]: Point ): Point[] => [
   [ x, y + 1 ]
 ]
 
+// returns every neighbouring tile, including diagonals
 export const allNeighbours = ( [ x, y ]: Point ): Point[] => [
   [ x - 1, y ],
   [ x + 1, y ],
@@ -23,9 +26,14 @@ export const allNeighbours = ( [ x, y ]: Point ): Point[] => [
   [ x + 1, y + 1 ]
 ]
 
+// gets all the immediate neighbours that match the passed in tileIndex
 export const getImmediateNeighbours = ( tiles: MapTiles, p: Point, tileIndex: number ) =>
   immediateNeighbours( p ).filter( p => tiles[ p[ Y ] ][ p[ X ] ] === tileIndex )
 
+/*
+  gets a random tile from the passed in collection that is between min and max
+  distance from the passed in point
+*/
 export const withinDist = ( tiles: Point[], [ x , y ]: Point, min: number, max: number ) => {
   const candidates = tiles.filter( ( [ tx, ty ] ) => {
     return delta( tx, x ) >= min &&
@@ -37,15 +45,19 @@ export const withinDist = ( tiles: Point[], [ x , y ]: Point, min: number, max: 
   return <Point>pick( candidates )
 }
 
+// use trig to get distance between points
 export const dist = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point ) =>
   Math.hypot( delta( x1, x2 ), delta( y1, y2 ) )
 
+// find the nearest point in a list of points
 export const nearest = ( p1: Point, points: Point[] ) => {
+  // set d to a big number
   let d = mapSize * mapSize
   let p
 
   for( let i = 0; i < points.length; i++ ){
     const currentDist = dist( p1, points[ i ] )
+    // this point is the closest so far
     if( currentDist < d ){
       d = currentDist
       p = points[ i ]
@@ -55,9 +67,11 @@ export const nearest = ( p1: Point, points: Point[] ) => {
   return p
 }
 
-export const sortByDistance = ( p: Point, points: Point[] ) => 
+// sort a list of points by their distance from p
+export const sortByDistance = ( p: Point, points: Point[] ) =>
   points.slice().sort( ( p1, p2 ) => dist( p, p1 ) - dist( p, p2 ) )
 
+// filters a list of points to be unique
 export const unique = ( points: Point[] ) => {
   const result: Point[] = []
   const cache: number[] = []
@@ -69,10 +83,11 @@ export const unique = ( points: Point[] ) => {
       cache[ y * mapSize + x ] = 1
     }
   }
-  
+
   return result
 }
 
+// floodFill algorithm
 export const floodFill = ( [ x, y ]: Point, canFlood: ( p: Point ) => boolean ) => {
   const flooded: FloodPoint[] = []
   const queue: FloodPoint[] = [ [ x, y, 0 ] ]
@@ -101,12 +116,14 @@ export const floodFill = ( [ x, y ]: Point, canFlood: ( p: Point ) => boolean ) 
   return flooded
 }
 
+// find a tile in a list of tiles
 const findTile = ( tiles: Point[] | FloodPoint[], [ x, y ] ) => {
   for( let i = 0; i < tiles.length; i++ ){
     if( tiles[ i ][ X ] === x && tiles[ i ][ Y ] === y ) return tiles[ i ]
   }
 }
 
+// changed map code so it didn't need path finding - removed by uglify
 export const findPath = ( flood: FloodPoint[], [ x2, y2 ] ) => {
   const path: Point[] = []
 
@@ -145,6 +162,7 @@ export const findPath = ( flood: FloodPoint[], [ x2, y2 ] ) => {
   return path
 }
 
+// find the best neighbouring tile to move to if you want to go towards a point
 export const towards = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point ): Point => {
   let dx = delta( x1, x2 )
   let dy = delta( y1, y2 )
@@ -171,6 +189,7 @@ export const towards = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point ): Point => {
   return [ x, y ]
 }
 
+// allows for carving out paths between points that aren't too perfect looking
 export const drunkenWalk = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point, allowed = inBounds, drunkenness = 0.66 ) => {
   const steps: Point[] = []
   const cache: number[] = []
@@ -180,7 +199,7 @@ export const drunkenWalk = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point, allowed = inB
       steps.push( [ x, y ] )
       cache[ y * mapSize + x ] = 1
     }
-     
+
 
     if( x === x2 && y === y2 ) return
 
@@ -196,6 +215,9 @@ export const drunkenWalk = ( [ x1, y1 ]: Point, [ x2, y2 ]: Point, allowed = inB
   return steps
 }
 
+// randomly adds points to edges of existing land until land is a certain size
+// gives a nice coastliney appearance while also ensuring there is a given
+// amount of land tiles
 export const expandLand = ( mapTiles: MapTiles, landTiles: Point[], tileCount = ~~( ( mapSize * mapSize ) * 0.2 ) ) => {
   while ( landTiles.length < tileCount ) {
     const [ cx, cy ] = pick( landTiles )
@@ -211,12 +233,14 @@ export const expandLand = ( mapTiles: MapTiles, landTiles: Point[], tileCount = 
   }
 }
 
+// same as above but instead of mutating maps returns list of points that
+// should be expanded to, allows for further processing
 export const expanded = ( points: Point[], tileCount = ~~( ( mapSize * mapSize ) * 0.33 ) ) => {
   const expandedPoints = points.slice()
   const cache: number[] = []
   for( let i = 0; i < expandedPoints.length; i++ ){
     const [ x, y ] = expandedPoints[ i ]
-    cache[ y * mapSize + x ] = 1 
+    cache[ y * mapSize + x ] = 1
   }
 
   while( expandedPoints.length < tileCount ){
@@ -235,9 +259,11 @@ export const expanded = ( points: Point[], tileCount = ~~( ( mapSize * mapSize )
   return expandedPoints
 }
 
+// some point on the map, randomly chosen
 export const randomPoint = (): Point =>
   [ randInt( mapSize ), randInt( mapSize ) ]
 
+// some point along the nominated landBorder edge, randomly chosen
 export const randomLandEdge = ( edge: Edge ): Point =>
   [
     edge === LEFT ?
@@ -252,12 +278,14 @@ export const randomLandEdge = ( edge: Edge ): Point =>
       randInt( mapSize - landBorder * 2, landBorder ),
   ]
 
+// some point within the land border, randomly chosen
 export const randomPointInLandBorder = (): Point =>
   [
     randInt( mapSize - landBorder * 2, landBorder ),
     randInt( mapSize - landBorder * 2, landBorder )
   ]
 
+// get the leftmost point amongst passed in tiles
 export const leftMost = ( tiles: Point[] | FloodPoint[] ) => {
   let left = mapSize
   let p: Point = [ 0, 0 ]
@@ -273,6 +301,7 @@ export const leftMost = ( tiles: Point[] | FloodPoint[] ) => {
   return p
 }
 
+// does this list of points contain the given point?
 export const hasPoint = ( tiles: Point[] | FloodPoint[], [ x, y ]: Point | FloodPoint ) => {
   for( let i = 0; i < tiles.length; i++ ){
     if( tiles[ i ][ X ] === x && tiles[ i ][ Y ] === y ) return true
@@ -280,6 +309,7 @@ export const hasPoint = ( tiles: Point[] | FloodPoint[], [ x, y ]: Point | Flood
   return false
 }
 
+// find the points of all tiles in a map that match tileIndex
 export const findTilePoints = ( mapTiles: MapTiles, tileIndex: number ) => {
   const tiles: Point[] = []
 
@@ -292,18 +322,21 @@ export const findTilePoints = ( mapTiles: MapTiles, tileIndex: number ) => {
   return tiles
 }
 
+// is within map boundaries
 export const inBounds = ( [ x, y ] ) =>
   x >= 0 &&
   x <= mapSize - 1 &&
   y >= 0 &&
   y <= mapSize - 1
 
+// is within the water border we want to leave on all sides
 export const inWaterBorder = ( [ x, y ] ) =>
   x >= waterBorder &&
   x <= mapSize - waterBorder &&
   y >= waterBorder &&
   y <= mapSize - waterBorder
 
+// is within the area we allow land to be created in
 export const inLandBorder = ( [ x, y ] ) =>
   x >= landBorder &&
   x <= mapSize - landBorder &&

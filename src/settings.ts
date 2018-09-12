@@ -1,3 +1,4 @@
+// various settings and magic numbers, these will get inlined by uglify
 export const tileSize = 16
 export const fontSize = 8
 export const computerIconSize = 7

@@ -1,27 +1,39 @@
 import { blocks, createIsland, createHut } from './map'
 
 import {
-  DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_C_MAIN, DATA_ISLAND,
-  DATA_INTRO, DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE, DATA_SUNSET, DTYPE_MAP,
-  MAP_PLAYERX, MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND,
-  MAP_TYPE, MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X,
-  Y, MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS,
-  OPTION_DATA_INDEX, SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED,
-  DTYPE_ACTION, ACTION_INDEX, DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED, DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS, T_PORTAL, DATA_COMPUTER, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DATA_C_FIXED, DATA_FIXABLE_COMPUTER, DATA_C_SYNTH_CHARGING, DATA_C_SYNTH, DTYPE_COMPUTER_MAP, DATA_C_DB_INTRO, DATA_RESTORE_BACKUPS, ITEM_KEY, ITEM_CHIP, ITEM_DISK, ITEM_FOOD, DATA_DB, DATA_MAP, ACTION_SHOW_COMMS, ACTION_SHOW_DB, ACTION_SHOW_MAP, DATA_C_DIAGNOSTICS, DATA_SYNTH, DATA_C_DIAGNOSTICS_FIXED, DATA_COMMS, DATA_SECURITY, DATA_USE_COMPUTER, DATA_FIX_COMPUTER, DATA_DIAGNOSTICS, ACTION_SHOW_SYNTH, DISPLAY_MESSAGE, DATA_CREATE_FOOD, DATA_MODCHIPS, T_PORTAL_OFFLINE, DATA_C_DB_L, DATA_C_DB_SHUTDOWN_PORTALS, DATA_C_DB_FIX_SATELLITE, T_SATELLITE, DATA_SATELLITE_CHIP, DATA_DISTRESS_SIGNAL, HUT_SYNTH_CHARGING
+  DTYPE_IMAGE, DTYPE_MESSAGE, DTYPE_SCREEN, DATA_ISLAND, DATA_INTRO,
+  DATA_SPLASH, DISPLAY_TYPE, DATA_SUNRISE, DATA_SUNSET, DTYPE_MAP, MAP_PLAYERX,
+  MAP_PLAYERY, MAP_TILES, T_HUT, T_HUT_R, MAP_STARTY, MT_ISLAND, MAP_TYPE,
+  MT_HUT, MAP_STARTX, DATA_INVESTIGATE, MON_X, MON_Y, MON_FACING, X, Y,
+  MON_HEALTH, T_COMPUTER, SCREEN_SELECTION, SCREEN_OPTIONS, OPTION_DATA_INDEX,
+  SCREEN_COLOR, T_BED, DATA_NOT_TIRED, DATA_BED, DTYPE_ACTION, ACTION_INDEX,
+  DATA_HUNGRY, DATA_DEAD, T_RANGER, DATA_RANGER, HUT_UNLOCKED,
+  DATA_LOCKED_NOKEYS, DATA_LOCKED_UNLOCK, T_RUINS, T_RUINS_L, DATA_RUINS,
+  T_PORTAL, ACTION_USE_COMPUTER, HUT_COMPUTER_FIXED, DTYPE_COMPUTER_MAP,
+  DATA_C_DB_INTRO, DATA_RESTORE_BACKUPS, ITEM_KEY, ITEM_CHIP, ITEM_DISK,
+  ITEM_FOOD, DATA_DB, DATA_MAP, ACTION_SHOW_MAP, DATA_SYNTH, DATA_COMMS,
+  DATA_USE_COMPUTER, DATA_FIX_COMPUTER, DATA_DIAGNOSTICS, DISPLAY_MESSAGE,
+  DATA_CREATE_FOOD, DATA_MODCHIPS, T_PORTAL_OFFLINE, DATA_C_DB_L,
+  DATA_C_DB_SHUTDOWN_PORTALS, DATA_C_DB_FIX_SATELLITE, T_SATELLITE,
+  DATA_SATELLITE_CHIP, DATA_DISTRESS_SIGNAL, HUT_SYNTH_CHARGING
 } from './indices'
 
 import {
   DisplayItem, GameColor, GameState, DisplayMap, GameAPI, Monster,
-  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap, DisplaySelection, RuinItems, HutCache, RuinCache, RuinItem, Seen, PortalCache, BoolAsNumber
+  DisplayScreen, DisplayAction, HutState, Point, DisplayComputerMap,
+  DisplaySelection, RuinItems, HutCache, RuinCache, RuinItem, Seen, PortalCache,
+  BoolAsNumber
 } from './types'
 
 import { inBounds, hasPoint, towards, allNeighbours, dist } from './geometry'
-import { initialMonsterCount, mapSize, sunrise, sunset, gridSize, gridTiles, centerTile } from './settings'
+import {
+  initialMonsterCount, mapSize, sunrise, sunset, gridSize, gridTiles, centerTile
+} from './settings'
 import { randInt, shuffle, pick } from './utils'
-import { gameData } from './data';
+import { gameData } from './data'
 
 export const Game = () => {
-  // state
+  // state, things the UI might need to know to draw
   let hutCache: HutCache
   let ruinCache: RuinCache
   let playerFacing: 0 | 1
@@ -38,7 +50,7 @@ export const Game = () => {
   let monsters: Monster[]
   let seen: Seen
   let satelliteFixed: BoolAsNumber
-  // internal state
+  // internal state, no need to expose to UI
   let seenRangerMessage: number
   let currentHut: HutState
   let currentRuins: RuinItems
@@ -48,10 +60,13 @@ export const Game = () => {
   let satelliteChips: number
   let portalCache: PortalCache
 
+  // create a clean slate, eg on first run or when restarting after died/won
   const reset = () => {
+    // information about huts, ruins, portals etc.
     hutCache = [[]]
     ruinCache = [[]]
     portalCache = [[]]
+    // player state
     playerFacing = 0
     playerFood = 5
     playerHealth = 20
@@ -59,9 +74,15 @@ export const Game = () => {
     playerKeys = 0
     playerChips = 0
     playerDisks = 0
+    // start five minutes before dark to teach the player about sunrise/sunset
     hours = 17
     minutes = 55
+    // generate main map
     gameData[ DATA_ISLAND ] = createIsland( hutCache, ruinCache, portalCache )
+    /*
+      setup the display stack with the splash screen, then the intro text,
+      then the main map
+    */
     displayStack = [
       gameData[ DATA_ISLAND ],
       gameData[ DATA_INTRO ],
@@ -77,6 +98,10 @@ export const Game = () => {
     seen = []
     satelliteFixed = 0
 
+    /*
+      once the player unlocks map, the tile they started on will already be
+      restored
+    */
     const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
     const playerX = mapItem[ MAP_PLAYERX ]
     const playerY = mapItem[ MAP_PLAYERY ]
@@ -90,15 +115,24 @@ export const Game = () => {
   }
 
   const currentColor = (): GameColor => {
+    // images and messages use the green scheme
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_IMAGE ) return 'g'
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_MESSAGE ) return 'g'
+    // computer stuff uses amber
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_COMPUTER_MAP ) return 'a'
+    // screens can be either game screens (green) or computer screens (amber)
     if ( displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN )
       return (<DisplayScreen>displayStack[ displayStack.length - 1 ])[ SCREEN_COLOR ]
+
+    /*
+      must be in game, probably empty string - black and white in day, dark
+      blues at night
+    */
 
     return color
   }
 
+  // current game state, used by the UI
   const state = (): GameState => [
     playerFacing, playerFood, playerHealth, playerMaxHealth, hours, minutes,
     currentColor(),
@@ -109,13 +143,18 @@ export const Game = () => {
     hutCache, ruinCache, portalCache, satelliteFixed, modChips, satelliteChips
   ]
 
+  // close the current screen
   const close = () => {
-    // can use this to toggle inventory for map
     displayStack.pop()
 
+    // if nothing left in stack, player won or died - restart
     if( !displayStack.length ) reset()
   }
 
+  /*
+    create a new monster at x,y unless that tile is blocked or already has a
+    monster
+  */
   const createMonster = ( [ x, y ]: Point ) => {
     const facing = randInt( 2 )
     const health = randInt( 2 ) + 1
@@ -131,6 +170,7 @@ export const Game = () => {
     ) monsters.push( [ x, y, facing, health ] )
   }
 
+  // create the initial monsters
   const createMonsters = () => {
     while ( monsters.length < initialMonsterCount ) {
       const x = randInt( mapSize )
@@ -139,6 +179,7 @@ export const Game = () => {
     }
   }
 
+  // monster is only "here" if it's still alive
   const isMonsterHere = ( [ x, y ]: Point ) => {
     for ( let i = 0; i < monsters.length; i++ ) {
       const monster = monsters[ i ]
@@ -149,6 +190,7 @@ export const Game = () => {
     }
   }
 
+  // move all the monsters
   const updateMonsters = () => {
     for ( let i = 0; i < monsters.length; i++ ) {
       const monster = monsters[ i ]
@@ -160,20 +202,28 @@ export const Game = () => {
       const playerY = mapItem[ MAP_PLAYERY ]
       const next = [ x, y ]
 
+      // at night, 66% chance the monster moves towards player.
       if ( ( hours >= sunset || hours < sunrise ) && Math.random() < 0.66 ) {
         const toPlayer = towards( [ x, y ], [ playerX, playerY ] )
         next[ X ] = toPlayer[ X ]
         next[ Y ] = toPlayer[ Y ]
-      } else {
+      }
+      // day time or 33% chance at night that monster just moves randomly
+      else {
+        // 50% chance of moving either horizontally or vertically
         if ( randInt( 2 ) ) {
+          // either move left, stay here, or move right
           next[ X ] = x + ( randInt( 3 ) - 1 )
         } else {
+          // either move up, stay here, or move down
           next[ Y ] = y + ( randInt( 3 ) - 1 )
         }
       }
 
+      // get the tile we're trying to move to
       const mapTile = mapItem[ MAP_TILES ][ next[ Y ] ][ next[ X ] ]
 
+      // only move if not blocked by map obstacle, another monster or player
       if (
         !blocks( mapTile ) &&
         !isMonsterHere( [ next[ X ], next[ Y ] ] ) &&
@@ -181,6 +231,7 @@ export const Game = () => {
       ) {
         monster[ MON_X ] = next[ X ]
         monster[ MON_Y ] = next[ Y ]
+        // update monster facing if moved left or right
         if ( next[ X ] < x ) {
           monster[ MON_FACING ] = 1
         }
@@ -189,6 +240,10 @@ export const Game = () => {
         }
       }
 
+      /*
+        if nighttime and on main map and bumped player and player not already
+        dead and this monster isn't dead, 50% chance of hurting player
+      */
       if (
         currentMapItem[ DISPLAY_TYPE ] === DTYPE_MAP &&
         currentMapItem[ MAP_TYPE ] === MT_ISLAND &&
@@ -201,12 +256,24 @@ export const Game = () => {
     }
   }
 
+  // distribute items amongst ruins
   const distributeItems = () => {
     const numHuts = hutCache[ 0 ].length
-    const numKeyCards = ~~( numHuts * 2 )
-    const numChips = ~~( numHuts * 9 )
-    const numBackups = 50 // guess
-    const numFood = ~~( numHuts * 2 ) // also guess
+    // 1 for each hut and some extra
+    const numKeyCards = numHuts + 2
+    // 6 for each hut and some extra
+    const numChips = ~~( numHuts * 7 )
+    /*
+      We need:
+        7 for notes
+        15 for map
+        2 for synth
+
+      But make approx double that so that the game doesn't go too slowly
+    */
+    const numBackups = 50
+    // this is just a guess
+    const numFood = ~~( numHuts * 2 )
 
     let items: RuinItem[] = []
 
@@ -223,9 +290,15 @@ export const Game = () => {
       items.push( ITEM_FOOD )
     }
 
+    /*
+      ok, now shuffle items so when we distribute it's random
+    */
     items = shuffle( items )
 
     while( items.length ){
+      /*
+        take an item and randomly pick a ruin to stash it in
+      */
       const item = items.pop()!
       const [ rx, ry ] = pick( ruinCache[ 0 ] )
       const ruinItems = <RuinItems>ruinCache[ ry * mapSize + rx ]
@@ -233,17 +306,28 @@ export const Game = () => {
     }
   }
 
-  const incTime = ( sleeping = 0 ) => {
+  /*
+    increase the time by 1 minute every time the player does certain actions
+
+    also keeps track of sunset/sunrise and changes color scheme accordingly
+
+    if sleeping, don't eat food
+
+    if not sleeping, try to eat food, if no food, lose health
+  */
+  const incTime = ( sleeping: BoolAsNumber = 0 ) => {
     if( playerHealth < 1 ){
       displayStack = [ gameData[ DATA_DEAD ] ]
       return
     }
 
     minutes++
+    // new hour
     if ( minutes === 60 ) {
       minutes = 0
       hours++
       if( sleeping ){
+        // heal one HP every hour
         if ( playerHealth < playerMaxHealth ) playerHealth++
         if ( hours === sunrise ) {
           color = ''
@@ -258,28 +342,36 @@ export const Game = () => {
           displayStack.push( gameData[ DATA_SUNSET ] )
         }
         if ( playerFood > 0 ) {
+          // eat food and heal 1 HP if needed
           playerFood--
           if ( playerHealth < playerMaxHealth ) playerHealth++
         } else {
+          // starve if no food and lose 1 HP
           playerHealth--
           displayStack.push( gameData[ DATA_HUNGRY ] )
         }
       }
     }
+    // once a day at midnight, do this
     if ( hours === 24 ) {
+      // put all the synths back to full charge
       const huts = hutCache[ 0 ]
       for( let i = 0; i < huts.length; i++ ){
         const [ hx, hy ] = huts[ i ]
         hutCache[ hy * mapSize + hx ][ HUT_SYNTH_CHARGING ] = 0
       }
+      // tick over the hours counter
       hours = 0
+      // have remaining active portals randomly spawn more monsters
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
       for( let y = 0; y < mapSize; y++ ){
         for( let x = 0; x < mapSize; x++ ){
           const mapTile = mapItem[ MAP_TILES ][ y ][ x ]
           if( mapTile === T_PORTAL ){
+            // every tile neighbouring portal has chance to spawn
             const neighbours = allNeighbours([ x, y ])
             for( let i = 0; i < neighbours.length; i++ ){
+              // one in three chance it spawns
               if( !randInt( 3 ) ){
                 createMonster( neighbours[ i ] )
               }
@@ -288,9 +380,11 @@ export const Game = () => {
         }
       }
     }
+    // move all the monsters
     updateMonsters()
   }
 
+  // format the time string
   const timeStr = () => `${
     hours < 10 ? '0' : ''
   }${
@@ -301,6 +395,7 @@ export const Game = () => {
     minutes
   }`
 
+  // update the fog of war - helps player keep track of where they've been
   const updateSeen = ( map: DisplayMap ) => {
     if( map[ MAP_TYPE ] === MT_ISLAND ){
       const px = map[ MAP_PLAYERX ]
@@ -310,6 +405,7 @@ export const Game = () => {
         for( let x = -centerTile; x < centerTile; x++ ){
           const cx = px + x
           const cy = py + y
+          // if we had a bigger viewport this would be a nice circle
           if( dist( [ px, py ], [ cx, cy ] ) < centerTile ){
             seen[ cy * mapSize + cx ] = 1
           }
@@ -318,24 +414,29 @@ export const Game = () => {
     }
   }
 
+  // the UI asked the game code to move the player
   const move = ( x: number, y: number ) => {
     const map = <DisplayMap>displayStack[ displayStack.length - 1 ]
 
+    // must be navigating around a menu or something
     if( map[ 0 ] !== DTYPE_MAP ) return
 
+    // takes one minute even if blocked
     incTime()
 
+    // change player facing even if blocked
     if( x === -1 ){
       playerFacing = 1
     }
-
     if( x === 1 ){
       playerFacing = 0
     }
 
+    // update current player position
     x = map[ MAP_PLAYERX ] + x
     y = map[ MAP_PLAYERY ] + y
 
+    // find if a monster is at the new position and if it is alive
     let monsterHere
     if (
       ( hours >= sunset || hours < sunrise ) &&
@@ -351,6 +452,7 @@ export const Game = () => {
       }
     }
 
+    // move the player if no map obstacle or monster
     if (
       playerHealth > 0 && inBounds( [ x, y ] ) &&
       !blocks( map[ MAP_TILES ][ y ][ x ] ) && !monsterHere
@@ -359,33 +461,42 @@ export const Game = () => {
       map[ MAP_PLAYERY ] = y
     }
 
+    // update the fog of war
     updateSeen( map )
 
-    // bumps
+    // check for bumping into things on island
     if( map[ MAP_TYPE ] === MT_ISLAND ){
+      // huts
       if ( map[ MAP_TILES ][ y ][ x ] === T_HUT ) {
         currentHut = <HutState>hutCache[ y * mapSize + x ]
+        // if unlocked you just go in
         if( currentHut[ HUT_UNLOCKED ] ){
           displayStack.push( createHut() )
         } else {
+          // if they have keys ask if want to unlock
           if( playerKeys ){
             displayStack.push( gameData[ DATA_LOCKED_UNLOCK ] )
-          } else {
+          }
+          // otherwise tell them it's locked
+          else {
             displayStack.push( gameData[ DATA_LOCKED_NOKEYS ] )
           }
         }
       }
 
+      // if they bump the boat tell them they can't leave, there's a job to do
       if( y === map[ MAP_STARTY ] ){
         if( x === map[ MAP_STARTX ] - 1 ){
           displayStack.push( gameData[ DATA_INVESTIGATE ] )
         }
       }
 
+      // if bumped a monster, 50% chance of hurting it
       if ( monsterHere && randInt( 2 ) ){
         monsterHere[ MON_HEALTH ]--
       }
 
+      // show the ranger message the first time the player bumps the skeleton
       if( map[ MAP_TILES ][ y ][ x ] === T_RANGER && !seenRangerMessage ){
         seenRangerMessage = 1
         displayStack.push( gameData[ DATA_RANGER ] )
@@ -395,46 +506,65 @@ export const Game = () => {
         playerDisks += 2
       }
 
+      // ruins
       if( map[ MAP_TILES ][ y ][ x ] >= T_RUINS && map[ MAP_TILES ][ y ][ x ] < T_RUINS + T_RUINS_L ){
         currentRuins = <RuinItems>ruinCache[ y * mapSize + x ]
+        // offer them chance to search if this ruins has items left
         if( currentRuins.length ){
           displayStack.push( gameData[ DATA_RUINS ] )
-        } else {
+        }
+        // otherwise tell them it's empty
+        else {
           displayStack.push( [ DTYPE_MESSAGE, [ 'Nothing here' ] ] )
         }
       }
 
+      // portal
       if( map[ MAP_TILES ][ y ][ x ] === T_PORTAL ){
+        // if they have mod chips, let them disable it
         if( modChips > 0 ){
           displayStack.push( [ DTYPE_MESSAGE, [ 'Portal disabled!' ] ] )
           map[ MAP_TILES ][ y ][ x ] = T_PORTAL_OFFLINE
           portalCache[ y * mapSize + x ] = 1
           modChips--
-        } else if ( modChips > -1 ) {
+        }
+        // they can make mod chips, but don't have any yet
+        else if ( modChips > -1 ) {
           displayStack.push( [ DTYPE_MESSAGE, [ 'Need mod chips' ] ] )
-        } else {
+        }
+        // they haven't unlocked mod chips yet
+        else {
           displayStack.push( [ DTYPE_MESSAGE, [ 'A strange portal' ] ] )
         }
       }
 
+      // satellite
       if( map[ MAP_TILES ][ y ][ x ] === T_SATELLITE ){
+        // if they haven't fixed it yet and have chips, fix it
         if ( satelliteChips > 0 && !satelliteFixed ) {
           displayStack.push( [ DTYPE_MESSAGE, [ 'Fixed satellite!' ] ] )
           satelliteFixed = 1
           satelliteChips--
-        } else if ( satelliteChips > -1 && !satelliteFixed ) {
+        }
+        // they can make chips but haven't yet
+        else if ( satelliteChips > -1 && !satelliteFixed ) {
           displayStack.push( [ DTYPE_MESSAGE, [ 'Need satellite chip' ] ] )
-        } else if ( !satelliteFixed ) {
+        }
+        // they haven't unlocked satellite chips yet
+        else if ( !satelliteFixed ) {
           displayStack.push( [ DTYPE_MESSAGE, [ 'Satellite is offline' ] ] )
         }
       }
     }
 
+    // bumps inside a hut
     if ( map[ MAP_TYPE ] === MT_HUT ) {
+      // leave the hut if they bump the door
       if ( map[ MAP_TILES ][ y ][ x ] === T_HUT_R ) {
         displayStack.pop()
       }
 
+      // use the computer
       if ( map[ MAP_TILES ][ y ][ x ] === T_COMPUTER ) {
         const options: DisplaySelection[] = [
           [ 'Use', DATA_USE_COMPUTER ]
@@ -457,13 +587,22 @@ export const Game = () => {
           options.push( [ 'Restore Backups', DATA_RESTORE_BACKUPS ] )
         }
 
+        // if they can fix or restore, ask them what they want to do
         if( options.length > 1 ){
           displayStack.push( computer )
-        } else {
+        }
+        // otherwise, just use the computer
+        else {
           actions[ ACTION_USE_COMPUTER ]()
         }
       }
 
+      /*
+        you can sleep anytime between one hour before sunset and 1 minute
+        before sunrise - 1 hour before, because if you hurried back to hut and
+        misjudged slightly and got there a bit early, it's annoying killing time
+        until you can sleep
+      */
       if( map[ MAP_TILES ][ y ][ x ] === T_BED ){
         if( hours >= ( sunset - 1 ) || hours < sunrise ) {
           displayStack.push( gameData[ DATA_BED ] )
@@ -474,6 +613,7 @@ export const Game = () => {
     }
   }
 
+  // the UI is asking to the change the selection on a screen
   const select = ( i: number ) => {
     if (
       displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN
@@ -482,12 +622,14 @@ export const Game = () => {
     }
   }
 
+  // the UI is asking us to execute whatever selection was chosen
   const confirmSelection = () => {
     if (
       displayStack[ displayStack.length - 1 ][ DISPLAY_TYPE ] === DTYPE_SCREEN
     ) {
       const screen = <DisplayScreen>displayStack[ displayStack.length - 1 ]
 
+      // some screens have no options, just close the screen and return
       if( !screen[ SCREEN_OPTIONS ].length ){
         displayStack.pop()
         return
@@ -496,18 +638,27 @@ export const Game = () => {
       const selected = screen[ SCREEN_SELECTION ]
       const dataIndex = screen[ SCREEN_OPTIONS ][ selected ][ OPTION_DATA_INDEX ]
 
+      // magic number used by options that just want to close this screen
       if( dataIndex === -1 ){
         close()
-      } else if( gameData[ dataIndex ][ DISPLAY_TYPE ] === DTYPE_ACTION ){
+      }
+      // if it's an action, close this screen and execute it
+      else if( gameData[ dataIndex ][ DISPLAY_TYPE ] === DTYPE_ACTION ){
         displayStack.pop()
         actions[ ( <DisplayAction>gameData[ dataIndex ] )[ ACTION_INDEX ] ]()
-      } else {
+      }
+      // otherwise it must be another screen
+      else {
         displayStack.push( gameData[ dataIndex ] )
       }
     }
   }
 
-  const actions: (()=>void)[] = [
+  /*
+    note actions don't generally check if they're valid or not, that's done by
+    the calling code
+  */
+  const actions: ( () => void )[] = [
     // ACTION_SLEEP
     () => {
       while ( hours !== sunrise ) {
@@ -518,7 +669,6 @@ export const Game = () => {
     () => {
       currentHut[ HUT_UNLOCKED ] = 1
       playerKeys--
-      //displayStack.push( [ DTYPE_MESSAGE, [ 'Unlocked' ] ] )
     },
     // ACTION_SEARCH
     () => {
@@ -528,6 +678,10 @@ export const Game = () => {
       const neighbours = allNeighbours([ playerX, playerY ])
       let attacked: BoolAsNumber = 0
 
+      /*
+        searching takes one hour - if a monster is adjacent at any point, we
+        want to stop searching so check every minute
+      */
       for( let i = 0; i < 60; i++ ){
         incTime()
         for( let n = 0; n < neighbours.length; n++ ){
@@ -542,6 +696,7 @@ export const Game = () => {
       if( attacked ){
         displayStack.push( [ DTYPE_MESSAGE, [ 'Under attack!' ] ] )
       } else {
+        // take an item off the ruin stack and give it to the player
         const item = currentRuins.pop()
 
         if ( item === ITEM_FOOD ) {
@@ -566,6 +721,7 @@ export const Game = () => {
     },
     // ACTION_USE_COMPUTER
     () => {
+      // if they've used chips to fix the computer
       if( currentHut[ HUT_COMPUTER_FIXED ] ){
         displayStack.push([
           DTYPE_SCREEN,
@@ -584,7 +740,9 @@ export const Game = () => {
           0,
           'a'
         ])
-      } else {
+      }
+      // otherwise, just basic functions
+      else {
         displayStack.push([
           DTYPE_SCREEN,
           [
@@ -631,13 +789,19 @@ export const Game = () => {
         0,
         'a'
       ]
+      // each hut's synth can only be used once a day
       if( currentHut[ HUT_SYNTH_CHARGING ] ){
         screen[ DISPLAY_MESSAGE ].push( '  CHARGING...' )
-      } else {
+      }
+      // if it hasn't been used
+      else {
+        // you can always make food if it has power
         options.push( [ 'RATIONS', DATA_CREATE_FOOD ] )
+        // if they've unlocked mod chips
         if( modChips > -1 ){
           options.push( [ 'MOD CHIPS', DATA_MODCHIPS ] )
         }
+        // if they've unlocked satellite chips
         if( satelliteChips > -1 ){
           options.push( [ 'SATELLITE CHIP', DATA_SATELLITE_CHIP ] )
         }
@@ -646,6 +810,7 @@ export const Game = () => {
     },
     // ACTION_SHOW_DB
     () => {
+      // options for all the notes they've unlocked so far
       const dbOptions: DisplaySelection[] = notesDb.map( i => {
         return <DisplaySelection>[ `ENTRY ${ i }`, i ]
       })
@@ -676,6 +841,7 @@ export const Game = () => {
         0,
         'a'
       ]
+      // they can only send distress signal after fixing satellite
       if( satelliteFixed ){
         options.push( [ 'DISTRESS SIGNAL', DATA_DISTRESS_SIGNAL ] )
       } else {
@@ -685,7 +851,10 @@ export const Game = () => {
     },
     // ACTION_SHOW_SECURITY
     () => {
-
+      /*
+        this was never used - can be removed but all the action indices would
+        need to be updated
+      */
     },
     // ACTION_SHOW_MAP
     () => {
@@ -693,6 +862,7 @@ export const Game = () => {
       const playerX = mapItem[ MAP_PLAYERX ]
       const playerY = mapItem[ MAP_PLAYERY ]
       const mapTiles = mapItem[ MAP_TILES ]
+      // all the information needed by the UI to display the computer map
       const computerMap: DisplayComputerMap = [ DTYPE_COMPUTER_MAP, playerX, playerY, mapTiles, mapDb ]
 
       displayStack.push( computerMap )
@@ -701,26 +871,35 @@ export const Game = () => {
     () => {
       playerDisks--
 
+      // which note is next (if there are any left to show)
       const nextNoteDb = notesDb.length + DATA_C_DB_INTRO
+
       const randItem = randInt( 8 )
 
-      // mod chip
+      /*
+        mod chip for closing down portals - give to the player on first backup
+        restore after they've seen the note mentioning it
+      */
       if ( ( notesDb.length + DATA_C_DB_INTRO ) > DATA_C_DB_SHUTDOWN_PORTALS && modChips === -1 ){
         displayStack.push( [ DTYPE_MESSAGE, [
           'Recovered 1 synth',
           'database entry'
         ] ] )
+        // lets the game know they can make them, but don't have any yet
         modChips = 0
       }
-      // satellite chip
+      /*
+        satellite chip for fixing satellite - give after first note as above
+      */
       else if ( ( notesDb.length + DATA_C_DB_INTRO ) > DATA_C_DB_FIX_SATELLITE && satelliteChips === -1 ){
         displayStack.push( [ DTYPE_MESSAGE, [
           'Recovered 1 synth',
           'database entry'
         ] ] )
+        // as above
         satelliteChips = 0
       }
-      // note
+      // note if they haven't gotten any yet and randItem was one of 0 1 2
       else if( randItem < 3 && nextNoteDb < ( DATA_C_DB_INTRO + DATA_C_DB_L ) ){
         notesDb.push( nextNoteDb )
         displayStack.push( gameData[ notesDb.length + DATA_C_DB_INTRO - 1 ] )
@@ -729,8 +908,9 @@ export const Game = () => {
           'database entry'
         ] ] )
       }
-      // map tile
+      // otherwise give them a map tile if randItem was 3 4 5 6 7
       else {
+        // check which map tiles are left
         let availableMaps: Point[] = []
         for( let y = 0; y < gridTiles; y++ ){
           for( let x = 0; x < gridTiles; x++ ){
@@ -739,6 +919,7 @@ export const Game = () => {
             }
           }
         }
+        // if there are any, pick one randomly and give it to them
         if( availableMaps.length ){
           const [ gridX, gridY ] = pick( availableMaps )
           mapDb[ gridY * gridTiles + gridX ] = 1
@@ -748,7 +929,9 @@ export const Game = () => {
             'Recovered 1 map',
             'database entry'
           ] ] )
-        } else {
+        }
+        // none left, try to give them a note
+        else {
           if ( nextNoteDb < ( DATA_C_DB_INTRO + DATA_C_DB_L ) ){
             notesDb.push( nextNoteDb )
             displayStack.push( gameData[ notesDb.length + DATA_C_DB_INTRO - 1 ] )
@@ -756,9 +939,12 @@ export const Game = () => {
               'Recovered 1 note',
               'database entry'
             ] ] )
-          } else {
+          }
+          // no notes left either
+          else {
             displayStack.push( [ DTYPE_MESSAGE, [
-              'Disk corrupt'
+              'Backup already',
+              'restored'
             ] ] )
           }
         }
@@ -766,6 +952,7 @@ export const Game = () => {
     },
     // ACTION_DIAGNOSTICS
     () => {
+      // if they've fixed the computer, check what else is working properly
       if( currentHut[ HUT_COMPUTER_FIXED ] ){
         let availableMaps: Point[] = []
         for( let y = 0; y < gridTiles; y++ ){
@@ -783,13 +970,19 @@ export const Game = () => {
           'NETWORK ONLINE',
           'SYNTHESIZE ONLINE',
         ]
+        /*
+          if they haven't got satellite chips yet, there are synth backups left
+          to restore
+        */
         if( satelliteChips === -1 ){
           screen.push( '  RESTORE BACKUPS' )
         }
         screen.push( 'NOTES ONLINE' )
+        // still some notes to restore
         if( notesDb.length < 8 ){
           screen.push( '  RESTORE BACKUPS' )
         }
+        // satellite status
         if( satelliteFixed ){
           screen.push( 'COMMS ONLINE' )
           screen.push( '  DISTRESS MODE ONLY' )
@@ -797,6 +990,7 @@ export const Game = () => {
           screen.push( 'COMMS OFFLINE' )
         }
         screen.push( 'MAP ONLINE' )
+        // still some map backups left to do
         if( availableMaps.length ){
           screen.push( '  RESTORE BACKUPS' )
         }
@@ -807,7 +1001,9 @@ export const Game = () => {
           0,
           'a'
         ])
-      } else {
+      }
+      // static screen if they haven't fixed it yet telling them to fix chips
+      else {
         displayStack.push([
           DTYPE_SCREEN,
           [
@@ -831,7 +1027,9 @@ export const Game = () => {
     },
     // ACTION_CREATE_MODCHIPS
     () => {
+      // give them 2-3 chips per synth
       const chips = randInt( 2 ) + 2
+      // set the synth to charge mode
       currentHut[ HUT_SYNTH_CHARGING ] = 1
       modChips += chips
       displayStack.push( [
@@ -844,7 +1042,9 @@ export const Game = () => {
     },
     // ACTION_CREATE_SATELLITE_CHIP
     () => {
+      // set the synth to charge mode
       currentHut[ HUT_SYNTH_CHARGING ] = 1
+      // they only need one anyway
       satelliteChips++
       displayStack.push( [
         DTYPE_MESSAGE,
@@ -856,6 +1056,7 @@ export const Game = () => {
     },
     // ACTION_DISTRESS_SIGNAL
     () => {
+      // check if they've disabled every portal
       const portals = portalCache[ 0 ]
       const mapItem = <DisplayMap>gameData[ DATA_ISLAND ]
       const mapTiles = mapItem[ MAP_TILES ]
@@ -867,6 +1068,7 @@ export const Game = () => {
         }
       }
 
+      // they didn't - bad move, the last note tells you to
       if( portalsLeft ){
         displayStack = [[
           DTYPE_MESSAGE,
@@ -883,7 +1085,9 @@ export const Game = () => {
             'GAME OVER!'
           ]
         ]]
-      } else {
+      }
+      // they did! good work, they won
+      else {
         displayStack = [ [
           DTYPE_MESSAGE,
           [
@@ -903,8 +1107,10 @@ export const Game = () => {
     }
   ]
 
+  // first run
   reset()
 
+  // api for the UI to interact with
   const api: GameAPI = [
     state, reset, timeStr, incTime, move, close, select, confirmSelection
   ]

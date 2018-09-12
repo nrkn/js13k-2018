@@ -3,8 +3,9 @@ const Jimp = require( 'jimp' )
 import { mapSize } from './settings'
 import { createIsland } from './map'
 import {
-  MAP_TILES, T_GRASS, T_GRASS_L, T_TREE, T_TREE_L, MAP_PLAYERX, MAP_PLAYERY, 
-  T_SAND, T_SAND_L, T_HUT, T_MOUNTAINS, T_MOUNTAINS_L, T_RUINS, T_RUINS_L, T_LAND, T_RANGER, T_SATELLITE, T_PORTAL
+  MAP_TILES, T_GRASS, T_GRASS_L, T_TREE, T_TREE_L, MAP_PLAYERX, MAP_PLAYERY,
+  T_SAND, T_SAND_L, T_HUT, T_MOUNTAINS, T_MOUNTAINS_L, T_RUINS, T_RUINS_L,
+  T_LAND, T_RANGER, T_SATELLITE, T_PORTAL
 } from './indices'
 
 const start = process.hrtime()
