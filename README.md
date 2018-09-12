@@ -246,6 +246,8 @@ Player is safe in hut, can sleep to pass the night away
   - Size: 12140, Remaining: 1172
 - ~Stop searching if monster nearby~
   - Size: 12200, Remaining: 1112
+- ~Better splash screen~
+  - Size: 12253, Remaining: 1059
 - if room left, consider adding transitional tiles to make slightly less blocky
 - consider adding padding to SCREENs, will look better (but more math)
 - gamepad support if room left
