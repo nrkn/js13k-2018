@@ -3,7 +3,7 @@ import {
   fontSize, fontTiles, mapSize, computerIconSize, gridSize, gridTiles
 } from './settings'
 
-import { loadImages } from './utils'
+import { loadImages, randInt } from './utils'
 import { inBounds, delta } from './geometry'
 
 import {
@@ -375,6 +375,7 @@ const drawUi = () => {
   }
 }
 
+let lastAnimFrame = 0
 // use the map db to display any unlocked map tiles
 const drawComputerMap = () => {
   // get info we need from state
@@ -397,9 +398,39 @@ const drawComputerMap = () => {
       const isSand = tile >= T_SAND && tile < T_SAND + T_SAND_L
       // if they have this tile unlocked
       if( mapDb[ gridY * gridTiles + gridX ] ){
-        // we draw sea and unseen tiles in black
-        if ( tile === T_SEA || ( !seen[ y * mapSize + x ] && !isSand ) ){
+        // leave left and top edge clear for coords
+        if ( x > fontSize && y > fontSize && tile === T_SEA ){
+          if( x % 2 && !( y % 2 ) ){
+            ctx.drawImage(
+              tiles,
+              T_LAND * tileSize, 0,
+              1, 1,
+              x, y,
+              1, 1
+            )  
+          } else {
+            ctx.drawImage(
+              tiles,
+              T_BLACK * tileSize, 0,
+              1, 1,
+              x, y,
+              1, 1
+            ) 
+          }
           // not the most efficient way to draw a single pixel but map is small
+        }        
+        // we draw coastlines and seen tiles in white
+        else if( seen[ y * mapSize + x ] || isSand ) {
+          ctx.drawImage(
+            tiles,
+            T_LAND * tileSize, 0,
+            1, 1,
+            x, y,
+            1, 1
+          )
+        }
+        // unseen black
+        else {
           ctx.drawImage(
             tiles,
             T_BLACK * tileSize, 0,
@@ -408,27 +439,27 @@ const drawComputerMap = () => {
             1, 1
           )
         }
-        // we draw coastlines and seen tiles in white
-        else {
-          ctx.drawImage(
-            tiles,
-            T_LAND * tileSize, 0,
-            1, 1,
-            x, y,
-            1, 1
-          )
-        }
       }
-      // otherwise draw a 50% dither pattern, but leave the left and top edge
+      // otherwise static, but leave the left and top edge
       else {
-        if( x > fontSize && y > fontSize && ( ( x % 2 && !( y % 2 ) ) || ( !( x % 2 ) && y % 2 ) ) ){
-          ctx.drawImage(
-            tiles,
-            T_LAND * tileSize, 0,
-            1, 1,
-            x, y,
-            1, 1
-          )
+        if( x > fontSize && y > fontSize ){
+          if(  randInt( 2 ) ){
+            ctx.drawImage(
+              tiles,
+              T_LAND * tileSize, 0,
+              1, 1,
+              x, y,
+              1, 1
+            ) 
+          } else {
+            ctx.drawImage(
+              tiles,
+              T_BLACK * tileSize, 0,
+              1, 1,
+              x, y,
+              1, 1
+            ) 
+          }
         }
       }
     }
