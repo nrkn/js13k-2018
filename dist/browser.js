@@ -1158,9 +1158,9 @@ const Game = () => {
         playerFood = 5;
         playerHealth = 20;
         playerMaxHealth = 20;
-        playerKeys = 50;
-        playerChips = 50;
-        playerDisks = 50;
+        playerKeys = 0;
+        playerChips = 0;
+        playerDisks = 0;
         // start five minutes before dark to teach the player about sunrise/sunset
         hours = 17;
         minutes = 55;
