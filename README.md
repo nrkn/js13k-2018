@@ -4,11 +4,39 @@
 
 A game for [js13kGames 2018 **Offline**](http://2018.js13kgames.com/)
 
+Supports mouse, touch, and keyboard:
+
 WASD/Arrows + ESC + Space/Enter
 
-Or mouse/touch
-
 ![Screenshot](screenshot.png)
+
+## Code
+
+The entrypoint to the unminified, commented TypeScript is 
+[browser.ts](src/browser.ts)
+
+The main game engine is in [game.ts](src/game.ts), and the map generation is in 
+[map.ts](src/map.ts)
+
+## Minification
+
+First, the TypeScript is compiled to ES6. Then a 
+[home-made and rather crude tool](build/index.js) inlines all the imports to 
+create a [single JS file](dist/browser.js), then makes some 
+pre-optimizations before calling [uglify](https://github.com/mishoo/UglifyJS)
+
+## Optimization Strategy
+
+- Use lots of constants (that will get inlined by uglify andyway) to aid 
+  readability
+- All data in arrays to make data creation/access/mutation more "samey" for
+  better compression
+- Stick with as few control structures as possible, and again, try to make them 
+  "samey" for compression
+- Low-res, 1 bit graphics. Very small files compress better as GIF, 
+  bigger files and files with transparency (like player etc) compress better as
+  PNG
+- Restricted vocabulary for in-game text for better compression
 
 ## Map Generation
 
@@ -45,9 +73,6 @@ This GIF is false-colored:
     - Huts 25%
     - Portals 15%
     - None 10%
-    
-
-
 
 ### Log
 - ~~pixels scaled as big as possible centered in viewport~~
