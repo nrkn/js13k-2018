@@ -21,22 +21,22 @@ The main game engine is in [game.ts](src/game.ts), and the map generation is in
 ## Minification
 
 First, the TypeScript is compiled to ES6. Then a 
-[home-made and rather crude tool](build/index.js) inlines all the imports to 
-create a [single JS file](dist/browser.js), then makes some 
+[home-made and rather crude tool](build/resolve-imports.js) inlines all the 
+imports to create a [single JS file](dist/browser.js), then makes some 
 pre-optimizations before calling [uglify](https://github.com/mishoo/UglifyJS)
 
 ## Optimization Strategy
 
-- Restricted vocabulary for in-game text for better compression
+- Restricted vocabulary used by in-game text for better compression
 - Low-res, 1 bit graphics. Very small files compress better as GIF, 
   bigger files and files with transparency (like player etc) compress better as
   PNG
 - CSS effects to shift color schemes, slight winner over processing pixels via 
   ImageData  
-- All data in arrays to make data creation/access/mutation more "samey" for
-  better compression
+- Store all data in arrays to make data creation/access/mutation more "samey" 
+  for better compression
 - Use lots of constants (that will get inlined by uglify andyway) to aid 
-  readability, especially useful to name known indices into arrays
+  readability, it is especially helpful to name known indices into arrays
 - Stick with as few control structures as possible, and again, try to make them 
   "samey" for compression
 
