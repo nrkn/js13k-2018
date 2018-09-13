@@ -213,3 +213,4 @@ export const QUEST_HUT = 1
 export const QUEST_RUINS = 2
 export const QUEST_PORTAL = 3
 export const QUEST_SATELLITE = 4
+export const QUEST_BLANK = 5

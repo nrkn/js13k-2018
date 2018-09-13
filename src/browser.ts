@@ -28,6 +28,7 @@ import { Game } from './game'
 import {
   DisplayMap, DisplayScreen, Point, DisplayComputerMap, HutState, RuinItems
 } from './types'
+import { blocks } from './map';
 
 // let typescript know we have a global c (via the element's id attribute)
 declare const c: HTMLCanvasElement
@@ -399,8 +400,32 @@ const drawComputerMap = () => {
       // if they have this tile unlocked
       if( mapDb[ gridY * gridTiles + gridX ] ){
         // leave left and top edge clear for coords
-        if ( x > fontSize && y > fontSize && tile === T_SEA ){
-          if( x % 2 && !( y % 2 ) ){
+        if ( blocks( tile ) ){
+          // not the most efficient way to draw a single pixel but map is small
+          ctx.drawImage(
+            tiles,
+            T_BLACK * tileSize, 0,
+            1, 1,
+            x, y,
+            1, 1
+          )          
+        }        
+        // we draw coastlines and seen tiles in white
+        else if( seen[ y * mapSize + x ] || isSand ) {
+          ctx.drawImage(
+            tiles,
+            T_LAND * tileSize, 0,
+            1, 1,
+            x, y,
+            1, 1
+          )
+        }
+        // unseen dithered
+        else {
+          if( 
+            ( x % 2 && !( y % 2 ) ) || 
+            ( !( x % 2 ) && y % 2 ) 
+          ){
             ctx.drawImage(
               tiles,
               T_LAND * tileSize, 0,
@@ -416,28 +441,7 @@ const drawComputerMap = () => {
               x, y,
               1, 1
             ) 
-          }
-          // not the most efficient way to draw a single pixel but map is small
-        }        
-        // we draw coastlines and seen tiles in white
-        else if( seen[ y * mapSize + x ] || isSand ) {
-          ctx.drawImage(
-            tiles,
-            T_LAND * tileSize, 0,
-            1, 1,
-            x, y,
-            1, 1
-          )
-        }
-        // unseen black
-        else {
-          ctx.drawImage(
-            tiles,
-            T_BLACK * tileSize, 0,
-            1, 1,
-            x, y,
-            1, 1
-          )
+          }          
         }
       }
       // otherwise static, but leave the left and top edge
@@ -470,6 +474,7 @@ const drawComputerMap = () => {
       const gridX = ~~( x / gridSize )
       const gridY = ~~( y / gridSize )
       const tile = map[ y ][ x ]
+
       // if they've unlocked this tile
       if( mapDb[ gridY * gridTiles + gridX ] ){
         // show two states for huts, locked or unlocked
@@ -477,6 +482,13 @@ const drawComputerMap = () => {
           const currentHut = <HutState>hutCache[ y * mapSize + x ]
           if( currentHut[ HUT_UNLOCKED ] ){
             ctx.drawImage(
+              tiles,
+              T_LAND * tileSize, 0,
+              computerIconSize + 2, computerIconSize + 2,
+              x - 4, y - 4,
+              computerIconSize + 2, computerIconSize + 2
+            )      
+              ctx.drawImage(
               computerIcons,
               C_HUT_UNLOCKED * computerIconSize, 0,
               computerIconSize, computerIconSize,
@@ -484,6 +496,13 @@ const drawComputerMap = () => {
               computerIconSize, computerIconSize
             )
           } else {
+            ctx.drawImage(
+              tiles,
+              T_BLACK * tileSize, 0,
+              computerIconSize + 2, computerIconSize + 2,
+              x - 4, y - 4,
+              computerIconSize + 2, computerIconSize + 2
+            )      
             ctx.drawImage(
               computerIcons,
               C_HUT_LOCKED * computerIconSize, 0,
@@ -498,6 +517,13 @@ const drawComputerMap = () => {
           const currentRuins = <RuinItems>ruinCache[ y * mapSize + x ]
           if( currentRuins.length ){
             ctx.drawImage(
+              tiles,
+              T_LAND * tileSize, 0,
+              computerIconSize + 2, computerIconSize + 2,
+              x - 4, y - 4,
+              computerIconSize + 2, computerIconSize + 2
+            )      
+            ctx.drawImage(
               computerIcons,
               C_RUINS_ACTIVE * computerIconSize, 0,
               computerIconSize, computerIconSize,
@@ -505,6 +531,13 @@ const drawComputerMap = () => {
               computerIconSize, computerIconSize
             )
           } else {
+            ctx.drawImage(
+              tiles,
+              T_BLACK * tileSize, 0,
+              computerIconSize + 2, computerIconSize + 2,
+              x - 4, y - 4,
+              computerIconSize + 2, computerIconSize + 2
+            )      
             ctx.drawImage(
               computerIcons,
               C_RUINS_EMPTY * computerIconSize, 0,
@@ -518,6 +551,13 @@ const drawComputerMap = () => {
         if ( tile === T_SATELLITE ) {
           if( satelliteFixed ){
             ctx.drawImage(
+              tiles,
+              T_LAND * tileSize, 0,
+              computerIconSize + 2, computerIconSize + 2,
+              x - 4, y - 4,
+              computerIconSize + 2, computerIconSize + 2
+            )                
+            ctx.drawImage(
               computerIcons,
               C_SATELLITE_ACTIVE * computerIconSize, 0,
               computerIconSize, computerIconSize,
@@ -525,6 +565,13 @@ const drawComputerMap = () => {
               computerIconSize, computerIconSize
             )
           } else {
+            ctx.drawImage(
+              tiles,
+              T_BLACK * tileSize, 0,
+              computerIconSize + 2, computerIconSize + 2,
+              x - 4, y - 4,
+              computerIconSize + 2, computerIconSize + 2
+            )                
             ctx.drawImage(
               computerIcons,
               C_SATELLITE_OFFLINE * computerIconSize, 0,
@@ -537,6 +584,13 @@ const drawComputerMap = () => {
         // portal, not yet deactivated
         if ( tile === T_PORTAL ) {
           ctx.drawImage(
+            tiles,
+            T_LAND * tileSize, 0,
+            computerIconSize + 2, computerIconSize + 2,
+            x - 4, y - 4,
+            computerIconSize + 2, computerIconSize + 2
+          )                
+          ctx.drawImage(
             computerIcons,
             C_PORTAL_ACTIVE * computerIconSize, 0,
             computerIconSize, computerIconSize,
@@ -546,6 +600,13 @@ const drawComputerMap = () => {
         }
         // offline portal
         if( tile === T_PORTAL_OFFLINE ){
+          ctx.drawImage(
+            tiles,
+            T_LAND * tileSize, 0,
+            computerIconSize + 2, computerIconSize + 2,
+            x - 4, y - 4,
+            computerIconSize + 2, computerIconSize + 2
+          )                
           ctx.drawImage(
             computerIcons,
             C_PORTAL_OFFLINE * computerIconSize, 0,
@@ -558,6 +619,13 @@ const drawComputerMap = () => {
     }
   }
   // mark current location on the map, always show even in locked tiles
+  ctx.drawImage(
+    tiles,
+    T_LAND * tileSize, 0,
+    computerIconSize + 2, computerIconSize + 2,
+    playerX - 4, playerY - 4,
+    computerIconSize + 2, computerIconSize + 2
+  )                
   ctx.drawImage(
     computerIcons,
     C_PLAYER * computerIconSize, 0,

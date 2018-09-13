@@ -251,7 +251,9 @@ Player is safe in hut, can sleep to pass the night away
 - ~BUG - you are under attack searching ruins during day~
   - Size: 12261, Remaining: 1051
 - ~Show water on computer map different to unseen~  
-  -Size: 12261, Remaining: 1051
+  - Size: 12261, Remaining: 1051
+- ~Computer map improvements~
+  - Size: 12316, Remaining: 996
 - if room left, consider adding transitional tiles to make slightly less blocky
 - consider adding padding to SCREENs, will look better (but more math)
 - gamepad support if room left

@@ -232,6 +232,7 @@ const QUEST_HUT = 1;
 const QUEST_RUINS = 2;
 const QUEST_PORTAL = 3;
 const QUEST_SATELLITE = 4;
+const QUEST_BLANK = 5;
 
 // normalized different between two numbers
 const delta = (i, j) => Math.max(i, j) - Math.min(i, j);
@@ -728,11 +729,12 @@ const createIsland = (hutCache, ruinCache, portalCache) => {
         return randInt(T_GRASS_L + 1) + T_LAND;
     });
     // now let's allocate quest locations to all the waypoints
-    // 50% ruins, 35% huts, 15% portals
+    // 50% ruins, 25% huts, 15% portals
     const questSlots = waypoints.length - 4;
-    const numHuts = ~~(questSlots * 0.35);
+    const numHuts = ~~(questSlots * 0.25);
     const numPortals = ~~(questSlots * 0.15);
-    const numRuins = questSlots - numHuts - numPortals;
+    const numRuins = ~~(questSlots * 0.5);
+    const numBlank = waypoints.length - numHuts - numPortals - numRuins;
     const randQuests = [];
     for (let i = 0; i < numHuts; i++) {
         randQuests.push(QUEST_HUT);
@@ -742,6 +744,9 @@ const createIsland = (hutCache, ruinCache, portalCache) => {
     }
     for (let i = 0; i < numRuins; i++) {
         randQuests.push(QUEST_RUINS);
+    }
+    for (let i = 0; i < numBlank; i++) {
+        randQuests.push(QUEST_BLANK);
     }
     // make sure that the closest ones are useful, the furthest is satellite,
     // the rest are random
@@ -2125,6 +2130,7 @@ const Game = () => {
     return api;
 };
 
+
 // a new animation frame, decide what to draw
 const draw = (time) => {
     const color = api[API_STATE]()[ST_COLOR];
@@ -2345,22 +2351,24 @@ const drawComputerMap = () => {
             const isSand = tile >= T_SAND && tile < T_SAND + T_SAND_L;
             // if they have this tile unlocked
             if (mapDb[gridY * gridTiles + gridX]) {
-                if (x > fontSize && y > fontSize && tile === T_SEA) {
-                    if (x % 2 && !(y % 2)) {
-                        ctx.drawImage(tiles, T_LAND * tileSize, 0, 1, 1, x, y, 1, 1);
-                    }
-                    else {
-                        ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
-                    }
+                // leave left and top edge clear for coords
+                if (blocks(tile)) {
                     // not the most efficient way to draw a single pixel but map is small
+                    ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
                 }
                 // we draw coastlines and seen tiles in white
                 else if (seen[y * mapSize + x] || isSand) {
                     ctx.drawImage(tiles, T_LAND * tileSize, 0, 1, 1, x, y, 1, 1);
                 }
-                // unseen black
+                // unseen dithered
                 else {
-                    ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
+                    if ((x % 2 && !(y % 2)) ||
+                        (!(x % 2) && y % 2)) {
+                        ctx.drawImage(tiles, T_LAND * tileSize, 0, 1, 1, x, y, 1, 1);
+                    }
+                    else {
+                        ctx.drawImage(tiles, T_BLACK * tileSize, 0, 1, 1, x, y, 1, 1);
+                    }
                 }
             }
             // otherwise static, but leave the left and top edge
@@ -2388,9 +2396,11 @@ const drawComputerMap = () => {
                 if (tile === T_HUT) {
                     const currentHut = hutCache[y * mapSize + x];
                     if (currentHut[HUT_UNLOCKED]) {
+                        ctx.drawImage(tiles, T_LAND * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                         ctx.drawImage(computerIcons, C_HUT_UNLOCKED * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                     }
                     else {
+                        ctx.drawImage(tiles, T_BLACK * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                         ctx.drawImage(computerIcons, C_HUT_LOCKED * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                     }
                 }
@@ -2398,33 +2408,40 @@ const drawComputerMap = () => {
                 if (tile >= T_RUINS && tile < T_RUINS + T_RUINS_L) {
                     const currentRuins = ruinCache[y * mapSize + x];
                     if (currentRuins.length) {
+                        ctx.drawImage(tiles, T_LAND * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                         ctx.drawImage(computerIcons, C_RUINS_ACTIVE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                     }
                     else {
+                        ctx.drawImage(tiles, T_BLACK * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                         ctx.drawImage(computerIcons, C_RUINS_EMPTY * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                     }
                 }
                 // fixed vs offline
                 if (tile === T_SATELLITE) {
                     if (satelliteFixed) {
+                        ctx.drawImage(tiles, T_LAND * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                         ctx.drawImage(computerIcons, C_SATELLITE_ACTIVE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                     }
                     else {
+                        ctx.drawImage(tiles, T_BLACK * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                         ctx.drawImage(computerIcons, C_SATELLITE_OFFLINE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                     }
                 }
                 // portal, not yet deactivated
                 if (tile === T_PORTAL) {
+                    ctx.drawImage(tiles, T_LAND * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                     ctx.drawImage(computerIcons, C_PORTAL_ACTIVE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                 }
                 // offline portal
                 if (tile === T_PORTAL_OFFLINE) {
+                    ctx.drawImage(tiles, T_LAND * tileSize, 0, computerIconSize + 2, computerIconSize + 2, x - 4, y - 4, computerIconSize + 2, computerIconSize + 2);
                     ctx.drawImage(computerIcons, C_PORTAL_OFFLINE * computerIconSize, 0, computerIconSize, computerIconSize, x - 3, y - 3, computerIconSize, computerIconSize);
                 }
             }
         }
     }
     // mark current location on the map, always show even in locked tiles
+    ctx.drawImage(tiles, T_LAND * tileSize, 0, computerIconSize + 2, computerIconSize + 2, playerX - 4, playerY - 4, computerIconSize + 2, computerIconSize + 2);
     ctx.drawImage(computerIcons, C_PLAYER * computerIconSize, 0, computerIconSize, computerIconSize, playerX - 3, playerY - 3, computerIconSize, computerIconSize);
     /*
       map coordinates - if we had room left we were going to have quests where

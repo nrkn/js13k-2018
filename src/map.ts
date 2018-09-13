@@ -3,7 +3,7 @@ import {
   T_SAND, T_HUT, T_BLACK, T_HUT_L, T_HUT_M, T_HUT_R, T_COMPUTER, T_SYNTH, T_BED,
   MT_ISLAND, MT_HUT, T_TREE_L, T_RUINS_L, T_RUINS, T_MOUNTAINS_L, T_MOUNTAINS,
   T_GRASS_L, T_PORTAL, T_SATELLITE, T_RANGER, T_PORTAL_DAY, T_PORTAL_OFFLINE,
-  QUEST_HUT, QUEST_PORTAL, QUEST_RUINS, QUEST_RANGER, QUEST_SATELLITE
+  QUEST_HUT, QUEST_PORTAL, QUEST_RUINS, QUEST_RANGER, QUEST_SATELLITE, QUEST_BLANK
 } from './indices'
 
 import { mapSize, landBorder } from './settings'
@@ -276,11 +276,12 @@ export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache, portalCa
   })
 
   // now let's allocate quest locations to all the waypoints
-  // 50% ruins, 35% huts, 15% portals
+  // 50% ruins, 25% huts, 15% portals
   const questSlots = waypoints.length - 4
-  const numHuts = ~~( questSlots * 0.35 )
+  const numHuts = ~~( questSlots * 0.25 )
   const numPortals = ~~( questSlots * 0.15 )
-  const numRuins = questSlots - numHuts - numPortals
+  const numRuins = ~~( questSlots * 0.5 )
+  const numBlank = waypoints.length - numHuts - numPortals - numRuins
   const randQuests: number[] = []
   for ( let i = 0; i < numHuts; i++ ) {
     randQuests.push( QUEST_HUT )
@@ -290,6 +291,9 @@ export const createIsland = ( hutCache: HutCache, ruinCache: RuinCache, portalCa
   }
   for ( let i = 0; i < numRuins; i++ ) {
     randQuests.push( QUEST_RUINS )
+  }
+  for ( let i = 0; i < numBlank; i++ ) {
+    randQuests.push( QUEST_BLANK )
   }
   // make sure that the closest ones are useful, the furthest is satellite,
   // the rest are random
