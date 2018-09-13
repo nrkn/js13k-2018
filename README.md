@@ -27,22 +27,37 @@ pre-optimizations before calling [uglify](https://github.com/mishoo/UglifyJS)
 
 ## Optimization Strategy
 
-- Use lots of constants (that will get inlined by uglify andyway) to aid 
-  readability
-- All data in arrays to make data creation/access/mutation more "samey" for
-  better compression
-- Stick with as few control structures as possible, and again, try to make them 
-  "samey" for compression
+- Restricted vocabulary for in-game text for better compression
 - Low-res, 1 bit graphics. Very small files compress better as GIF, 
   bigger files and files with transparency (like player etc) compress better as
   PNG
-- Restricted vocabulary for in-game text for better compression
+- CSS effects to shift color schemes, slight winner over processing pixels via 
+  ImageData  
+- All data in arrays to make data creation/access/mutation more "samey" for
+  better compression
+- Use lots of constants (that will get inlined by uglify andyway) to aid 
+  readability, especially useful to name known indices into arrays
+- Stick with as few control structures as possible, and again, try to make them 
+  "samey" for compression
+
+Normally in a restricted size competition I would have golfed the code serveral
+times over to make sure I had enough bytes to finish, but in this case I ran out
+of time before I ran out of bytes, so very little golfing actually took place.
+
+## Debugging Tools
+
+When trying to make good maps, I found it useful to be able to [convert a map
+structure to an image](src/debug-map.ts) so I could look at the whole map at
+once rather than having to walk around it in-game. I generate two images,
+one a false-color map, and the other a full-sized map using the game graphics:
+
+![False Color Map](island.png)
+
+![Full Size Map](map.png)
 
 ## Map Generation
 
-Warning, gameplay spoliers follow.
-
-This GIF is false-colored:
+Warning, gameplay spoilers follow.
 
 ![Map Generator](map-generator.gif)
 

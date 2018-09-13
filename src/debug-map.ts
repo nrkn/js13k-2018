@@ -1,7 +1,7 @@
 const Jimp = require( 'jimp' )
 
 import { mapSize, tileSize } from './settings'
-import { createIsland, createIsland2 } from './map'
+import { createIsland, observableCreateIsland } from './map'
 import {
   MAP_TILES, T_GRASS, T_GRASS_L, T_TREE, T_TREE_L, MAP_PLAYERX, MAP_PLAYERY,
   T_SAND, T_SAND_L, T_HUT, T_MOUNTAINS, T_MOUNTAINS_L, T_RUINS, T_RUINS_L,
@@ -95,7 +95,7 @@ const createColorMap = ( map: number[][], name: string, playerX?: number, player
 
 createColorMap( map, 'island', playerX, playerY )
 
-createIsland2( createColorMap )
+observableCreateIsland( createColorMap )
 
 // async image loader
 const loadImage = ( path: string ) => Jimp.read( path )

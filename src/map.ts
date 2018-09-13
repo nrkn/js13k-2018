@@ -347,11 +347,7 @@ export const blocks = i =>
   i === T_SATELLITE
 
 // temporary for documenting map generation process:
-
-// draw a nice island with believable coastlines, different biomes to help the
-// player build a mental map, quest locations that are guaranteed to be
-// connected etc
-export const createIsland2 = ( callback: ( map: number[][], name: string ) => void ): DisplayMap => {
+export const observableCreateIsland = ( callback: ( map: number[][], name: string ) => void ): DisplayMap => {
   const tiles = createMap()
 
   // choose clearways (they will become quest locations, define path ends etc)

@@ -793,10 +793,7 @@ const blocks = i => i < 2 || (i >= T_TREE && i < T_TREE + T_TREE_L) || i === T_H
     i === T_PORTAL || i === T_PORTAL_DAY || i === T_PORTAL_OFFLINE ||
     i === T_SATELLITE;
 // temporary for documenting map generation process:
-// draw a nice island with believable coastlines, different biomes to help the
-// player build a mental map, quest locations that are guaranteed to be
-// connected etc
-const createIsland2 = (callback) => {
+const observableCreateIsland = (callback) => {
     const tiles = createMap();
     // choose clearways (they will become quest locations, define path ends etc)
     // start with one on each side so that we generally end up with a rough
