@@ -1,14 +1,53 @@
 # RANGER DOWN
 
+[Play it here](http://nrkn.com/ranger-down)
+
 A game for [js13kGames 2018 **Offline**](http://2018.js13kgames.com/)
 
 WASD/Arrows + ESC + Space/Enter
 
 Or mouse/touch
 
-[Play](http://nrkn.com/ranger-down)
-
 ![Screenshot](screenshot.png)
+
+## Map Generation
+
+Warning, gameplay spoliers follow.
+
+This GIF is false-colored:
+
+![Map Generator](map-generator.gif)
+
+1. Place 4 points along the edges that will bound the island
+2. Place a random amount of points within the island - these will be used to 
+   place quests
+3. Randomly join points that are near to each other until every point is joined.   
+   Also join some of the already joined paths to other paths.
+   Some paths will close off interior areas from the sea.
+4. Make clearings around the quest points
+5. Pick random points next to existing land points and add them to the land
+   until the landmass reaches the desired size
+6. Pick the leftmost land tile - this will be where the player starts.
+7. For each of the closed off interior areas, randomly pick one of these biomes
+   and fill it with:
+   - Forest,
+   - Meadow,
+   - Mountains, or
+   - Lake
+8. Decoration step that adds sand around water, randomly places different 
+   grass tiles, trees, rocks etc.
+9. Clear original paths between quests to an empty land tile, as a visual clue 
+   for the user when exploring   
+10. Randomly place a different quest at each of the quest locations in the 
+    following proportion, and place one of each quest type near to the player 
+    start. Make the furthest location from the player the satellite.
+    - Ruins 50%
+    - Huts 25%
+    - Portals 15%
+    - None 10%
+    
+
+
 
 ### Log
 - ~~pixels scaled as big as possible centered in viewport~~

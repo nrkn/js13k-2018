@@ -1,8 +1,7 @@
 node_modules
 dist/browser
 dist/node
-debug/island.png
-debug/map.png
+debug/*.png
 zip/offline.zip
 zip/*.gif
 zip/*.html
