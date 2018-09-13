@@ -734,7 +734,7 @@ const createIsland = (hutCache, ruinCache, portalCache) => {
     const numHuts = ~~(questSlots * 0.25);
     const numPortals = ~~(questSlots * 0.15);
     const numRuins = ~~(questSlots * 0.5);
-    const numBlank = waypoints.length - numHuts - numPortals - numRuins;
+    const numBlank = questSlots - numHuts - numPortals - numRuins;
     const randQuests = [];
     for (let i = 0; i < numHuts; i++) {
         randQuests.push(QUEST_HUT);
@@ -1158,9 +1158,9 @@ const Game = () => {
         playerFood = 5;
         playerHealth = 20;
         playerMaxHealth = 20;
-        playerKeys = 0;
-        playerChips = 0;
-        playerDisks = 0;
+        playerKeys = 50;
+        playerChips = 50;
+        playerDisks = 50;
         // start five minutes before dark to teach the player about sunrise/sunset
         hours = 17;
         minutes = 55;

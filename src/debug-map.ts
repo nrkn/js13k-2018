@@ -1,6 +1,6 @@
 const Jimp = require( 'jimp' )
 
-import { mapSize } from './settings'
+import { mapSize, tileSize } from './settings'
 import { createIsland } from './map'
 import {
   MAP_TILES, T_GRASS, T_GRASS_L, T_TREE, T_TREE_L, MAP_PLAYERX, MAP_PLAYERY,
@@ -89,3 +89,35 @@ new Jimp( mapSize, mapSize, ( err, image ) => {
 
   image.write( './debug/island.png' )
 } )
+
+// async image loader
+const loadImage = ( path: string ) => Jimp.read( path )
+
+// load a series of images
+const loadImages = ( ...paths: string[] ) => Promise.all( paths.map( loadImage ) )
+
+loadImages( './dist/f.gif', './dist/t.gif', './dist/p.gif', './dist/s.png', './dist/c.gif' ).then( imgs => {
+  const [ font, tiles, player, splash, computerIcons ] = imgs
+
+  // big map
+  new Jimp( mapSize * tileSize, mapSize * tileSize, ( err, image ) => {
+    if ( err ) {
+      throw err
+    }
+    for( let mapY = 0; mapY < mapSize; mapY++ ){
+      for( let mapX = 0; mapX < mapSize; mapX++ ){
+        const tileIndex = map[ mapY ][ mapX ]
+
+        image.blit( 
+          tiles,
+          mapX * tileSize, mapY * tileSize,
+          tileIndex * tileSize, 0,
+          tileSize, tileSize
+        )
+      }
+    }
+
+    image.write( './debug/map.png' )
+  }) 
+} )
+
