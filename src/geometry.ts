@@ -140,7 +140,9 @@ export const findPath = ( flood: FloodPoint[], [ x2, y2 ] ) => {
     if ( x === x1 && y === y1 ) return
 
     const neighbours = immediateNeighbours( [ x, y ] )
-    let n
+    
+    let n: FloodPoint | undefined
+    
     neighbours.forEach( ( [ x, y ] ) => {
       const t = flood.find( ( [ fx, fy ] ) => fx === x && fy === y )
       if ( t ) {
