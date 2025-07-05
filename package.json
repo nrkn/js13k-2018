@@ -16,10 +16,10 @@
   "author": "Nik Coughlin <nrkn.com@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "jimp": "^0.3.5",
+    "jimp": "^1.6.0",
     "uglify-es": "^3.3.9",
     "uglifycss": "0.0.29",
-    "yazl": "^2.4.3",
-    "@types/node": "^10.7.1"
+    "yazl": "^3.3.1",
+    "@types/node": "^24.0.10"
   }
 }

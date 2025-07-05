@@ -63,8 +63,8 @@ const draw = ( time: number ) => {
         tileSize, tileSize
       )
       // and copyright etc
-      drawText( 'Js13kGames OFFLINE', 1, 16 )
-      drawText( 'C2018 Nik Coughlin', 1, 18 )
+      drawText( 'itch.io edition v1', 1, 16 )
+      drawText( 'C2025 Nik Coughlin', 1, 18 )
     }
   }
 

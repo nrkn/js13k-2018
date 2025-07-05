@@ -2366,8 +2366,8 @@ const draw = (time) => {
             // draw a skeleton in the middle, looks cool
             ctx.drawImage(player, S_SKELETON * tileSize, 0, tileSize, tileSize, mapSize / 2 - fontSize, mapSize / 2 - fontSize, tileSize, tileSize);
             // and copyright etc
-            drawText('Js13kGames OFFLINE', 1, 16);
-            drawText('C2018 Nik Coughlin', 1, 18);
+            drawText('itch.io edition v1', 1, 16);
+            drawText('C2025 Nik Coughlin', 1, 18);
         }
     }
     if (displayItem[DISPLAY_TYPE] === DTYPE_MESSAGE) {
