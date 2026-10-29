@@ -25,10 +25,12 @@ import {
 } from './indices'
 
 import { Game } from './game'
+
 import {
   DisplayMap, DisplayScreen, Point, DisplayComputerMap, HutState, RuinItems
 } from './types'
-import { blocks } from './map';
+
+import { blocks } from './map'
 
 // let typescript know we have a global c (via the element's id attribute)
 declare const c: HTMLCanvasElement

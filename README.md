@@ -35,7 +35,7 @@ pre-optimizations before calling [uglify](https://github.com/mishoo/UglifyJS)
   ImageData  
 - Store all data in arrays to make data creation/access/mutation more "samey" 
   for better compression
-- Use lots of constants (that will get inlined by uglify andyway) to aid 
+- Use lots of constants (that will get inlined by uglify anyway) to aid 
   readability, it is especially helpful to name known indices into arrays
 - Stick with as few control structures as possible, and again, try to make them 
   "samey" for compression
